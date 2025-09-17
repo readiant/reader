@@ -49,7 +49,11 @@
     "@webcomponents/webcomponentsjs": "^2.8.0"
   },
   "devDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "@juggle/resize-observer": "^3.3.1",
+    "idb": "^7.1.1",
+    "lodash": "^4.17.21"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
