@@ -131,9 +131,104 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 </readiant>
 ```
 
-### Framework Integration
+## Document Index Structure
 
-#### React
+Each document requires an `index.json` file that describes the document structure and files.
+
+### Document Index (Standard)
+
+```json
+{
+  "type": "pdf",
+  "pages": 25,
+  "availableAudio": {
+    "provider1": [1, 2, 3, 4, 5],
+    "provider2": [1, 3, 5]
+  },
+  "blueprints": [
+    {
+      "page": 1,
+      "blueprint": ["element1", "element2"],
+      "viewBox": [0, 0, 612, 792],
+      "rotation": 0
+    }
+  ],
+  "chapters": [
+    {
+      "title": "Chapter 1",
+      "page": 1
+    },
+    {
+      "title": "Chapter 2", 
+      "page": 10
+    }
+  ],
+  "files": [
+    "docs/doc-123/elements/page1.json",
+    "docs/doc-123/textContent/1.json",
+    "docs/doc-123/images/image1_4.jpg",
+    "docs/doc-123/audio/provider1/page1.mp3"
+  ],
+  "imageInfo": [
+    {
+      "id": "image1",
+      "transparent": false
+    }
+  ],
+  "inverted": false,
+  "offset": 0,
+  "rtl": false,
+  "spread": false
+}
+```
+
+### PDF Document Index (With Signed URLs)
+
+```json
+{
+  "type": "pdf",
+  "pages": 25,
+  "availableAudio": {
+    "provider1": [1, 2, 3, 4, 5],
+    "provider2": [1, 3, 5]
+  },
+  "blueprints": [
+    {
+      "page": 1,
+      "blueprint": ["element1", "element2"],
+      "viewBox": [0, 0, 612, 792],
+      "rotation": 0
+    }
+  ],
+  "chapters": [
+    {
+      "title": "Chapter 1",
+      "page": 1
+    }
+  ],
+  "files": [
+    "https://mybucket.s3.amazonaws.com/docs/doc-123/elements/page1.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+    "https://mybucket.s3.amazonaws.com/docs/doc-123/textContent/1.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+    "https://mybucket.s3.amazonaws.com/docs/doc-123/images/image1_4.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
+    "https://mybucket.s3.amazonaws.com/docs/doc-123/audio/provider1/page1.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+  ],
+  "imageInfo": [
+    {
+      "id": "image1",
+      "transparent": false,
+      "signedUrl": "https://mybucket.s3.amazonaws.com/docs/doc-123/images/image1_4.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+    }
+  ],
+  "inverted": false,
+  "offset": 0,
+  "rtl": false,
+  "spread": false
+}
+```
+
+## Framework Integration
+
+### React
 
 ```jsx
 import 'readiant';
@@ -149,7 +244,7 @@ function DocumentViewer({ documentId, locale = 'en', page = 1 }) {
 }
 ```
 
-#### Vue 3
+### Vue 3
 
 ```vue
 <template>
@@ -171,7 +266,7 @@ defineProps({
 </script>
 ```
 
-#### Angular
+### Angular
 
 ```typescript
 // app.module.ts
