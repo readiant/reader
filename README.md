@@ -14,7 +14,7 @@ npm install readiant
 
 ```html
 <script type="module" src="https://unpkg.com/readiant@latest/dist/index.js"></script>
-<readiant document-id="your-doc-id"></readiant>
+<readiant id="document-id"></readiant>
 ```
 
 ## Quick Start
@@ -35,7 +35,7 @@ npm install readiant
     
     <!-- Use the component -->
     <readiant
-        document-id="your-document-id"
+        id="document-id"
         locale="en"
         page="1">
     </readiant>
@@ -51,7 +51,7 @@ import 'readiant';
 
 // Programmatically create and configure
 const viewer = document.createElement('readiant');
-viewer.setAttribute('document-id', 'your-document-id');
+viewer.setAttribute('id', 'document-id');
 viewer.setAttribute('locale', 'en');
 viewer.setAttribute('page', '1');
 
@@ -64,28 +64,93 @@ document.body.appendChild(viewer);
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `document-id` | string | required | The ID of the document to display |
+| `id` | string | required | The ID of the document to display |
 | `locale` | string | `'en'` | Language locale (en, nl, fr, de, etc.) |
 | `page` | number | `1` | Initial page to display |
-| `zoom` | number | `1.0` | Initial zoom level |
-| `font-size` | string | `'medium'` | Text size (small, medium, large) |
-| `theme` | string | `'light'` | Theme mode (light, dark, sepia) |
-| `disable` | string | `''` | Comma-separated features to disable |
-| `base-url` | string | `''` | Base URL for remote document sources |
-| `remote-source` | boolean | `false` | Enable remote document loading |
+| `url` | string | `''` | Base URL for document sources |
 | `use-signed-urls` | boolean | `false` | Enable S3 signed URL support |
+| `single-page` | boolean | `false` | Single page preview mode |
+| `orientation` | string | `'auto'` | Document orientation (portrait, landscape, auto) |
+| `touch` | boolean | `true` | Enable touch gestures |
+| `disable` | string | `''` | Comma-separated features to disable |
+
+### Visual Appearance
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `zoom-level` | number | `1` | Zoom level (1-5) |
+| `font` | string | `'default'` | Font family |
+| `font-size` | number | `16` | Font size in pixels |
+| `letter-spacing` | number | `0` | Letter spacing adjustment |
+| `line-height` | number | `1.2` | Line height multiplier |
+| `word-spacing` | number | `0` | Word spacing adjustment |
+| `screen-mode-level` | number | `1` | Theme mode (1=light, 2=sepia, 3=dark) |
+| `color-blind-filter` | string | `'none'` | Color blind accessibility filter |
+| `image-quality-level` | number | `4` | Image quality setting (1-4) |
+| `text-mode-level` | number | `0` | Text enhancement level |
+
+### Audio Options
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `audio-highlighting-level` | number | `0` | Audio highlighting intensity |
+| `countdown-level` | number | `0` | Audio countdown settings |
+| `playback-rate` | number | `1.0` | Audio playback speed |
+| `read-stop-level` | number | `0` | Audio read stop behavior |
+| `subtitle-font-size` | number | `16` | Subtitle text size |
+| `subtitle-level` | number | `0` | Subtitle display settings |
+
+### Legacy Attributes (for backwards compatibility)
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `zoom` | number | `1.0` | Initial zoom level (use `zoom-level` instead) |
+| `theme` | string | `'light'` | Theme mode (use `screen-mode-level` instead) |
+| `base-url` | string | `''` | Base URL (use `url` instead) |
+| `remote-source` | string | `''` | Remote source (use `url` instead) |
+| `locale-translations` | string | `''` | Custom locale translations |
 
 ### Advanced Configuration
 
 ```html
+<!-- Basic configuration -->
 <readiant
-    document-id="doc-123"
+    id="doc-123"
     locale="en"
     page="5"
-    zoom="1.5"
-    font-size="large"
+    zoom-level="2"
+    font-size="18"
+    screen-mode-level="3"
+    disable="print,fullscreen">
+</readiant>
+
+<!-- Advanced visual customization -->
+<readiant
+    id="doc-456"
+    font="Arial"
+    font-size="20"
+    letter-spacing="1"
+    line-height="1.5"
+    word-spacing="2"
+    color-blind-filter="deuteranopia"
+    image-quality-level="4">
+</readiant>
+
+<!-- Audio-enabled document -->
+<readiant
+    id="doc-789"
+    audio-highlighting-level="2"
+    playback-rate="1.2"
+    subtitle-level="1"
+    subtitle-font-size="18">
+</readiant>
+
+<!-- Legacy syntax (still supported) -->
+<readiant
+    id="doc-legacy"
     theme="dark"
-    disable="print,fullscreen,download">
+    zoom="1.5"
+    base-url="https://docs.example.com">
 </readiant>
 ```
 
@@ -96,7 +161,7 @@ document.body.appendChild(viewer);
 By default, documents are loaded from the local server using relative paths:
 
 ```html
-<readiant document-id="local-doc"></readiant>
+<readiant id="local-doc"></readiant>
 ```
 
 ### Remote Document Sources
@@ -106,14 +171,14 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 ```html
 <!-- Amazon S3 -->
 <readiant 
-    document-id="remote-doc"
+    id="remote-doc"
     base-url="https://mybucket.s3.amazonaws.com"
     remote-source="true">
 </readiant>
 
 <!-- Custom Server -->
 <readiant 
-    document-id="remote-doc"
+    id="remote-doc"
     base-url="https://documents.myserver.com"
     remote-source="true">
 </readiant>
@@ -124,7 +189,7 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 ```html
 <!-- Private S3 documents with signed URLs -->
 <readiant
-    document-id="doc-123"
+    id="doc-123"
     base-url="https://mybucket.s3.amazonaws.com"
     remote-source="true"
     use-signed-urls="true">
@@ -236,7 +301,7 @@ import 'readiant';
 function DocumentViewer({ documentId, locale = 'en', page = 1 }) {
     return (
         <readiant 
-            document-id={documentId}
+            id={documentId}
             locale={locale}
             page={page}
         />
@@ -249,7 +314,7 @@ function DocumentViewer({ documentId, locale = 'en', page = 1 }) {
 ```vue
 <template>
     <readiant 
-        :document-id="documentId"
+        :id="documentId"
         :locale="locale"
         :page="page"
     />
@@ -283,7 +348,7 @@ export class AppModule {}
 ```html
 <!-- component.html -->
 <readiant 
-    [attr.document-id]="documentId"
+    [attr.id]="documentId"
     [attr.locale]="locale"
     [attr.page]="page">
 </readiant>
@@ -351,21 +416,166 @@ const viewer = document.querySelector('readiant');
 // Document loaded
 viewer.addEventListener('document-loaded', (event) => {
     console.log('Document loaded:', event.detail);
+    // event.detail: { documentId, totalPages, isReady }
 });
 
 // Page changed
 viewer.addEventListener('page-changed', (event) => {
     console.log('Current page:', event.detail.page);
+    // event.detail: { page, currentPage, totalPages, direction? }
 });
 
 // Zoom changed
 viewer.addEventListener('zoom-changed', (event) => {
     console.log('Zoom level:', event.detail.zoom);
+    // event.detail: { zoom, level }
+});
+
+// Theme changed
+viewer.addEventListener('theme-changed', (event) => {
+    console.log('Theme changed:', event.detail.theme);
+    // event.detail: { theme, level }
+});
+
+// Font changed
+viewer.addEventListener('font-changed', (event) => {
+    console.log('Font changed:', event.detail.font);
+    // event.detail: { font, fontKey }
+});
+
+// Font size changed
+viewer.addEventListener('font-size-changed', (event) => {
+    console.log('Font size changed:', event.detail.fontSize);
+    // event.detail: { fontSize, size }
+});
+
+// Audio play/pause
+viewer.addEventListener('audio-play', (event) => {
+    console.log('Audio started playing');
+    // event.detail: { isPlaying: true, action: 'play' }
+});
+
+viewer.addEventListener('audio-pause', (event) => {
+    console.log('Audio paused');
+    // event.detail: { isPlaying: false, action: 'pause' }
+});
+
+// Fullscreen changed
+viewer.addEventListener('fullscreen-changed', (event) => {
+    console.log('Fullscreen:', event.detail.isFullscreen);
+    // event.detail: { isFullscreen }
 });
 
 // Error occurred
 viewer.addEventListener('error', (event) => {
     console.error('Error:', event.detail.message);
+    // event.detail: { message, type }
+});
+
+// Annotations added
+viewer.addEventListener('annotations-added', (event) => {
+    console.log('Annotations added:', event.detail.count);
+    // event.detail: { annotations, count }
+});
+
+// Audio highlighting changed
+viewer.addEventListener('audio-highlighting-changed', (event) => {
+    console.log('Audio highlighting level:', event.detail.level);
+    // event.detail: { level, audioHighlightingLevel }
+});
+
+// Color blind filter changed
+viewer.addEventListener('color-blind-filter-changed', (event) => {
+    console.log('Color blind filter:', event.detail.filter);
+    // event.detail: { filter, filterKey }
+});
+
+// Countdown changed
+viewer.addEventListener('countdown-changed', (event) => {
+    console.log('Countdown level:', event.detail.level);
+    // event.detail: { level, countdownLevel }
+});
+
+// Image quality changed
+viewer.addEventListener('image-quality-changed', (event) => {
+    console.log('Image quality level:', event.detail.level);
+    // event.detail: { level, imageQualityLevel }
+});
+
+// Letter spacing changed
+viewer.addEventListener('letter-spacing-changed', (event) => {
+    console.log('Letter spacing:', event.detail.spacing);
+    // event.detail: { spacing, letterSpacing }
+});
+
+// Line height changed
+viewer.addEventListener('line-height-changed', (event) => {
+    console.log('Line height:', event.detail.height);
+    // event.detail: { height, lineHeight }
+});
+
+// Playback rate changed
+viewer.addEventListener('playback-rate-changed', (event) => {
+    console.log('Playback rate:', event.detail.rate);
+    // event.detail: { rate, playbackRate }
+});
+
+// Read stop changed
+viewer.addEventListener('read-stop-changed', (event) => {
+    console.log('Read stop level:', event.detail.level);
+    // event.detail: { level, readStopLevel }
+});
+
+// Subtitle changed
+viewer.addEventListener('subtitle-changed', (event) => {
+    console.log('Subtitle level:', event.detail.level);
+    // event.detail: { level, subtitleLevel }
+});
+
+// Subtitle font size changed
+viewer.addEventListener('subtitle-font-size-changed', (event) => {
+    console.log('Subtitle font size:', event.detail.fontSize);
+    // event.detail: { fontSize, subtitleFontSize }
+});
+
+// Text mode changed
+viewer.addEventListener('text-mode-changed', (event) => {
+    console.log('Text mode level:', event.detail.level);
+    // event.detail: { level, textModeLevel }
+});
+
+// Word spacing changed
+viewer.addEventListener('word-spacing-changed', (event) => {
+    console.log('Word spacing:', event.detail.spacing);
+    // event.detail: { spacing, wordSpacing }
+});
+
+// Audio management events
+viewer.addEventListener('audio-added', (event) => {
+    console.log('Audio added:', event.detail);
+    // event.detail: { page, provider, language, voiceId }
+});
+
+viewer.addEventListener('audio-switched', (event) => {
+    console.log('Audio switched:', event.detail.key);
+    // event.detail: { key, audioKey }
+});
+
+// Highlighting events
+viewer.addEventListener('highlighting-started', (event) => {
+    console.log('Highlighting started:', event.detail.indices);
+    // event.detail: { position, indices }
+});
+
+viewer.addEventListener('highlighting-stopped', (event) => {
+    console.log('Highlighting stopped');
+    // event.detail: { action: 'stop' }
+});
+
+// Orientation changed
+viewer.addEventListener('orientation-changed', (event) => {
+    console.log('Orientation changed');
+    // event.detail: { action: 'toggle', orientation: 'toggled' }
 });
 ```
 
@@ -376,7 +586,7 @@ All document sources must maintain this folder structure:
 ```
 baseUrl/ (or local server)
 └── docs/
-    └── {document-id}/
+    └── {id}/
         ├── index.json
         ├── audio/
         │   ├── provider1/
