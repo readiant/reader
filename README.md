@@ -14,7 +14,7 @@ npm install readiant
 
 ```html
 <script type="module" src="https://unpkg.com/readiant@latest/dist/index.js"></script>
-<readiant-player id="document-id"></readiant-player>
+<readiant-reader id="document-id"></readiant-reader>
 ```
 
 ## Quick Start
@@ -34,11 +34,11 @@ npm install readiant
     </script>
     
     <!-- Use the component -->
-    <readiant-player
+    <readiant-reader
         id="document-id"
         locale="en"
         page="1">
-    </readiant-player>
+    </readiant-reader>
 </body>
 </html>
 ```
