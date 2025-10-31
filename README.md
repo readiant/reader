@@ -619,7 +619,6 @@ readiant {
     --readiant-primary-color: #0066cc;
     --readiant-background-color: #ffffff;
     --readiant-text-color: #333333;
-    --readiant-border-radius: 8px;
     --readiant-font-family: 'Inter', sans-serif;
     
     /* Size the component */
@@ -637,9 +636,7 @@ readiant {
 | `--readiant-background-color` | `#ffffff` | Background color |
 | `--readiant-text-color` | `#333333` | Text color |
 | `--readiant-border-color` | `#e0e0e0` | Border color |
-| `--readiant-border-radius` | `4px` | Border radius |
-| `--readiant-font-family` | `system-ui` | Font family |
-| `--readiant-font-size` | `14px` | Base font size |
+| `--readiant-font-family` | `Roboto` | Font family |
 
 ## License
 
