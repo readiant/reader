@@ -86,7 +86,7 @@ jobs:
       - name: Build (optional)
         if: steps.compare.outputs.should_publish == 'true'
         run: |
-          npm ci
+          npm install
           npm run build || true
 
       - name: Publish to npm
