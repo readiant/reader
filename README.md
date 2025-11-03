@@ -30,13 +30,12 @@ npm install @readiant/reader
 <body>
     <!-- Import the web component -->
     <script type="module">
-        import 'readiant';
+        import '@readiant/reader';
     </script>
     
     <!-- Use the component -->
     <readiant-reader
         id="document-id"
-        locale="en"
         page="1">
     </readiant-reader>
 </body>
@@ -46,13 +45,12 @@ npm install @readiant/reader
 ### JavaScript/TypeScript Usage
 
 ```typescript
-import 'readiant';
-// or import { ReadiantElement } from 'readiant';
+import '@readiant/reader';
+// or import { ReadiantElement } from '@readiant/reader';
 
 // Programmatically create and configure
-const viewer = document.createElement('readiant');
+const viewer = document.createElement('readiant-reader');
 viewer.setAttribute('id', 'document-id');
-viewer.setAttribute('locale', 'en');
 viewer.setAttribute('page', '1');
 
 document.body.appendChild(viewer);
@@ -102,18 +100,17 @@ document.body.appendChild(viewer);
 
 ```html
 <!-- Basic configuration -->
-<readiant
+<readiant-reader
     id="doc-123"
-    locale="en"
     page="5"
     zoom-level="2"
     font-size="18"
     screen-mode-level="3"
     disable="print,fullscreen">
-</readiant>
+</readiant-reader>
 
 <!-- Advanced visual customization -->
-<readiant
+<readiant-reader
     id="doc-456"
     font="Arial"
     font-size="20"
@@ -122,16 +119,16 @@ document.body.appendChild(viewer);
     word-spacing="2"
     color-blind-filter="deuteranopia"
     image-quality-level="4">
-</readiant>
+</readiant-reader>
 
 <!-- Audio-enabled document -->
-<readiant
+<readiant-reader
     id="doc-789"
     audio-highlighting-level="2"
     playback-rate="1.2"
     subtitle-level="1"
     subtitle-font-size="18">
-</readiant>
+</readiant-reader>
 ```
 
 ## Document Sources
@@ -141,7 +138,7 @@ document.body.appendChild(viewer);
 By default, documents are loaded from the local server using relative paths:
 
 ```html
-<readiant id="local-doc"></readiant>
+<readiant-reader id="local-doc"></readiant-reader>
 ```
 
 ### Remote Document Sources
@@ -150,30 +147,30 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 
 ```html
 <!-- Amazon S3 -->
-<readiant 
+<readiant-reader 
     id="remote-doc"
     url="https://mybucket.s3.amazonaws.com"
     remote-source="true">
-</readiant>
+</readiant-reader>
 
 <!-- Custom Server -->
-<readiant 
+<readiant-reader 
     id="remote-doc"
     url="https://documents.myserver.com"
     remote-source="true">
-</readiant>
+</readiant-reader>
 ```
 
 ### Secure S3 Signed URLs
 
 ```html
 <!-- Private S3 documents with signed URLs -->
-<readiant
+<readiant-reader
     id="doc-123"
     url="https://mybucket.s3.amazonaws.com"
     remote-source="true"
     use-signed-urls="true">
-</readiant>
+</readiant-reader>
 ```
 
 ## Document Index Structure
@@ -209,10 +206,10 @@ Each document requires an `index.json` file that describes the document structur
     }
   ],
   "files": [
-    "docs/doc-123/elements/page1.json",
-    "docs/doc-123/textContent/1.json",
-    "docs/doc-123/images/image1_4.jpg",
-    "docs/doc-123/audio/provider1/page1.mp3"
+    "elements/page1.json",
+    "textContent/1.json",
+    "images/image1_4.jpg",
+    "audio/provider1/page1.mp3"
   ],
   "imageInfo": [
     {
@@ -276,13 +273,12 @@ Each document requires an `index.json` file that describes the document structur
 ### React
 
 ```jsx
-import 'readiant';
+import '@readiant/reader';
 
-function DocumentViewer({ documentId, locale = 'en', page = 1 }) {
+function DocumentViewer({ documentId, page = 1 }) {
     return (
-        <readiant 
+        <readiant-reader 
             id={documentId}
-            locale={locale}
             page={page}
         />
     );
@@ -293,19 +289,17 @@ function DocumentViewer({ documentId, locale = 'en', page = 1 }) {
 
 ```vue
 <template>
-    <readiant 
+    <readiant-reader 
         :id="documentId"
-        :locale="locale"
         :page="page"
     />
 </template>
 
 <script setup>
-import 'readiant';
+import '@readiant/reader';
 
 defineProps({
     documentId: String,
-    locale: { type: String, default: 'en' },
     page: { type: Number, default: 1 }
 });
 </script>
@@ -316,7 +310,7 @@ defineProps({
 ```typescript
 // app.module.ts
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import 'readiant';
+import '@readiant/reader';
 
 @NgModule({
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -327,11 +321,10 @@ export class AppModule {}
 
 ```html
 <!-- component.html -->
-<readiant 
+<readiant-reader 
     [attr.id]="documentId"
-    [attr.locale]="locale"
     [attr.page]="page">
-</readiant>
+</readiant-reader>
 ```
 
 ## Browser Support
@@ -353,7 +346,7 @@ For older browsers, include the Web Components polyfill:
 ### Properties
 
 ```typescript
-const viewer = document.querySelector('readiant');
+const viewer = document.querySelector('readiant-reader');
 
 // Get current page
 console.log(viewer.currentPage);
@@ -368,7 +361,7 @@ console.log(viewer.isLoaded);
 ### Methods
 
 ```typescript
-const viewer = document.querySelector('readiant');
+const viewer = document.querySelector('readiant-reader');
 
 // Navigation
 viewer.goToPage(10);
@@ -391,7 +384,7 @@ viewer.print();
 ### Events
 
 ```typescript
-const viewer = document.querySelector('readiant');
+const viewer = document.querySelector('readiant-reader');
 
 // Document loaded
 viewer.addEventListener('document-loaded', (event) => {
