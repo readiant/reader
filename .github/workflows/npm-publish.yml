@@ -49,7 +49,7 @@ jobs:
         run: |
           # read package.json as-of the previous commit in this push
           prev_json=$(git show ${{ github.event.before }}:package.json 2>/dev/null || echo "{}")
-          prev_version=$(node -pe "JSON.parse(process.stdin.read())['version']" <<<"$prev_json")
+          prev_version=$(node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" <<<"$prev_json")
           echo "prev_version=$prev_version" >> $GITHUB_ENV
 
       - name: Compare versions and decide
