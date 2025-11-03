@@ -1,9 +1,9 @@
 {
-  "name": "readiant-embed",
-  "version": "0.7.0",
+  "name": "@readiant/reader",
+  "version": "0.8.1",
   "description": "Readiant Web Component",
-  "main": "lib/js/index.js",
-  "module": "lib/js/index.js",
+  "main": "lib/js/base.js",
+  "module": "lib/js/base.js",
   "types": "lib/types/index.d.ts",
   "type": "module",
   "exports": {
@@ -26,14 +26,13 @@
     "reading",
     "pdf"
   ],
-  "homepage": "https://readiant.app",
+  "homepage": "https://readiant.com",
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/readiant/readiant.git",
-    "directory": "embed"
+    "url": "git+https://github.com/readiant/reader.git"
   },
   "bugs": {
-    "url": "https://gitlab.com/readiant/readiant/-/issues"
+    "url": "https://github.com/readiant/reader/issues"
   },
   "author": "Readiant",
   "engines": {
@@ -56,6 +55,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
-    "access": "public"
+    "access": "restricted"
   }
 }

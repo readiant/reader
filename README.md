@@ -1,4 +1,4 @@
-# Readiant Web Component
+# Readiant
 
 A minimal Web Component wrapper for the Readiant reader that provides seamless integration with modern web applications. Supports local documents and remote sources for private document access.
 
@@ -7,7 +7,7 @@ A minimal Web Component wrapper for the Readiant reader that provides seamless i
 ### NPM
 
 ```bash
-npm install readiant
+npm install @readiant/reader
 ```
 
 ### CDN
@@ -65,13 +65,11 @@ document.body.appendChild(viewer);
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `id` | string | required | The ID of the document to display |
-| `locale` | string | `'en'` | Language locale (en, nl, fr, de, etc.) |
 | `page` | number | `1` | Initial page to display |
 | `url` | string | `''` | Base URL for document sources |
 | `use-signed-urls` | boolean | `false` | Enable S3 signed URL support |
 | `single-page` | boolean | `false` | Single page preview mode |
 | `orientation` | string | `'auto'` | Document orientation (portrait, landscape, auto) |
-| `touch` | boolean | `true` | Enable touch gestures |
 | `disable` | string | `''` | Comma-separated features to disable |
 
 ### Visual Appearance
@@ -99,16 +97,6 @@ document.body.appendChild(viewer);
 | `read-stop-level` | number | `0` | Audio read stop behavior |
 | `subtitle-font-size` | number | `16` | Subtitle text size |
 | `subtitle-level` | number | `0` | Subtitle display settings |
-
-### Legacy Attributes (for backwards compatibility)
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `zoom` | number | `1.0` | Initial zoom level (use `zoom-level` instead) |
-| `theme` | string | `'light'` | Theme mode (use `screen-mode-level` instead) |
-| `base-url` | string | `''` | Base URL (use `url` instead) |
-| `remote-source` | string | `''` | Remote source (use `url` instead) |
-| `locale-translations` | string | `''` | Custom locale translations |
 
 ### Advanced Configuration
 
@@ -144,14 +132,6 @@ document.body.appendChild(viewer);
     subtitle-level="1"
     subtitle-font-size="18">
 </readiant>
-
-<!-- Legacy syntax (still supported) -->
-<readiant
-    id="doc-legacy"
-    theme="dark"
-    zoom="1.5"
-    base-url="https://docs.example.com">
-</readiant>
 ```
 
 ## Document Sources
@@ -172,14 +152,14 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 <!-- Amazon S3 -->
 <readiant 
     id="remote-doc"
-    base-url="https://mybucket.s3.amazonaws.com"
+    url="https://mybucket.s3.amazonaws.com"
     remote-source="true">
 </readiant>
 
 <!-- Custom Server -->
 <readiant 
     id="remote-doc"
-    base-url="https://documents.myserver.com"
+    url="https://documents.myserver.com"
     remote-source="true">
 </readiant>
 ```
@@ -190,7 +170,7 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 <!-- Private S3 documents with signed URLs -->
 <readiant
     id="doc-123"
-    base-url="https://mybucket.s3.amazonaws.com"
+    url="https://mybucket.s3.amazonaws.com"
     remote-source="true"
     use-signed-urls="true">
 </readiant>
@@ -645,5 +625,5 @@ see LICENSE file for details.
 ## Support
 
 - **Documentation**: [https://readiant.app/documentation](https://readiant.app/documentation)
-- **Issues**: [https://github.com/readiant/readiant/issues](https://github.com/readiant/readiant/issues)
+- **Issues**: [https://github.com/readiant/reader/issues](https://github.com/readiant/reader/issues)
 - **Email**: support@readiant.com
