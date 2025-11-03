@@ -17,6 +17,9 @@ jobs:
       packages: write
 
     steps:
+      - name: Authenticate to npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
