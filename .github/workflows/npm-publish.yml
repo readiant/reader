@@ -94,6 +94,5 @@ jobs:
         run: |
           # for public packages, include --access public
           npm publish --access public
-      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
