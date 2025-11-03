@@ -1,6 +1,6 @@
 {
   "name": "@readiant/reader",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Readiant Web Component",
   "main": "lib/js/base.js",
   "module": "lib/js/base.js",
@@ -55,6 +55,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
-    "access": "restricted"
+    "access": "public"
   }
 }
