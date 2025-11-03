@@ -14,7 +14,7 @@ npm install @readiant/reader
 
 ```html
 <script type="module" src="https://unpkg.com/readiant@latest/dist/index.js"></script>
-<readiant-reader id="document-id"></readiant-reader>
+<readiant-reader document-id="your-document-id"></readiant-reader>
 ```
 
 ## Quick Start
@@ -35,7 +35,7 @@ npm install @readiant/reader
     
     <!-- Use the component -->
     <readiant-reader
-        id="document-id"
+        document-id="your-document-id"
         page="1">
     </readiant-reader>
 </body>
@@ -50,7 +50,7 @@ import '@readiant/reader';
 
 // Programmatically create and configure
 const viewer = document.createElement('readiant-reader');
-viewer.setAttribute('id', 'document-id');
+viewer.setAttribute('document-id', 'your-document-id');
 viewer.setAttribute('page', '1');
 
 document.body.appendChild(viewer);
@@ -62,12 +62,11 @@ document.body.appendChild(viewer);
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `id` | string | required | The ID of the document to display |
+| `document-id` | string | required | The ID of the document to display |
 | `page` | number | `1` | Initial page to display |
 | `url` | string | `''` | Base URL for document sources |
 | `use-signed-urls` | boolean | `false` | Enable S3 signed URL support |
-| `single-page` | boolean | `false` | Single page preview mode |
-| `orientation` | string | `'auto'` | Document orientation (portrait, landscape, auto) |
+| `orientation` | string | `'auto'` | Document orientation (portrait, landscape) |
 | `disable` | string | `''` | Comma-separated features to disable |
 
 ### Visual Appearance
@@ -76,7 +75,6 @@ document.body.appendChild(viewer);
 |-----------|------|---------|-------------|
 | `zoom-level` | number | `1` | Zoom level (1-5) |
 | `font` | string | `'default'` | Font family |
-| `font-size` | number | `16` | Font size in pixels |
 | `letter-spacing` | number | `0` | Letter spacing adjustment |
 | `line-height` | number | `1.2` | Line height multiplier |
 | `word-spacing` | number | `0` | Word spacing adjustment |
@@ -101,7 +99,7 @@ document.body.appendChild(viewer);
 ```html
 <!-- Basic configuration -->
 <readiant-reader
-    id="doc-123"
+    document-id="doc-123"
     page="5"
     zoom-level="2"
     font-size="18"
@@ -111,7 +109,7 @@ document.body.appendChild(viewer);
 
 <!-- Advanced visual customization -->
 <readiant-reader
-    id="doc-456"
+    document-id="doc-456"
     font="Arial"
     font-size="20"
     letter-spacing="1"
@@ -123,7 +121,7 @@ document.body.appendChild(viewer);
 
 <!-- Audio-enabled document -->
 <readiant-reader
-    id="doc-789"
+    document-id="doc-789"
     audio-highlighting-level="2"
     playback-rate="1.2"
     subtitle-level="1"
@@ -138,7 +136,7 @@ document.body.appendChild(viewer);
 By default, documents are loaded from the local server using relative paths:
 
 ```html
-<readiant-reader id="local-doc"></readiant-reader>
+<readiant-reader document-id="local-doc"></readiant-reader>
 ```
 
 ### Remote Document Sources
@@ -148,14 +146,14 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 ```html
 <!-- Amazon S3 -->
 <readiant-reader 
-    id="remote-doc"
+    document-id="remote-doc"
     url="https://mybucket.s3.amazonaws.com"
     remote-source="true">
 </readiant-reader>
 
 <!-- Custom Server -->
 <readiant-reader 
-    id="remote-doc"
+    document-id="remote-doc"
     url="https://documents.myserver.com"
     remote-source="true">
 </readiant-reader>
@@ -166,7 +164,7 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 ```html
 <!-- Private S3 documents with signed URLs -->
 <readiant-reader
-    id="doc-123"
+    document-id="doc-123"
     url="https://mybucket.s3.amazonaws.com"
     remote-source="true"
     use-signed-urls="true">
@@ -278,7 +276,7 @@ import '@readiant/reader';
 function DocumentViewer({ documentId, page = 1 }) {
     return (
         <readiant-reader 
-            id={documentId}
+            document-id={documentId}
             page={page}
         />
     );
@@ -290,7 +288,7 @@ function DocumentViewer({ documentId, page = 1 }) {
 ```vue
 <template>
     <readiant-reader 
-        :id="documentId"
+        :document-id="documentId"
         :page="page"
     />
 </template>
@@ -322,7 +320,7 @@ export class AppModule {}
 ```html
 <!-- component.html -->
 <readiant-reader 
-    [attr.id]="documentId"
+    [attr.document-id]="documentId"
     [attr.page]="page">
 </readiant-reader>
 ```
