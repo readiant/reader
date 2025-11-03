@@ -40,7 +40,8 @@ jobs:
         if: steps.changed.outputs.changed == 'true'
         id: newver
         run: |
-          echo "new_version=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+          new_version=$(node -p "require('./package.json').version")
+          echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Get previous version from previous commit
         if: steps.changed.outputs.changed == 'true'
