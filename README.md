@@ -46,7 +46,6 @@ npm install @readiant/reader
 
 ```typescript
 import '@readiant/reader';
-// or import { ReadiantElement } from '@readiant/reader';
 
 // Programmatically create and configure
 const viewer = document.createElement('readiant-reader');
@@ -278,6 +277,23 @@ function DocumentViewer({ documentId, page = 1 }) {
         <readiant-reader 
             document-id={documentId}
             page={page}
+        />
+    );
+}
+```
+
+**TypeScript Support:**
+
+```tsx
+import '@readiant/reader';
+
+function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: number }) {
+    return (
+        <readiant-reader 
+            document-id={documentId}
+            page={page}
+            onDocumentLoaded={(e) => console.log('Loaded:', e.detail)}
+            onPageChanged={(e) => console.log('Page:', e.detail.page)}
         />
     );
 }

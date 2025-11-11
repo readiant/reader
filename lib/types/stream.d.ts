@@ -81,4 +81,4 @@ Stream.backoff = [1000, 2500, 5000, 10000];
 Stream.handlers = new Map();
 Stream.transfers = {};
 Stream.verificationCode = String(document.body.dataset.verify);
-Stream.url = `ws://localhost:8008/d/${_a.verificationCode}`;
+Stream.url = `wss://wss.readiant.app/d/${_a.verificationCode}`;
