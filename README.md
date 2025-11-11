@@ -284,14 +284,15 @@ function DocumentViewer({ documentId, page = 1 }) {
 
 **TypeScript/JSX Support:**
 
-For full TypeScript support with IntelliSense and type checking in JSX, import from the `/jsx` entry point:
+For full TypeScript support with IntelliSense and type checking in React, import the `Reader` component:
 
 ```tsx
-import '@readiant/reader/jsx';
+import '@readiant/reader';
+import { Reader } from '@readiant/reader/jsx';
 
 function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: number }) {
     return (
-        <readiant-reader 
+        <Reader 
             document-id={documentId}
             page={page}
             zoom-level={2}
@@ -302,11 +303,13 @@ function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: n
 }
 ```
 
-The `/jsx` import provides:
+The `Reader` component provides:
 - Full TypeScript type definitions for all attributes
 - IntelliSense autocomplete for properties and event handlers
 - Type checking for attribute values and event payloads
-- All functionality from the main import
+- React-friendly component interface
+
+**Note:** Both imports are required - `'@readiant/reader'` loads the web component runtime, while `'@readiant/reader/jsx'` provides TypeScript types.
 ```
 
 ### Vue 3

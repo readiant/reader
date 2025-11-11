@@ -1,6 +1,6 @@
 {
   "name": "@readiant/reader",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "description": "Readiant Web Component",
   "main": "lib/js/base.js",
   "module": "lib/js/base.js",
@@ -13,9 +13,7 @@
       "default": "./lib/js/index.js"
     },
     "./jsx": {
-      "types": "./lib/types/jsx.d.ts",
-      "import": "./lib/js/jsx.js",
-      "default": "./lib/js/jsx.js"
+      "types": "./lib/types/jsx.d.ts"
     },
     "./styles": "./lib/css/style.css",
     "./template": "./lib/template.html",
