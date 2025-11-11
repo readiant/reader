@@ -1,4 +1,4 @@
-name: Publish to npm when version changes
+name: Publish to npm when version is newer
 
 on:
   push:
@@ -10,31 +10,38 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Detect version change
-        id: version
+      - name: Read local version
+        id: local
+        run: echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Fetch published version from npm
+        id: remote
         run: |
-          prev=$(git show ${{ github.event.before }}:package.json 2>/dev/null | jq -r .version)
-          curr=$(jq -r .version package.json)
-          echo "prev=$prev"
-          echo "curr=$curr"
-          if [ "$prev" != "$curr" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+          pkg=$(jq -r .name package.json)
+          published=$(npm view "$pkg" version 2>/dev/null || echo "0.0.0")
+          echo "published=$published" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          echo "Local:    ${{ steps.local.outputs.version }}"
+          echo "Published: ${{ steps.remote.outputs.published }}"
+          if [ "$(npm version --no-git-tag-version --allow-same-version ${{ steps.local.outputs.version }} >/dev/null 2>&1 && echo ok)" ] && \
+             [ "$(npx semver -r ">${{ steps.remote.outputs.published }}" ${{ steps.local.outputs.version }} || true)" = "${{ steps.local.outputs.version }}" ]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Node
-        if: steps.version.outputs.changed == 'true'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
+        if: steps.compare.outputs.should_publish == 'true'
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org/'
 
       - name: Publish to npm
-        if: steps.version.outputs.changed == 'true'
+        if: steps.compare.outputs.should_publish == 'true'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
