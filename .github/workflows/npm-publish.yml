@@ -1,98 +1,40 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
-name: Node.js Package
+name: Publish to npm when version changes
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   publish:
-    name: Publish if package.json version changed
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
-      - name: Authenticate to npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Check if package.json changed in this push
-        id: changed
+      - name: Detect version change
+        id: version
         run: |
-          # list files changed between previous commit and current commit
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }} > changed.txt || true
-          if grep -qE '^package.json$' changed.txt; then
+          prev=$(git show ${{ github.event.before }}:package.json 2>/dev/null | jq -r .version)
+          curr=$(jq -r .version package.json)
+          echo "prev=$prev"
+          echo "curr=$curr"
+          if [ "$prev" != "$curr" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Get new version
-        if: steps.changed.outputs.changed == 'true'
-        id: newver
-        run: |
-          new_version=$(node -p "require('./package.json').version")
-          echo "new_version=$new_version" >> $GITHUB_ENV
-
-      - name: Get previous version from previous commit
-        if: steps.changed.outputs.changed == 'true'
-        id: prevver
-        run: |
-          # read package.json as-of the previous commit in this push
-          prev_json=$(git show ${{ github.event.before }}:package.json 2>/dev/null || echo "{}")
-          prev_version=$(node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" <<<"$prev_json")
-          echo "prev_version=$prev_version" >> $GITHUB_ENV
-
-      - name: Compare versions and decide
-        if: steps.changed.outputs.changed == 'true'
-        id: compare
-        run: |
-          echo "previous: $prev_version"
-          echo "current:  $new_version"
-          if [ -z "$prev_version" ]; then
-            echo "prev_empty=true" >> $GITHUB_OUTPUT
-          else
-            echo "prev_empty=false" >> $GITHUB_OUTPUT
-          fi
-          if [ "$new_version" = "$prev_version" ]; then
-            echo "should_publish=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged — skipping publish"
-          else
-            echo "should_publish=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Setup Node (for publish)
-        if: steps.compare.outputs.should_publish == 'true'
+      - name: Setup Node
+        if: steps.version.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
           registry-url: 'https://registry.npmjs.org/'
 
-      - name: Authenticate to npm
-        if: steps.compare.outputs.should_publish == 'true'
-        run: |
-          # using token from repository secrets (NPM_TOKEN)
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
-      - name: Build (optional)
-        if: steps.compare.outputs.should_publish == 'true'
-        run: |
-          npm install
-          npm run build || true
-
       - name: Publish to npm
-        if: steps.compare.outputs.should_publish == 'true'
-        run: |
-          # for public packages, include --access public
-          npm publish --access public
+        if: steps.version.outputs.changed == 'true'
+        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
