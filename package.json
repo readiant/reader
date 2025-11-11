@@ -1,6 +1,6 @@
 {
   "name": "@readiant/reader",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "Readiant Web Component",
   "main": "lib/js/base.js",
   "module": "lib/js/base.js",
