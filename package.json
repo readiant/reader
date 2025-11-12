@@ -1,6 +1,6 @@
 {
   "name": "@readiant/reader",
-  "version": "0.8.12",
+  "version": "0.8.13",
   "description": "Readiant Web Component",
   "main": "lib/js/base.js",
   "module": "lib/js/base.js",
@@ -13,7 +13,9 @@
       "default": "./lib/js/index.js"
     },
     "./jsx": {
-      "types": "./lib/types/jsx.d.ts"
+      "types": "./lib/types/jsx.d.ts",
+      "import": "./lib/js/jsx.js",
+      "default": "./lib/js/jsx.js"
     },
     "./styles": "./lib/css/style.css",
     "./template": "./lib/template.html",
@@ -48,7 +50,8 @@
     "maintained node versions"
   ],
   "peerDependencies": {
-    "@webcomponents/webcomponentsjs": "^2.8.0"
+    "@webcomponents/webcomponentsjs": "^2.8.0",
+    "react": ">=16.8.0"
   },
   "devDependencies": {},
   "dependencies": {

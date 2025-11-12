@@ -102,7 +102,6 @@ document.body.appendChild(viewer);
     document-id="doc-123"
     page="5"
     zoom-level="2"
-    font-size="18"
     screen-mode-level="3"
     disable="print,fullscreen">
 </readiant-reader>
@@ -111,7 +110,6 @@ document.body.appendChild(viewer);
 <readiant-reader
     document-id="doc-456"
     font="Arial"
-    font-size="20"
     letter-spacing="1"
     line-height="1.5"
     word-spacing="2"
@@ -286,6 +284,8 @@ Each document requires an `index.json` file that describes the document structur
 
 ### React
 
+#### Using the Web Component Directly
+
 ```jsx
 import '@readiant/reader';
 
@@ -299,12 +299,11 @@ function DocumentViewer({ documentId, page = 1 }) {
 }
 ```
 
-**TypeScript/JSX Support:**
+#### Using the React Wrapper Component (Recommended)
 
-For full TypeScript support with IntelliSense and type checking in React, import the `Reader` component:
+For better TypeScript support and a more React-friendly API, use the `Reader` wrapper component:
 
 ```tsx
-import '@readiant/reader';
 import { Reader } from '@readiant/reader/jsx';
 
 function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: number }) {
@@ -313,20 +312,80 @@ function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: n
             document-id={documentId}
             page={page}
             zoom-level={2}
-            onDocumentLoaded={(e) => console.log('Loaded:', e.detail)}
-            onPageChanged={(e) => console.log('Page:', e.detail.page)}
+            screen-mode-level={3}
+            onDocumentLoaded={(e) => console.log('Document loaded:', e.detail)}
+            onPageChanged={(e) => console.log('Current page:', e.detail.page)}
+            onZoomChanged={(e) => console.log('Zoom level:', e.detail.zoom)}
+            onError={(e) => console.error('Error:', e.detail.message)}
         />
     );
 }
 ```
 
-The `Reader` component provides:
-- Full TypeScript type definitions for all attributes
+**Benefits of the React Wrapper:**
+- Full TypeScript type definitions for all props
 - IntelliSense autocomplete for properties and event handlers
 - Type checking for attribute values and event payloads
-- React-friendly component interface
+- No need to import the base web component separately
 
-**Note:** Both imports are required - `'@readiant/reader'` loads the web component runtime, while `'@readiant/reader/jsx'` provides TypeScript types.
+**Available Props:**
+
+All web component attributes are available as props with full TypeScript support:
+
+```tsx
+interface ReaderProps {
+  // Document configuration
+  'document-id'?: string;
+  page?: number | string;
+  url?: string;
+  'use-signed-urls'?: boolean | string;
+  orientation?: string;
+  disable?: string;
+  
+  // Visual appearance
+  'zoom-level'?: number | string;
+  font?: string;
+  'letter-spacing'?: number | string;
+  'line-height'?: number | string;
+  'word-spacing'?: number | string;
+  'screen-mode-level'?: number | string;
+  'color-blind-filter'?: string;
+  'image-quality-level'?: number | string;
+  'text-mode-level'?: number | string;
+  
+  // Audio options
+  'audio-highlighting-level'?: number | string;
+  'countdown-level'?: number | string;
+  'playback-rate'?: number | string;
+  'read-stop-level'?: number | string;
+  'subtitle-font-size'?: number | string;
+  'subtitle-level'?: number | string;
+  
+  // Event handlers
+  onDocumentLoaded?: (event: CustomEvent<{
+    documentId: string;
+    totalPages: number;
+    isReady: boolean;
+  }>) => void;
+  onPageChanged?: (event: CustomEvent<{
+    page: number;
+    currentPage: number;
+    totalPages: number;
+    direction?: string;
+  }>) => void;
+  onZoomChanged?: (event: CustomEvent<{
+    zoom: number;
+    level: number;
+  }>) => void;
+  onThemeChanged?: (event: CustomEvent<{
+    theme: number;
+    level: number;
+  }>) => void;
+  onError?: (event: CustomEvent<{
+    message: string;
+    type: string;
+  }>) => void;
+}
 ```
 
 ### Vue 3
@@ -458,12 +517,6 @@ viewer.addEventListener('theme-changed', (event) => {
 viewer.addEventListener('font-changed', (event) => {
     console.log('Font changed:', event.detail.font);
     // event.detail: { font, fontKey }
-});
-
-// Font size changed
-viewer.addEventListener('font-size-changed', (event) => {
-    console.log('Font size changed:', event.detail.fontSize);
-    // event.detail: { fontSize, size }
 });
 
 // Audio play/pause
