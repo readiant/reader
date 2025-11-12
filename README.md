@@ -67,6 +67,7 @@ document.body.appendChild(viewer);
 | `use-signed-urls` | boolean | `false` | Enable S3 signed URL support |
 | `orientation` | string | `'auto'` | Document orientation (portrait, landscape) |
 | `disable` | string | `''` | Comma-separated features to disable |
+| `concurrency-limit` | number | `6` | Maximum concurrent file downloads (1-20) |
 
 ### Visual Appearance
 
@@ -126,6 +127,12 @@ document.body.appendChild(viewer);
     subtitle-level="1"
     subtitle-font-size="18">
 </readiant-reader>
+
+<!-- Performance optimization for large documents -->
+<readiant-reader
+    document-id="doc-large"
+    concurrency-limit="10">
+</readiant-reader>
 ```
 
 ## Document Sources
@@ -146,29 +153,39 @@ Load documents from cloud storage or any HTTP/HTTPS server:
 <!-- Amazon S3 -->
 <readiant-reader 
     document-id="remote-doc"
-    url="https://mybucket.s3.amazonaws.com"
-    remote-source="true">
+    url="https://mybucket.s3.amazonaws.com/docs/remote-doc/">
 </readiant-reader>
 
 <!-- Custom Server -->
 <readiant-reader 
     document-id="remote-doc"
-    url="https://documents.myserver.com"
-    remote-source="true">
+    url="https://documents.myserver.com/docs/remote-doc/">
 </readiant-reader>
 ```
 
 ### Secure S3 Signed URLs
 
+When using signed URLs, the `url` attribute should point directly to the signed `index.json` URL. The `document-id` attribute is optional in this case.
+
 ```html
 <!-- Private S3 documents with signed URLs -->
 <readiant-reader
+    url="https://mybucket.s3.amazonaws.com/docs/doc-123/index.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+    use-signed-urls="true">
+</readiant-reader>
+
+<!-- With explicit document ID -->
+<readiant-reader
     document-id="doc-123"
-    url="https://mybucket.s3.amazonaws.com"
-    remote-source="true"
+    url="https://mybucket.s3.amazonaws.com/docs/doc-123/index.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
     use-signed-urls="true">
 </readiant-reader>
 ```
+
+**Note:** When `use-signed-urls="true"`:
+- The `url` attribute must point to the complete signed `index.json` URL (not a base path)
+- All file paths in the `index.json` should be complete signed URLs
+- The `document-id` is optional and will be auto-generated if not provided
 
 ## Document Index Structure
 
