@@ -29,10 +29,10 @@ import { TextMode } from './textMode.js';
 import { Zoom } from './zoom.js';
 export class Readiant {
     static get menuButtons() {
-        return document.getElementsByClassName('rdnt__menu__buttons')[0];
+        return Readiant.root.querySelector('.rdnt__menu__buttons');
     }
     static get pageNumber() {
-        return document.getElementsByClassName('rdnt__page-number')[0];
+        return Readiant.root.querySelector('.rdnt__page-number');
     }
     static close(containers) {
         if (typeof containers === 'undefined')
@@ -45,12 +45,18 @@ export class Readiant {
                 Container.Settings,
             ];
         for (const container of containers) {
-            const element = document.getElementsByClassName(container)[0];
+            const element = Readiant.root.querySelector(`.${container}`);
             if (typeof element !== 'undefined' &&
                 !element.classList.contains(CLASS_HIDDEN))
                 this.toggle(container);
         }
-        document.documentElement.removeEventListener('click', this.closeOnClick);
+        const rootNode = Readiant.root.getRootNode();
+        if (rootNode instanceof Document) {
+            rootNode.documentElement.removeEventListener('click', this.closeOnClick);
+        }
+        else {
+            rootNode.host.removeEventListener('click', this.closeOnClick);
+        }
     }
     static closeOnClick(event) {
         const containers = [
@@ -114,9 +120,9 @@ export class Readiant {
         }
     }
     static toggle(container) {
-        const button = document.getElementsByClassName(`${container}-button`)[0];
-        const element = document.getElementsByClassName(container)[0];
-        const nextButton = document.getElementsByClassName('rdnt__navigation--next')[0];
+        const button = Readiant.root.querySelector(`.${container}-button`);
+        const element = Readiant.root.querySelector(`.${container}`);
+        const nextButton = Readiant.root.querySelector('.rdnt__navigation--next');
         if (element.classList.contains(CLASS_HIDDEN))
             this.close();
         element.classList.toggle(CLASS_HIDDEN);
@@ -136,16 +142,16 @@ export class Readiant {
         this.menuButtons.classList.toggle(CLASS_HIDDEN);
         this.pageNumber.classList.toggle(CLASS_HIDDEN);
     }
-    constructor() {
-        this.advancedSettings = document.getElementsByClassName('rdnt__advanced-settings');
-        this.audioButton = document.getElementsByClassName('rdnt__start')[0];
-        this.closeScreenSettingsButton = document.getElementsByClassName('rdnt__close-screen-settings')[0];
-        this.closeSettingsButton = document.getElementsByClassName('rdnt__close-settings')[0];
-        this.moreButton = document.getElementsByClassName('rdnt__more')[0];
-        this.printButton = document.getElementsByClassName('rdnt__print-button')[0];
-        this.screenSettingsButton = document.getElementsByClassName('rdnt__screen-settings-button')[0];
-        this.settingsButton = document.getElementsByClassName('rdnt__settings-button')[0];
-        this.toggleButtons = document.getElementsByClassName('rdnt__block-toggle');
+    constructor(root) {
+        this.advancedSettings = Readiant.root.querySelectorAll('.rdnt__advanced-settings');
+        this.audioButton = Readiant.root.querySelector('.rdnt__start');
+        this.closeScreenSettingsButton = Readiant.root.querySelector('.rdnt__close-screen-settings');
+        this.closeSettingsButton = Readiant.root.querySelector('.rdnt__close-settings');
+        this.moreButton = Readiant.root.querySelector('.rdnt__more');
+        this.printButton = Readiant.root.querySelector('.rdnt__print-button');
+        this.screenSettingsButton = Readiant.root.querySelector('.rdnt__screen-settings-button');
+        this.settingsButton = Readiant.root.querySelector('.rdnt__settings-button');
+        this.toggleButtons = Readiant.root.querySelectorAll('.rdnt__block-toggle');
         this.accepted = {
             audioHighlightingLevel: AcceptedTypes.Number,
             colorBlindFilter: AcceptedTypes.String,
@@ -181,6 +187,9 @@ export class Readiant {
             page: 1,
         };
         this.connected = false;
+        if (root) {
+            Readiant.root = root;
+        }
         if (isOffline) {
             this.connect().catch((e) => {
                 Readiant.errorHandler(e);
@@ -839,7 +848,7 @@ export class Readiant {
         const parent = element.parentNode;
         const top = parent.parentNode;
         const toggle = element.children[1];
-        const toggleButtons = top.getElementsByClassName('rdnt__block-toggle');
+        const toggleButtons = top.querySelectorAll('.rdnt__block-toggle');
         for (const toggleButton of toggleButtons) {
             if (toggleButton.isEqualNode(toggle) ||
                 toggleButton.classList.contains('rdnt__block-toggle--ignore'))
@@ -855,6 +864,7 @@ export class Readiant {
         block.classList.toggle('rdnt__block-view--active');
     }
 }
+Readiant.root = document;
 Readiant.preview = false;
 Readiant.type = ContentType.SVG;
 export default () => new Readiant();

@@ -1,5 +1,6 @@
 import { Fullscreen } from './fullscreen.js';
 import { Navigation } from './navigation.js';
+import { Readiant } from './readiant.js';
 import { ScreenMode } from './screenMode.js';
 import { Zoom } from './zoom.js';
 const initializedElements = new WeakSet();
@@ -69,7 +70,7 @@ class ReadiantElement extends HTMLElement {
                 const url = this.getAttribute('url');
                 if (documentId !== null || url !== null) {
                     const { Readiant } = await import('./readiant.js');
-                    new Readiant();
+                    new Readiant(shadow);
                 }
             }
             catch (error) {
@@ -91,7 +92,7 @@ class ReadiantElement extends HTMLElement {
         return Navigation.pages.length;
     }
     get isLoaded() {
-        return document.querySelector('.rdnt__viewport') !== null;
+        return Readiant.root.querySelector('.rdnt__viewport') !== null;
     }
     goToPage(page) {
         Navigation.gotoPageDirectly(page);

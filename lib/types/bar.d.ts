@@ -8,43 +8,43 @@ import { Readiant } from './readiant.js';
 import { Text } from './text.js';
 export class Bar {
     static get backwardButton() {
-        return document.getElementsByClassName('rdnt__backward')[0];
+        return Readiant.root.querySelector('.rdnt__backward');
     }
     static get bar() {
-        return document.getElementsByClassName('rdnt__bottom-bar')[0];
+        return Readiant.root.querySelector('.rdnt__bottom-bar');
     }
     static get closeButton() {
-        return document.getElementsByClassName('rdnt__close-bar')[0];
+        return Readiant.root.querySelector('.rdnt__close-bar');
     }
     static get closeSettingsButton() {
-        return document.getElementsByClassName('rdnt__close-bottom-bar-settings')[0];
+        return Readiant.root.querySelector('.rdnt__close-bottom-bar-settings');
     }
     static get currentReadStop() {
-        return document.getElementsByClassName('rdnt__current-selection--read-stop')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--read-stop');
     }
     static get currentSubtitleFontSize() {
-        return document.getElementsByClassName('rdnt__current-selection--subtitle-font-size')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--subtitle-font-size');
     }
     static get forwardButton() {
-        return document.getElementsByClassName('rdnt__forward')[0];
+        return Readiant.root.querySelector('.rdnt__forward');
     }
     static get readStopButtons() {
-        return document.getElementsByClassName('rdnt__read-stop');
+        return Readiant.root.querySelectorAll('.rdnt__read-stop');
     }
     static get settings() {
-        return document.getElementsByClassName('rdnt__bottom-bar-settings')[0];
+        return Readiant.root.querySelector('.rdnt__bottom-bar-settings');
     }
     static get settingsButtons() {
-        return document.getElementsByClassName('rdnt__bottom-bar-settings-button');
+        return Readiant.root.querySelectorAll('.rdnt__bottom-bar-settings-button');
     }
     static get subtitlesRange() {
-        return document.getElementsByClassName('rdnt__subtitles-range')[0];
+        return Readiant.root.querySelector('.rdnt__subtitles-range');
     }
     static get syntaxElement() {
-        return document.getElementsByClassName('rdnt__bottom-bar__syntax')[0];
+        return Readiant.root.querySelector('.rdnt__bottom-bar__syntax');
     }
     static get syntaxOptionsElement() {
-        return document.getElementsByClassName('rdnt__bottom-bar__options')[0];
+        return Readiant.root.querySelector('.rdnt__bottom-bar__options');
     }
     static register() {
         this.subtitlesRange.addEventListener('change', (event) => {
@@ -117,7 +117,7 @@ export class Bar {
                 event = 1;
             if (event > 3)
                 event = 3;
-            const element = document.querySelector(`[data-read-stop="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-read-stop="${String(event)}"]`);
             if (element !== null) {
                 element.click();
                 title = String(element.getAttribute('data-title'));

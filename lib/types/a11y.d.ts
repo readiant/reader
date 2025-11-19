@@ -1,9 +1,10 @@
+import { Readiant } from './readiant.js';
 export class A11y {
     static get elements() {
-        return document.querySelectorAll('h5[role="button"], label[role="button"]');
+        return Readiant.root.querySelectorAll('h5[role="button"], label[role="button"]');
     }
     static get icons() {
-        return document.querySelectorAll('svg');
+        return Readiant.root.querySelectorAll('svg');
     }
     static register() {
         for (const element of this.elements)

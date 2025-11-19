@@ -7,10 +7,10 @@ import { LogType } from './log.js';
 import { Readiant } from './readiant.js';
 export class ImageQuality {
     static get buttons() {
-        return document.getElementsByClassName('rdnt__image-quality');
+        return Readiant.root.querySelectorAll('.rdnt__image-quality');
     }
     static get current() {
-        return document.getElementsByClassName('rdnt__current-selection--image-quality')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--image-quality');
     }
     static register() {
         for (const button of this.buttons)
@@ -27,7 +27,7 @@ export class ImageQuality {
                 event = 1;
             if (event > 3)
                 event = 3;
-            const element = document.querySelector(`[data-image-quality="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-image-quality="${String(event)}"]`);
             if (element === null)
                 return;
             element.click();

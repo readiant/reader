@@ -12,79 +12,79 @@ import { ClientActionType, ServerActionType, SpeechMarkType, } from './consts.js
 import { Readiant } from './readiant.js';
 export class Audio {
     static get countdownButtons() {
-        return document.getElementsByClassName('rdnt__countdown-button');
+        return Readiant.root.querySelectorAll('.rdnt__countdown-button');
     }
     static get countdownCurrent() {
-        return document.getElementsByClassName('rdnt__current-selection--countdown')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--countdown');
     }
     static get countdownElement() {
-        return document.getElementsByClassName('rdnt__countdown')[0];
+        return Readiant.root.querySelector('.rdnt__countdown');
     }
     static get countdownSettings() {
-        return document.getElementsByClassName('rdnt__countdown-settings')[0];
+        return Readiant.root.querySelector('.rdnt__countdown-settings');
     }
     static get lineHighlighterButtons() {
-        return document.getElementsByClassName('rdnt__audio-line-highlighter-button');
+        return Readiant.root.querySelectorAll('.rdnt__audio-line-highlighter-button');
     }
     static get lineHighlighterCurrent() {
-        return document.getElementsByClassName('rdnt__current-selection--audio-line-highlighter')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--audio-line-highlighter');
     }
     static get pauseButton() {
-        return document.getElementsByClassName('rdnt__pause')[0];
+        return Readiant.root.querySelector('.rdnt__pause');
     }
     static get playButton() {
-        return document.getElementsByClassName('rdnt__play')[0];
+        return Readiant.root.querySelector('.rdnt__play');
     }
     static get playbackRateMinus() {
-        return document.getElementsByClassName('rdnt__playback-rate--minus')[0];
+        return Readiant.root.querySelector('.rdnt__playback-rate--minus');
     }
     static get playbackRatePlus() {
-        return document.getElementsByClassName('rdnt__playback-rate--plus')[0];
+        return Readiant.root.querySelector('.rdnt__playback-rate--plus');
     }
     static get playbackRateCurrent() {
-        return document.getElementsByClassName('rdnt__current-selection--playback-rate')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--playback-rate');
     }
     static get playbackRateInputs() {
-        return document.getElementsByClassName('rdnt__playback-rate');
+        return Readiant.root.querySelectorAll('.rdnt__playback-rate');
     }
     static get playbackRateSettings() {
-        return document.getElementsByClassName('rdnt__playback-rate-settings')[0];
+        return Readiant.root.querySelector('.rdnt__playback-rate-settings');
     }
     static get playbackRateTopSettings() {
-        return document.getElementsByClassName('rdnt__menu__buttons-audio')[0];
+        return Readiant.root.querySelector('.rdnt__menu__buttons-audio');
     }
     static get progressElement() {
-        return document.getElementsByClassName('rdnt__audio-progress')[0];
+        return Readiant.root.querySelector('.rdnt__audio-progress');
     }
     static get progressValue() {
-        return document.getElementsByClassName('rdnt__audio-progress-value')[0];
+        return Readiant.root.querySelector('.rdnt__audio-progress-value');
     }
     static get providersList() {
-        return document.getElementsByClassName('rdnt__providers-list')[0];
+        return Readiant.root.querySelector('.rdnt__providers-list');
     }
     static get providersSettings() {
-        return document.getElementsByClassName('rdnt__providers-settings')[0];
+        return Readiant.root.querySelector('.rdnt__providers-settings');
     }
     static get settingsButtons() {
-        return document.getElementsByClassName('rdnt__bottom-bar-settings-button');
+        return Readiant.root.querySelectorAll('.rdnt__bottom-bar-settings-button');
     }
     static get startButton() {
-        return document.getElementsByClassName('rdnt__start')[0];
+        return Readiant.root.querySelector('.rdnt__start');
     }
     static get stopButton() {
-        return document.getElementsByClassName('rdnt__stop')[0];
+        return Readiant.root.querySelector('.rdnt__stop');
     }
     static get subtitlesButtons() {
-        return document.getElementsByClassName('rdnt__subtitles-button');
+        return Readiant.root.querySelectorAll('.rdnt__subtitles-button');
     }
     static get subtitlesCurrent() {
-        return document.getElementsByClassName('rdnt__current-selection--subtitles')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--subtitles');
     }
     static get subtitlesFontSizeSettings() {
-        return document.getElementsByClassName('rdnt__subtitles-font-size-settings')[0];
+        return Readiant.root.querySelector('.rdnt__subtitles-font-size-settings');
     }
     static get voice() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-voice'));
+        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-voice'));
     }
     static get playing() {
         return typeof this.element === 'undefined' ? false : !this.element.paused;
@@ -240,7 +240,7 @@ export class Audio {
                 event = 1;
             if (event > 3)
                 event = 3;
-            const element = document.querySelector(`[data-countdown="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-countdown="${String(event)}"]`);
             if (element !== null) {
                 element.click();
                 title = String(element.getAttribute('data-title'));
@@ -524,7 +524,7 @@ export class Audio {
                 event = 1;
             if (event > 3)
                 event = 3;
-            const element = document.querySelector(`[data-audio-line-highlighter="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-audio-line-highlighter="${String(event)}"]`);
             if (element !== null) {
                 element.click();
                 title = String(element.getAttribute('data-title'));
@@ -590,7 +590,7 @@ export class Audio {
                 event = 1;
             if (event > 3)
                 event = 3;
-            const element = document.querySelector(`[data-subtitles="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-subtitles="${String(event)}"]`);
             if (element !== null) {
                 element.click();
                 title = String(element.getAttribute('data-title'));

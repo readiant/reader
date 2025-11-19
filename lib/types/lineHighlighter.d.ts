@@ -1,36 +1,37 @@
 import { Builder } from './builder.js';
 import { CLASS_BLOCK_ACTIVE, CLASS_DISABLED, CLASS_HIDDEN, CLASS_ROUND_BUTTON_ACTIVE, } from './consts.js';
+import { Readiant } from './readiant.js';
 import { Storage } from './storage.js';
 export class LineHighlighter {
     static get bottom() {
-        return document.getElementsByClassName('rdnt__line-highlighter--bottom')[0];
+        return Readiant.root.querySelector('.rdnt__line-highlighter--bottom');
     }
     static get buttons() {
-        return document.getElementsByClassName('rdnt__line-highlight');
+        return Readiant.root.querySelectorAll('.rdnt__line-highlight');
     }
     static get center() {
-        return document.getElementsByClassName('rdnt__line-highlighter--center')[0];
+        return Readiant.root.querySelector('.rdnt__line-highlighter--center');
     }
     static get colorButtons() {
-        return document.getElementsByClassName('rdnt__line-highlighter-color');
+        return Readiant.root.querySelectorAll('.rdnt__line-highlighter-color');
     }
     static get currents() {
-        return document.getElementsByClassName('rdnt__current-selection--line-highlighter');
+        return Readiant.root.querySelectorAll('.rdnt__current-selection--line-highlighter');
     }
     static get off() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-off'));
+        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-off'));
     }
     static get on() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-on'));
+        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-on'));
     }
     static get ranges() {
-        return document.getElementsByClassName('rdnt__line-highlighter-range');
+        return Readiant.root.querySelectorAll('.rdnt__line-highlighter-range');
     }
     static get settings() {
-        return document.getElementsByClassName('rdnt__line-highlighter-settings');
+        return Readiant.root.querySelectorAll('.rdnt__line-highlighter-settings');
     }
     static get top() {
-        return document.getElementsByClassName('rdnt__line-highlighter--top')[0];
+        return Readiant.root.querySelector('.rdnt__line-highlighter--top');
     }
     static register() {
         for (const button of this.buttons)

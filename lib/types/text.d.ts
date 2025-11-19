@@ -3,17 +3,18 @@ import { Bar } from './bar.js';
 import { CLASS_ROUND_BUTTON_ACTIVE } from './consts.js';
 import { eventLogger } from './eventLogger.js';
 import { LogType } from './log.js';
+import { Readiant } from './readiant.js';
 import { Stream } from './stream.js';
 import { ClientActionType, ServerActionType, } from './consts.js';
 export class Text {
     static get current() {
-        return document.getElementsByClassName('rdnt__current-selection--translation')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--translation');
     }
     static get translateButton() {
-        return document.getElementsByClassName('rdnt__translate')[0];
+        return Readiant.root.querySelector('.rdnt__translate');
     }
     static get translateList() {
-        return document.getElementsByClassName('rdnt__translation-list')[0];
+        return Readiant.root.querySelector('.rdnt__translation-list');
     }
     static register(translations, defaultLanguage) {
         if (typeof this.translateButton !== 'undefined') {

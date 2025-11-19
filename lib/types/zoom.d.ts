@@ -2,12 +2,13 @@ import { Builder } from './builder.js';
 import { eventLogger } from './eventLogger.js';
 import { LogType } from './log.js';
 import { Navigation } from './navigation.js';
+import { Readiant } from './readiant.js';
 export class Zoom {
     static get current() {
-        return document.getElementsByClassName('rdnt__current-selection--zoom')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--zoom');
     }
     static get range() {
-        return document.getElementsByClassName('rdnt__zoom')[0];
+        return Readiant.root.querySelector('.rdnt__zoom');
     }
     static add(handler) {
         this.handlers.add(handler);
@@ -107,7 +108,6 @@ export class Zoom {
                         2;
             scrollY = position[1];
         }
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         window.scroll(scrollX, scrollY);
     }
     static updateScrollPosition() {
@@ -115,7 +115,6 @@ export class Zoom {
         const deltaY = this.lastKnownMouseY - this.startY;
         const newScrollX = this.scrollLeft - deltaX;
         const newScrollY = this.scrollTop - deltaY;
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         window.scrollTo(newScrollX, newScrollY);
         this.animationFrameId = undefined;
     }

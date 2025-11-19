@@ -6,31 +6,37 @@ import { Stream } from './stream.js';
 import { ClientActionType, ServerActionType, } from './consts.js';
 export class Search {
     static get button() {
-        return document.getElementsByClassName('rdnt__search-button')[0];
+        return Readiant.root.querySelector('.rdnt__search-button');
     }
     static get closeButton() {
-        return document.getElementsByClassName('rdnt__close-search')[0];
+        return Readiant.root.querySelector('.rdnt__close-search');
     }
     static get input() {
-        return document.getElementsByClassName('rdnt__input')[0];
+        return Readiant.root.querySelector('.rdnt__input');
     }
     static get nResults() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-n-results'));
+        return String(Readiant.root
+            .querySelector('.rdnt__i18n')
+            .getAttribute('data-n-results'));
     }
     static get noResults() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-no-results'));
+        return String(Readiant.root
+            .querySelector('.rdnt__i18n')
+            .getAttribute('data-no-results'));
     }
     static get oneResult() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-one-result'));
+        return String(Readiant.root
+            .querySelector('.rdnt__i18n')
+            .getAttribute('data-one-result'));
     }
     static get page() {
-        return String(document.getElementsByClassName('rdnt__i18n')[0].getAttribute('data-page'));
+        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-page'));
     }
     static get results() {
-        return document.getElementsByClassName('rdnt__search-results')[0];
+        return Readiant.root.querySelector('.rdnt__search-results');
     }
     static get summary() {
-        return document.getElementsByClassName('rdnt__search-summary')[0];
+        return Readiant.root.querySelector('.rdnt__search-summary');
     }
     static register() {
         this.button.addEventListener('click', () => {
@@ -77,7 +83,7 @@ export class Search {
         this.results.appendChild(fragment);
     }
     static remove() {
-        const element = document.getElementsByClassName(Container.Search)[0];
+        const element = Readiant.root.querySelector(`.${Container.Search}`);
         this.button.remove();
         element.remove();
     }
@@ -104,7 +110,6 @@ export class Search {
         const spans = [];
         const lowerCase = match.toLowerCase();
         let lastIndex = -1;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         while (true) {
             lastIndex = lowerCase.indexOf(query.toLowerCase(), lastIndex + 1);
             if (lastIndex !== -1) {

@@ -5,19 +5,19 @@ import { LogType } from './log.js';
 import { Readiant } from './readiant.js';
 export class Fullscreen {
     static get buttons() {
-        return document.getElementsByClassName('rdnt__fullscreen-button');
+        return Readiant.root.querySelectorAll('.rdnt__fullscreen-button');
     }
     static get current() {
-        return document.getElementsByClassName('rdnt__current-selection--fullscreen')[0];
+        return Readiant.root.querySelector('.rdnt__current-selection--fullscreen');
     }
     static get enableIcon() {
-        return document.getElementsByClassName('rdnt__button-fullscreen')[0];
+        return Readiant.root.querySelector('.rdnt__button-fullscreen');
     }
     static get exitIcon() {
-        return document.getElementsByClassName('rdnt__button-fullscreen-disabled')[0];
+        return Readiant.root.querySelector('.rdnt__button-fullscreen-disabled');
     }
     static get toggleButton() {
-        return document.getElementsByClassName('rdnt__fullscreen-toggle')[0];
+        return Readiant.root.querySelector('.rdnt__fullscreen-toggle');
     }
     static register() {
         if (!fullscreen)
@@ -38,7 +38,7 @@ export class Fullscreen {
                 event = 0;
             if (event > 1)
                 event = 1;
-            const element = document.querySelector(`[data-fullscreen="${String(event)}"]`);
+            const element = Readiant.root.querySelector(`[data-fullscreen="${String(event)}"]`);
             if (element === null)
                 return;
             element.click();
