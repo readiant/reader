@@ -187,6 +187,7 @@ export class Readiant {
             page: 1,
         };
         this.connected = false;
+        this.fonts = {};
         if (root) {
             Readiant.root = root;
         }
@@ -386,6 +387,21 @@ export class Readiant {
                 await Builder.definitions(await this.replaceImageURLs(elements, imageInfo));
                 return;
             }
+            if (filePath.startsWith('stylesheet') ||
+                filePath.includes('/stylesheet')) {
+                const css = await response.text();
+                const stylesheet = new CSSStyleSheet();
+                await stylesheet.replace(css);
+                this.stylesheet = stylesheet;
+                return;
+            }
+            if (filePath.startsWith('fonts/') || filePath.includes('/fonts/')) {
+                const fontName = fileNameWithoutExtension;
+                if (typeof this.fonts[fontName] === 'undefined')
+                    this.fonts[fontName] = {};
+                this.fonts[fontName][fileExtension] = fileUrl;
+                return;
+            }
         };
         const worker = async () => {
             while (queue.length > 0) {
@@ -403,8 +419,9 @@ export class Readiant {
             return;
         const directionFromString = (s) => s === 'rtl' ? Direction.Rtl : Direction.Ltr;
         Readiant.type = ContentType.HTML;
-        Builder.register(document);
+        Builder.register();
         Builder.setDirection(directionFromString(direction));
+        Builder.setStylesheet(document, this.fonts, this.stylesheet);
         Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
         await this.register({}, chapters, translations);
     }
@@ -412,8 +429,9 @@ export class Readiant {
         if (this.connected)
             return;
         Readiant.type = ContentType.SVG;
-        Builder.register(document);
+        Builder.register();
         Builder.setDirection(rtl ? Direction.Rtl : Direction.Ltr);
+        Builder.setStylesheet(document, this.fonts, this.stylesheet);
         Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
         await this.register(availableAudio, chapters, translations);
     }
@@ -814,21 +832,15 @@ export class Readiant {
     async replaceImageURL(definition, imageInfo) {
         if (!(definition.includes('<image') || definition.includes('<img')) ||
             typeof this.options.id === 'undefined' ||
+            typeof this.options.url === 'undefined' ||
             typeof imageInfo === 'undefined')
             return definition;
         let def = definition;
         for (const info of imageInfo) {
-            let imageUrl;
-            if (this.options.useSignedUrls === true &&
-                'signedUrl' in info &&
-                typeof info.signedUrl === 'string' &&
-                info.signedUrl.length > 0) {
-                imageUrl = info.signedUrl;
-            }
-            else {
-                const imagePath = `docs/${this.options.id}/images/${info.id}_4.${info.transparent ? 'png' : 'jpg'}`;
-                imageUrl = imagePath;
-            }
+            const imageUrl = this.options.useSignedUrls === true &&
+                typeof info.signedUrl === 'string'
+                ? info.signedUrl
+                : `${this.options.url}images/${info.id}_4.${info.transparent ? 'png' : 'jpg'}`;
             def = def.replaceAll(info.id, imageUrl);
         }
         return def;

@@ -8,7 +8,6 @@ import { Bar } from './bar.js';
 import { CLASS_ACTIVE, CLASS_ANIMATE_LEFT, CLASS_ANIMATE_RIGHT, CLASS_HIDDEN, CLASS_HIGHLIGHT_ACTIVE, CLASS_HIGHLIGHT_IGNORE, CLASS_HIGHLIGHT_SYNTAX_ACTIVE, CLASS_HIGHLIGHT_SYNTAX_WORD_ACTIVE, CLASS_HIGHLIGHT_WORD, CLASS_HIGHLIGHT_WORD_ACTIVE, CLASS_SINGLE, NAMESPACE_SVG, NAMESPACE_XLINK, AudioPlayingState, ContentType, Direction, OrientationMode, PagePosition, } from './consts.js';
 import { debounce } from './debounce.js';
 import { ResizeObserver, specGetScrollLeft, specSetScrollLeft, } from './detection.js';
-import { isOffline } from './env.js';
 import { eventLogger } from './eventLogger.js';
 import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
@@ -100,14 +99,7 @@ export class Builder {
     static get currentPage() {
         return Math.floor(specGetScrollLeft(this.htmlPage) / this.pageSizeHTML());
     }
-    static register(id) {
-        const link = document.createElement('link');
-        if (isOffline)
-            link.setAttribute('href', `/docs/${id}/stylesheet.css`);
-        else
-            link.setAttribute('href', `/files/stylesheet/${id}`);
-        link.setAttribute('rel', 'stylesheet');
-        document.head.appendChild(link);
+    static register() {
         if (Readiant.type === ContentType.HTML) {
             this.htmlPage.classList.remove(CLASS_HIDDEN);
             this.left.remove();
@@ -680,6 +672,38 @@ export class Builder {
                 htmlPage.classList.remove('rdnt__html-page--rtl');
         }
         this.direction = direction;
+    }
+    static setStylesheet(id, fonts, stylesheet) {
+        if (typeof stylesheet !== 'undefined') {
+            for (const rule of stylesheet.cssRules) {
+                if (rule instanceof CSSFontFaceRule) {
+                    const fontFamily = rule.style.getPropertyValue('font-family');
+                    const cleanFontName = fontFamily.replace(/['"]/g, '').trim();
+                    if (typeof fonts[cleanFontName] !== 'undefined') {
+                        const fontUrls = fonts[cleanFontName];
+                        let sources = [];
+                        if (typeof fontUrls.woff2 === 'string') {
+                            sources = [...sources, `url(${fontUrls.woff2}) format('woff2')`];
+                        }
+                        if (typeof fontUrls.woff === 'string') {
+                            sources = [...sources, `url(${fontUrls.woff}) format('woff')`];
+                        }
+                        if (sources.length > 0)
+                            rule.style.setProperty('src', sources.join(','));
+                    }
+                }
+            }
+            document.adoptedStyleSheets = [
+                ...document.adoptedStyleSheets,
+                stylesheet,
+            ];
+        }
+        else {
+            const link = document.createElement('link');
+            link.setAttribute('href', `/files/stylesheet/${id}`);
+            link.setAttribute('rel', 'stylesheet');
+            document.head.appendChild(link);
+        }
     }
     static distance(a, b) {
         return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
