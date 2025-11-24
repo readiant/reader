@@ -17,7 +17,7 @@ export class Text {
         return Readiant.root.querySelector('.rdnt__translation-list');
     }
     static register(translations, defaultLanguage) {
-        if (typeof this.translateButton !== 'undefined') {
+        if (this.translateButton !== null) {
             this.languages = translations;
             this.translateButton.addEventListener('click', () => {
                 this.toggleTranslate();
