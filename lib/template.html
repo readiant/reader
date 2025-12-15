@@ -63,6 +63,8 @@
         </div>
         <div class="rdnt__menu__buttons">
           <button
+            aria-expanded="false"
+            aria-haspopup="menu"
             aria-label="Open or close the chapter index"
             class="rdnt__button rdnt__chapters-button rdnt__tooltip bottom left hidden"
             data-title="Chapters"
@@ -70,6 +72,8 @@
             <svg class="rdnt__button-icon" viewBox="0 0 21.26 21.26"><path d="M2.258 2.088h4.271v4.271H2.258V2.088zm6.407 1.068h10.677v2.135H8.665V3.156zM2.258 8.494h4.271v4.271H2.258V8.494zm6.407 1.068h10.677v2.135H8.665V9.562zm-6.407 5.339h4.271v4.271H2.258v-4.271zm6.407 1.068h10.677v2.135H8.665v-2.135z"/></svg>
           </button>
           <button
+            aria-expanded="false"
+            aria-haspopup="menu"
             aria-label="Open or close reading tools"
             class="rdnt__button rdnt__settings-button rdnt__tooltip bottom left"
             data-title="Reading tools"
@@ -93,6 +97,8 @@
               <svg class="rdnt__stop-icon" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg>
             </button>
             <button
+              aria-expanded="false"
+              aria-haspopup="menu"
               aria-label="Open or close audio preferences"
               class="rdnt__button rdnt__bottom-bar-settings-button rdnt__tooltip bottom left visually-hidden hidden"
               data-title="Audio preferences"
@@ -135,6 +141,8 @@
           </div>
           
           <button
+            aria-expanded="false"
+            aria-haspopup="menu"
             aria-label="Open or close screen settings"
             class="rdnt__button rdnt__screen-settings-button rdnt__tooltip bottom left"
             data-title="Screen"
@@ -142,6 +150,8 @@
             <svg class="rdnt__button-icon" viewBox="0 0 141.73 141.73"><path d="M57.826 14.29h26.078v42.94h43.615v26.078H83.904v44.514H57.826V83.308H14.212V57.23h43.614V14.29z"/></svg>
           </button>
           <button
+            aria-expanded="false"
+            aria-haspopup="menu"
             aria-label="Open or close the annotation settings"
             class="rdnt__button rdnt__annotations-button rdnt__tooltip bottom left hidden"
             data-title="Annotations"
@@ -158,6 +168,8 @@
           </button>
           
           <button
+            aria-expanded="false"
+            aria-haspopup="menu"
             aria-label="Search in this document"
             class="rdnt__button rdnt__search-button rdnt__tooltip bottom left hidden"
             data-title="Search"
@@ -248,7 +260,7 @@
       </div>
     </div>
 
-    <div class="rdnt__chapters hidden">
+    <div class="rdnt__chapters hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-chapters"
@@ -258,7 +270,7 @@
       <h2 class="rdnt__title">Chapters</h2>
       <div class="rdnt__chapters-list"></div>
     </div>
-    <div class="rdnt__settings hidden">
+    <div class="rdnt__settings hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-settings"
@@ -271,7 +283,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 466.85 466.85"><path d="M463.925 122.425l-119.5-119.5c-3.9-3.9-10.2-3.9-14.1 0l-327.4 327.4c-3.9 3.9-3.9 10.2 0 14.1l119.5 119.5c3.9 3.9 10.2 3.9 14.1 0l327.4-327.4c3.9-3.9 3.9-10.2 0-14.1zm-334.5 320.3l-105.3-105.3 79.1-79.1 35.9 35.9c3.8 4 10.2 4.1 14.1.2 4-3.8 4.1-10.2.2-14.1l-.2-.2-35.9-35.8 26.1-26.1 56 56c3.9 3.9 10.3 3.9 14.1-.1 3.9-3.9 3.9-10.2 0-14.1l-56-56 26.1-26.1 35.9 35.8c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-35.9-35.8 26.1-26.1 56 56c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-56-56 26.1-26.1 35.9 35.9c3.9 3.9 10.2 4 14.1.1 3.9-3.9 4-10.2.1-14.1l-.1-.1-35.6-36.2 26.1-26.1 56 56c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-56-56 18.8-18.8 105.3 105.3-313.3 313.3z"/><path d="M137.325 331.325c-12.6-12.5-32.9-12.5-45.4 0-12.5 12.6-12.5 32.9 0 45.4s32.9 12.5 45.4 0 12.5-32.8 0-45.4zm-13.1 31c-.2.2-.5.5-1.1.4-4.7 4.7-12.4 4.7-17.2 0-4.7-4.7-4.7-12.4 0-17.2 4.7-4.7 12.4-4.7 17.2 0 4.9 4.5 5.6 11.9 1.1 16.8z"/></svg> Reading window
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -352,7 +364,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M19.24 10.492c0-4.746-3.863-8.609-8.611-8.609s-8.611 3.863-8.611 8.609c0 4.748 3.863 8.615 8.611 8.615s8.611-3.863 8.611-8.615zm-8.611 6.834a6.838 6.838 0 0 1-6.832-6.834c0-3.766 3.064-6.83 6.832-6.83s6.83 3.064 6.83 6.83a6.837 6.837 0 0 1-6.83 6.834zM0 10.494h1.355v.938H0zM19.902 10.494h1.357v.938h-1.357zM10.16.047h.938v1.355h-.938zM10.16 19.793h.938v1.355h-.938z"/><path d="M19.893 1.808l-2.366 2.364-.662-.662 2.366-2.364zM4.183 17.517l-2.426 2.426-.662-.662 2.426-2.426zM19.442 19.859l-2.232-2.232.663-.664 2.233 2.233zM3.738 4.157l-2.33-2.33.664-.663 2.33 2.33z"/></svg> Screen mode
           <span class="rdnt__block-toggle">
@@ -402,7 +414,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor rdnt__block-title--text-mode"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path fill-rule="evenodd" clip-rule="evenodd" d="M.13 11.313c5.212-8.736 15.903-8.417 20.813-.004-4.904 8.33-15.489 8.782-20.813.004zm14.418.015c.002-2.603-1.767-4.72-3.947-4.724-2.253-.005-4.06 2.054-4.062 4.63-.002 2.646 1.75 4.763 3.946 4.766 2.269.003 4.062-2.06 4.063-4.672zm4.579-.017c-1.008-1.487-2.894-3.152-4.032-3.559 1.2 2.373 1.195 4.737-.029 7.162 1.624-.865 2.948-2.05 4.061-3.603zM6.018 7.694c-1.635.869-2.963 2.057-4.06 3.602 1.043 1.515 2.829 3.094 4.034 3.566-1.198-2.377-1.2-4.741.026-7.168z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M7.852 10.424c.744 1.011 1.605 1.162 2.261.424.675-.76.565-1.768-.292-2.685 1.199-.471 2.545.317 3.102 1.419.646 1.283.517 2.899-.355 3.982-.849 1.055-2.238 1.316-3.34.628-1.143-.713-1.679-2.158-1.376-3.768z"/></svg> Display
           <span class="rdnt__block-toggle">
@@ -445,7 +457,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M18.386 1.891v4.674h-.458c-.272-1.078-.573-1.853-.904-2.324s-.786-.847-1.363-1.127c-.322-.153-.887-.229-1.693-.229h-1.286v13.321c0 .883.049 1.435.146 1.655.098.222.288.414.572.58.285.165.673.248 1.166.248h.573v.472H6.096v-.472h.573c.501 0 .904-.089 1.21-.268.221-.118.395-.322.522-.611.093-.203.14-.738.14-1.604V2.884H7.293c-1.163 0-2.008.247-2.534.739-.739.688-1.206 1.668-1.401 2.941h-.484V1.891h15.512z"/></svg> Font
           <span class="rdnt__block-toggle">
@@ -583,7 +595,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor rdnt__block-title--font-size"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M5.802 4.608h3.714l5.558 15.709h-3.56l-1.038-3.229H4.691l-1.067 3.229H.191L5.802 4.608zm-.216 9.773h4.022L7.624 8.199l-2.038 6.182zM15.317 2.014h2.091l3.128 8.841h-2.003l-.584-1.817h-3.257l-.601 1.817h-1.933l3.159-8.841zm-.121 5.501h2.264l-1.117-3.479-1.147 3.479z"/></svg> Font size
           <span class="rdnt__block-toggle">
@@ -623,7 +635,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor rdnt__block-title--letter-spacing"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M5.802 4.608h3.714l5.558 15.709h-3.56l-1.038-3.229H4.691l-1.067 3.229H.191L5.802 4.608zm-.216 9.773h4.022L7.624 8.199l-2.038 6.182zM13.335 6.304l-2.58-2.15 2.58-2.15zM18.564 2.004l2.581 2.149-2.581 2.151z"/><path d="M12.936 3.73h5.984v.847h-5.984z"/></svg> Letter spacing
           <span class="rdnt__block-toggle">
@@ -662,6 +674,7 @@
       <div class="rdnt__block">
         <h5
           class="rdnt__block-title rdnt__block-title--cursor rdnt__block-title--line-height"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M8.202 3.839h12.765v2H8.202zM8.202 7.84h12.765v2H8.202zM8.202 15.842h7.979v2H8.202zM8.202 11.84h12.765v2.001H8.202zM7.322 15.109l-3.332 4-3.334-4zM.656 7.001l3.332-4 3.334 4z"/><path d="M3.333 6.45h1.313v9.278H3.333z"/></svg> Line height
           <span class="rdnt__block-toggle">
@@ -703,6 +716,7 @@
       <div class="rdnt__block">
         <h5
           class="rdnt__block-title rdnt__block-title--cursor rdnt__block-title--word-spacing"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M4.493 10.502h12.763v2H4.493zM4.493 18.509h7.977v2H4.493zM4.493 14.505h12.763v2.002H4.493zM6.575 7.915l-4-3.332 4-3.334zM14.684 1.249l4 3.331-4 3.335z"/><path d="M5.956 3.925h9.279v1.313H5.956z"/></svg> Word spacing
           <span class="rdnt__block-toggle">
@@ -742,7 +756,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M.13 11.313c5.212-8.736 15.903-8.417 20.813-.004-4.904 8.331-15.489 8.782-20.813.004zm14.418.015c.002-2.603-1.767-4.72-3.947-4.724-2.253-.005-4.06 2.054-4.062 4.629-.002 2.647 1.75 4.764 3.946 4.767 2.269.003 4.062-2.06 4.063-4.672zm4.579-.016c-1.008-1.487-2.894-3.152-4.032-3.56 1.2 2.373 1.195 4.737-.029 7.162 1.624-.865 2.949-2.05 4.061-3.602zM6.018 7.694c-1.635.869-2.963 2.057-4.06 3.602 1.043 1.516 2.829 3.094 4.034 3.566-1.198-2.377-1.2-4.741.026-7.168z"/><path d="M7.852 10.424c.744 1.011 1.605 1.162 2.261.424.675-.76.565-1.768-.292-2.685 1.199-.471 2.545.317 3.102 1.419.646 1.283.518 2.899-.355 3.981-.849 1.056-2.237 1.316-3.339.629-1.144-.713-1.68-2.158-1.377-3.768z"/><path d="m18.641 1.11 1.415 1.414L2.43 20.15l-1.414-1.414z"/></svg> Colorblind mode
           <span class="rdnt__block-toggle">
@@ -931,7 +945,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.684 2.571H3.486V.623h14.287v1.944h-1.26c0 .42-.017.816.004 1.209.076 1.485-.4 2.808-1.174 4.044-.674 1.08-1.543 1.987-2.533 2.78-.164.132-.172.204-.002.341 1.23.993 2.275 2.146 2.981 3.576.491.992.778 2.033.728 3.154-.018.416-.002.834-.002 1.279h1.26v1.938H3.485v-1.932h1.199c0-.438.016-.84-.003-1.242-.056-1.178.256-2.266.784-3.301.703-1.377 1.72-2.492 2.911-3.461.222-.181.221-.181-.001-.362-1.183-.965-2.199-2.073-2.9-3.441-.534-1.042-.852-2.136-.794-3.322.019-.409.003-.82.003-1.256zm.822.196c0 .383.016.749-.003 1.112-.049.915.174 1.771.553 2.592.66 1.433 1.693 2.563 2.908 3.541.542.436.535 1.065.004 1.52-.429.366-.854.74-1.248 1.143-1.637 1.672-2.453 3.652-2.209 6.018.003.027.015.055.023.087h10.167c0-.372-.016-.729.003-1.086.052-1.021-.22-1.964-.673-2.862-.668-1.328-1.656-2.387-2.803-3.312-.535-.431-.524-1.06.002-1.504a17.81 17.81 0 0 0 1.154-1.042c1.684-1.69 2.559-3.692 2.313-6.115-.003-.028-.015-.056-.024-.091L5.506 2.767z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M14.593 18.046H6.618c.054-1.412.629-2.521 1.786-3.312a3.946 3.946 0 0 1 4.364-.026c1.184.785 1.775 1.904 1.825 3.338zM7.008 6.338c.357.102.674.205.996.281a5.134 5.134 0 0 0 2.775-.114c1.032-.324 2.058-.304 3.066.104.063.025.119.06.174.087-.389.376-.797.72-1.145 1.118-.624.718-1.217 1.464-1.813 2.208-.268.333-.399.331-.606-.044a4.092 4.092 0 0 0-1.017-1.223c-.828-.665-1.606-1.382-2.276-2.21-.047-.057-.089-.118-.154-.207z"/></svg> Quality
           <span class="rdnt__block-toggle">
@@ -974,7 +988,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M11.699 14.017h-2.29c-.006-.33-.009-.53-.009-.602 0-.742.123-1.354.368-1.832.246-.48.737-1.02 1.473-1.619s1.177-.991 1.32-1.177a1.57 1.57 0 0 0 .332-.97c0-.491-.195-.912-.588-1.262-.392-.35-.92-.525-1.585-.525-.641 0-1.177.183-1.608.548s-.727.922-.889 1.671l-2.317-.288c.066-1.071.522-1.982 1.369-2.731.848-.749 1.96-1.123 3.337-1.123 1.449 0 2.602.379 3.458 1.136.855.757 1.284 1.639 1.284 2.646 0 .557-.156 1.083-.47 1.581-.314.497-.987 1.174-2.018 2.031-.533.443-.864.801-.993 1.07-.127.27-.185.75-.174 1.446zm-2.29 3.396v-2.525h2.524v2.525H9.409z"/></svg> Report an issue
           <span class="rdnt__block-toggle">
@@ -1081,7 +1095,7 @@
       </svg>
     </div>
 
-    <div class="rdnt__screen-settings hidden">
+    <div class="rdnt__screen-settings hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-screen-settings"
@@ -1094,7 +1108,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 141.73 141.73"><path d="M57.826 14.29h26.078v42.94h43.615v26.078H83.904v44.514H57.826V83.308H14.212V57.23h43.614V14.29z"/></svg> Zoom
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1132,7 +1146,7 @@
         <h5
           class="rdnt__block-title rdnt__orientation-settings--title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 -0.5 21 21"><path d="M2 10.941v7h12v-7H2Zm0-2h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Zm9.012-2h-2V2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H18v-2h.012V2h-7v4.941Z"/></svg> Orientation
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1167,7 +1181,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 466.85 466.85"><path d="M463.925 122.425l-119.5-119.5c-3.9-3.9-10.2-3.9-14.1 0l-327.4 327.4c-3.9 3.9-3.9 10.2 0 14.1l119.5 119.5c3.9 3.9 10.2 3.9 14.1 0l327.4-327.4c3.9-3.9 3.9-10.2 0-14.1zm-334.5 320.3l-105.3-105.3 79.1-79.1 35.9 35.9c3.8 4 10.2 4.1 14.1.2 4-3.8 4.1-10.2.2-14.1l-.2-.2-35.9-35.8 26.1-26.1 56 56c3.9 3.9 10.3 3.9 14.1-.1 3.9-3.9 3.9-10.2 0-14.1l-56-56 26.1-26.1 35.9 35.8c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-35.9-35.8 26.1-26.1 56 56c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-56-56 26.1-26.1 35.9 35.9c3.9 3.9 10.2 4 14.1.1 3.9-3.9 4-10.2.1-14.1l-.1-.1-35.6-36.2 26.1-26.1 56 56c3.9 3.9 10.2 3.9 14.1 0 3.9-3.9 3.9-10.2 0-14.1l-56-56 18.8-18.8 105.3 105.3-313.3 313.3z"/><path d="M137.325 331.325c-12.6-12.5-32.9-12.5-45.4 0-12.5 12.6-12.5 32.9 0 45.4s32.9 12.5 45.4 0 12.5-32.8 0-45.4zm-13.1 31c-.2.2-.5.5-1.1.4-4.7 4.7-12.4 4.7-17.2 0-4.7-4.7-4.7-12.4 0-17.2 4.7-4.7 12.4-4.7 17.2 0 4.9 4.5 5.6 11.9 1.1 16.8z"/></svg> Reading window
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1246,6 +1260,7 @@
       <div class="rdnt__block rdnt__fullscreen-settings hidden">
         <h5
           class="rdnt__block-title rdnt__fullscreen-settings--title rdnt__block-title--cursor"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M19.079 2.514h-6.865l2.641 2.641-3.169 3.168 1.584 1.584 3.169-3.169 2.641 2.641V2.514zM19.079 19.414v-6.865l-2.641 2.641-3.169-3.169-1.584 1.584 3.169 3.168-2.641 2.641h6.866zM2.18 19.414h6.865l-2.641-2.641 3.169-3.168-1.584-1.584L4.82 15.19l-2.641-2.641v6.865zM2.18 2.514v6.865l2.641-2.641L7.99 9.907l1.584-1.584-3.169-3.168 2.641-2.641H2.18z"/></svg> Fullscreen
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1278,7 +1293,7 @@
       </div>
     </div>
 
-    <div class="rdnt__annotations hidden">
+    <div class="rdnt__annotations hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-annotations"
@@ -1290,7 +1305,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path fill-rule="evenodd" clip-rule="evenodd" d="M.13 11.313c5.212-8.736 15.903-8.417 20.813-.004-4.904 8.33-15.489 8.782-20.813.004zm14.418.015c.002-2.603-1.767-4.72-3.947-4.724-2.253-.005-4.06 2.054-4.062 4.63-.002 2.646 1.75 4.763 3.946 4.766 2.269.003 4.062-2.06 4.063-4.672zm4.579-.017c-1.008-1.487-2.894-3.152-4.032-3.559 1.2 2.373 1.195 4.737-.029 7.162 1.624-.865 2.948-2.05 4.061-3.603zM6.018 7.694c-1.635.869-2.963 2.057-4.06 3.602 1.043 1.515 2.829 3.094 4.034 3.566-1.198-2.377-1.2-4.741.026-7.168z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M7.852 10.424c.744 1.011 1.605 1.162 2.261.424.675-.76.565-1.768-.292-2.685 1.199-.471 2.545.317 3.102 1.419.646 1.283.517 2.899-.355 3.982-.849 1.055-2.238 1.316-3.34.628-1.143-.713-1.679-2.158-1.376-3.768z"/></svg> Display
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1400,7 +1415,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 511.626 511.626"><path d="M477.371 127.44c-22.843-28.074-53.871-50.249-93.076-66.523-39.204-16.272-82.035-24.41-128.478-24.41-34.643 0-67.762 4.805-99.357 14.417-31.595 9.611-58.812 22.602-81.653 38.97-22.845 16.37-41.018 35.832-54.534 58.385C6.757 170.833 0 194.484 0 219.228c0 28.549 8.61 55.3 25.837 80.234 17.227 24.931 40.778 45.871 70.664 62.811-2.096 7.611-4.57 14.846-7.426 21.693-2.855 6.852-5.424 12.474-7.708 16.851-2.286 4.377-5.376 9.233-9.281 14.562-3.899 5.328-6.849 9.089-8.848 11.275-1.997 2.19-5.28 5.812-9.851 10.849-4.565 5.048-7.517 8.329-8.848 9.855-.193.089-.953.952-2.285 2.567-1.331 1.615-1.999 2.423-1.999 2.423l-1.713 2.566c-.953 1.431-1.381 2.334-1.287 2.707.096.373-.094 1.331-.57 2.851-.477 1.526-.428 2.669.142 3.433v.284c.765 3.429 2.43 6.187 4.998 8.277 2.568 2.092 5.474 2.95 8.708 2.563 12.375-1.522 23.223-3.606 32.548-6.276 49.87-12.758 93.649-35.782 131.334-69.097 14.272 1.522 28.072 2.286 41.396 2.286 46.442 0 89.271-8.138 128.479-24.417 39.208-16.272 70.233-38.448 93.072-66.517 22.843-28.062 34.263-58.663 34.263-91.781.001-33.119-11.418-63.718-34.254-91.787z"/></svg> Comments
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1417,7 +1432,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 -57 511.999 511"><path d="M496.707 51.91l-36.121-36.12c-20.387-20.388-53.563-20.388-73.95 0L154.552 247.878a15.45 15.45 0 0 0 0 21.863l1.867 1.871-25.984 25.985c-5.965 5.964-6.028 15.578-.215 21.632l-47.871 47.872-66.86-.11h-.027C6.937 366.992.016 373.898 0 382.43c-.016 8.539 6.898 15.476 15.437 15.488l155.657.117h.023c4.102 0 8.035-1.629 10.934-4.527l11.222-11.223a15.414 15.414 0 0 0 10.696 4.313c3.957 0 7.918-1.508 10.933-4.528l25.989-25.984 1.863 1.86c3.02 3.019 6.976 4.53 10.933 4.53s7.915-1.507 10.934-4.53l232.086-232.087c20.387-20.386 20.387-53.558 0-73.949zM164.719 367.102l-38.582-.055 25.937-25.938 19.32 19.32zm39.25-17.832l-40.735-40.739 15.051-15.05 40.738 40.738zm270.87-245.278l-17.128 17.133-66.34-66.336 17.133-17.133c8.328-8.328 21.883-8.328 30.215 0l36.12 36.125c8.333 8.328 8.333 21.883 0 30.211zm-39 39L253.689 325.148l-66.336-66.336L369.504 76.656zm0 0"/><path d="M355.984 134.645L245.336 245.293c-6.04 6.039-6.04 15.828 0 21.867 3.02 3.02 6.976 4.531 10.934 4.531s7.914-1.511 10.933-4.53l110.652-110.65c6.036-6.038 6.036-15.827 0-21.866-6.039-6.04-15.832-6.04-21.87 0zm0 0"/></svg> Markings
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1432,7 +1447,7 @@
       </div>
     </div>
 
-    <div class="rdnt__search hidden">
+    <div class="rdnt__search hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-search"
@@ -1455,7 +1470,7 @@
       <ul class="rdnt__search-results"></ul>
     </div>
 
-    <div class="rdnt__bottom-bar-settings hidden">
+    <div class="rdnt__bottom-bar-settings hidden" role="menu">
       <button
         aria-label="Close"
         class="rdnt__close rdnt__close-bottom-bar-settings"
@@ -1468,7 +1483,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 141.73 141.73"><path fill-rule="evenodd" clip-rule="evenodd" d="M81.323 1c.658.289 1.345.528 1.973.873 2.553 1.4 3.83 4.278 3.226 7.177-.57 2.734-2.837 4.826-5.684 5.073-1.483.128-2.987.023-4.688.023v5.179c13.462 1.462 25.181 6.741 35.093 15.708l5.641-5.637c-.516-.403-1.225-.833-1.775-1.414-1.633-1.72-1.619-4.063-.04-5.61 1.536-1.506 3.849-1.524 5.509.088 2.769 2.691 5.5 5.423 8.184 8.198 1.589 1.643 1.545 4.005.039 5.51-1.52 1.517-3.817 1.542-5.506-.02-.523-.484-.882-1.148-1.237-1.622l-5.714 5.682c13.931 17.431 18.389 37.044 11.473 58.597-5.507 17.162-16.974 29.359-33.427 36.736-31.632 14.182-70.039-2.334-81.423-35.117-6.453-18.58-4.585-36.487 5.964-53.121 10.558-16.647 26.065-25.7 45.679-28.098v-4.959c-1.476 0-2.823.051-4.164-.009-5.015-.228-8.083-4.613-6.355-9.047.879-2.257 2.706-3.425 4.874-4.19h22.358zm39.254 78.645c-.074-27.815-22.657-50.497-50.488-50.438-28.17.061-50.506 22.614-50.491 50.528.015 27.926 22.622 50.523 50.445 50.443 28.145-.084 50.356-22.535 50.534-50.533z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M70.395 37.467c1.232 1.972 2.391 3.749 3.45 5.585.247.428.199 1.054.199 1.589.011 9.718.02 19.437-.012 29.155-.004.947.248 1.568 1.022 2.168 3.447 2.674 3.77 7.857.762 11.117-3.019 3.273-8.251 3.307-11.296.078-3.08-3.268-2.763-8.498.739-11.219.728-.564.995-1.143.992-2.047-.029-9.718-.04-19.436.018-29.154.006-.875.377-1.839.843-2.599.944-1.541 2.071-2.973 3.283-4.673z"/></svg> Countdown
           <span class="rdnt__block-toggle">
@@ -1512,7 +1527,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 24 24"><path d="M17.75 2.001a2.25 2.25 0 0 1 2.245 2.096L20 4.25v15.498a2.25 2.25 0 0 1-2.096 2.245l-.154.005H6.25a2.25 2.25 0 0 1-2.245-2.096L4 19.75V4.251a2.25 2.25 0 0 1 2.096-2.245l.154-.005h11.5Zm0 1.5H6.25a.75.75 0 0 0-.743.648l-.007.102v15.498c0 .38.282.694.648.743l.102.007h11.5a.75.75 0 0 0 .743-.648l.007-.102V4.251a.75.75 0 0 0-.648-.743L17.75 3.5Z"/><path d="M7 15.75a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1-.75-.75ZM7 7.75A.75.75 0 0 1 7.75 7h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 7 7.75ZM7 11.75a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1-.75-.75Z"/></svg> Reading break
           <span class="rdnt__block-toggle">
@@ -1555,7 +1570,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 141.73 141.73"><path d="M92.58 18.135v9.598H10.538v-9.598H92.58zM49.648 61.298v-9.595h82.041v9.595H49.648zM131.748 18.109v9.594H102.55v-9.594h29.198zM10.479 61.293v-9.586h29.168v9.586H10.479zM49.647 109.118l20.214-24.289 20.238 24.289z"/><path d="M65.885 105.764h7.97v23.137h-7.97z"/></svg> Page highlighting
           <span class="rdnt__block-toggle">
@@ -1600,7 +1615,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 141.73 141.73"><path d="M92.58 86.179v9.597H10.538v-9.597H92.58zM49.648 129.339v-9.595h82.041v9.595H49.648zM131.748 86.152v9.594H102.55v-9.594h29.198zM10.479 129.334v-9.586h29.168v9.586H10.479zM90.101 33.824 69.887 58.115 49.649 33.824z"/><path d="M65.895 14.04h7.969v23.139h-7.969z"/></svg> Subtitles
           <span class="rdnt__block-toggle">
@@ -1645,7 +1660,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 21.26 21.26"><path d="M5.802 4.608h3.714l5.558 15.709h-3.56l-1.038-3.229H4.691l-1.067 3.229H.191L5.802 4.608zm-.216 9.773h4.022L7.624 8.199l-2.038 6.182zM15.317 2.014h2.091l3.128 8.841h-2.003l-.584-1.817h-3.257l-.601 1.817h-1.933l3.159-8.841zm-.121 5.501h2.264l-1.117-3.479-1.147 3.479z"/></svg> Subtitle size
           <span class="rdnt__block-toggle rdnt__block-toggle--active">
@@ -1686,7 +1701,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 512 512"><path d="M342.322 104.837A100.443 100.443 0 0 1 342.457 231l24.943 20.02a132.373 132.373 0 0 0-.178-166.261ZM432.147 32.4l-24.989 20.15a183.6 183.6 0 0 1 .248 230.594l25.03 20.1a216.053 216.053 0 0 0-.289-270.844Z"/><path d="m347.6 343.656-72.822-47.334 27.455-50.334A80.23 80.23 0 0 0 312 207.681V128a112 112 0 0 0-224 0v79.681a80.236 80.236 0 0 0 9.768 38.308l27.455 50.333L52.4 343.656A79.725 79.725 0 0 0 16 410.732V496h368v-85.268a79.725 79.725 0 0 0-36.4-67.076ZM352 464H48v-53.268a47.836 47.836 0 0 1 21.841-40.246l97.661-63.48-41.641-76.34A48.146 48.146 0 0 1 120 207.681V128a80 80 0 0 1 160 0v79.681a48.139 48.139 0 0 1-5.861 22.984L232.5 307.007l97.662 63.479A47.838 47.838 0 0 1 352 410.732Z"/></svg> Voice
           <span class="rdnt__block-toggle">
@@ -1709,7 +1724,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 32 32"><path d="M27.85 29H30l-6-15h-2.35l-6 15h2.15l1.6-4h6.85Zm-7.65-6 2.62-6.56L25.45 23ZM18 7V5h-7V2H9v3H2v2h10.74a14.71 14.71 0 0 1-3.19 6.18A13.5 13.5 0 0 1 7.26 9h-2.1a16.47 16.47 0 0 0 3 5.58A16.84 16.84 0 0 1 3 18l.75 1.86A18.47 18.47 0 0 0 9.53 16a16.92 16.92 0 0 0 5.76 3.84L16 18a14.48 14.48 0 0 1-5.12-3.37A17.64 17.64 0 0 0 14.8 7Z"/></svg> Translate
           <span class="rdnt__block-toggle">
@@ -1729,7 +1744,7 @@
         <h5
           class="rdnt__block-title rdnt__block-title--cursor"
           tabindex="0"
-          role="button"
+          role="menuitem"
         >
           <svg class="rdnt__block-title--icon" viewBox="0 0 141.73 141.73"><path fill-rule="evenodd" clip-rule="evenodd" d="M140.484 84.74c-1.066 5.191-1.86 10.459-3.261 15.559-1.992 7.242-5.345 13.9-9.885 20.144L118 114.206c5.979-8.701 9.663-17.969 10.708-28.475-1.854-.108-3.469-.205-5.251-.309v-10.91c1.66-.114 3.337-.232 5.283-.368-1.171-11.555-5.4-21.606-12.632-30.728l-3.764 3.374c-2.605-2.743-5.121-5.39-7.684-8.085.9-.953 2.017-2.134 3.25-3.441-9.001-7.324-19.111-11.423-30.74-12.744-.098 1.889-.18 3.487-.273 5.319H65.802l-.302-5.242c-11.547 1.085-21.553 5.37-30.698 12.564.653.751 1.209 1.412 1.787 2.052.534.592 1.089 1.165 1.673 1.787l-7.849 7.864-3.789-3.433c-7.36 8.953-11.376 19.085-12.77 30.686 1.052.08 1.928.17 2.808.208.797.033 1.599.007 2.55.007v11.054l-5.254.379c1.054 10.447 4.669 19.646 10.694 28.389-3.059 2.079-6.058 4.115-9.653 6.56-2.438-4.617-5.118-8.941-7.102-13.563-17.094-39.829 6.021-84.947 48.334-94.545 39.33-8.921 78.013 17.866 83.52 57.828.206 1.495.487 2.981.73 4.471.003 3.277.003 6.556.003 9.835z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M102.85 48.902c-6.128 9.066-12.306 18.102-18.338 27.236-.951 1.441-1.585 3.277-1.789 5-.7 5.852-5.939 10.506-11.842 10.235-6-.273-10.824-5.197-10.912-11.144-.09-6.11 4.414-11.017 10.407-11.575 1.437-.134 2.992-.644 4.189-1.438 8.782-5.819 17.49-11.754 26.223-17.65.559-.378 1.143-.72 1.717-1.08.117.139.23.277.345.416z"/></svg> Playback rate
           <span class="rdnt__block-toggle">
@@ -1815,6 +1830,8 @@
           <svg class="rdnt__button-icon" viewBox="0 0 485 485"><path d="M271.2 125.5c-5.3-5.3-13.8-5.3-19.1 0-5.3 5.3-5.3 13.8 0 19.1l84.4 84.4h-323C6 229 0 235 0 242.5S6 256 13.5 256h323l-84.4 84.4c-5.3 5.3-5.3 13.8 0 19.1 2.6 2.6 6.1 4 9.5 4 3.5 0 6.9-1.3 9.5-4L378.6 252c2.5-2.5 4-6 4-9.5s-1.4-7-4-9.5L271.2 125.5zM471.5 45C464 45 458 51 458 58.5v368c0 7.5 6 13.5 13.5 13.5s13.5-6 13.5-13.5v-368c0-7.5-6-13.5-13.5-13.5z"/></svg>
         </button>
         <button
+          aria-expanded="false"
+          aria-haspopup="menu"
           aria-label="Open or close audio preferences"
           class="rdnt__block-round-button rdnt__bottom-bar-settings-button rdnt__tooltip top left"
           data-title="Audio preferences"

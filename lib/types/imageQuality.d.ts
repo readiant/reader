@@ -71,7 +71,8 @@ export class ImageQuality {
                 break;
         }
         Builder.imageQuality(connection);
-        this.current.textContent = title;
+        if (this.current !== null)
+            this.current.textContent = title;
         eventLogger({
             type: LogType.ChangeImageQuality,
             imageQuality: connection,

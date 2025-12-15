@@ -35,7 +35,7 @@ export class Annotations {
         return Readiant.root.querySelector('.rdnt__markings--left');
     }
     static get annotationLeftContext() {
-        return this.annotationLeftCanvas.getContext('2d');
+        return this.annotationLeftCanvas?.getContext('2d');
     }
     static get annotationLeftComments() {
         return Readiant.root.querySelector('.rdnt__comments--left');
@@ -47,7 +47,7 @@ export class Annotations {
         return Readiant.root.querySelector('.rdnt__markings--right');
     }
     static get annotationRightContext() {
-        return this.annotationRightCanvas.getContext('2d');
+        return this.annotationRightCanvas?.getContext('2d');
     }
     static get annotationRightComments() {
         return Readiant.root.querySelector('.rdnt__comments--right');
@@ -56,13 +56,13 @@ export class Annotations {
         return Readiant.root.querySelector('.rdnt__current-selection--annotations');
     }
     static get off() {
-        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-off'));
+        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-off'));
     }
     static get on() {
-        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-on'));
+        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-on'));
     }
     static get page() {
-        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-page'));
+        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-page'));
     }
     static get button() {
         return Readiant.root.querySelector('.rdnt__annotations-button');
@@ -98,10 +98,10 @@ export class Annotations {
         return Readiant.root.querySelector('.rdnt__eraser');
     }
     static get editCommentTooltip() {
-        return String(this.commentButton.getAttribute('data-edit-comment'));
+        return String(this.commentButton?.getAttribute('data-edit-comment'));
     }
     static get removeCommentTooltip() {
-        return String(this.commentButton.getAttribute('data-remove-comment'));
+        return String(this.commentButton?.getAttribute('data-remove-comment'));
     }
     static add(annotations) {
         for (const annotation of annotations) {
@@ -122,25 +122,25 @@ export class Annotations {
             window.removeEventListener('touchend', endEvent);
             this.annotationHandler('end', event);
         };
-        this.button.addEventListener('click', () => {
+        this.button?.addEventListener('click', () => {
             Readiant.toggle(Container.Annotations);
         });
-        this.closeButton.addEventListener('click', () => {
+        this.closeButton?.addEventListener('click', () => {
             Readiant.close([Container.Annotations]);
         });
-        this.commentButton.addEventListener('click', () => {
+        this.commentButton?.addEventListener('click', () => {
             this.toggleComments();
         });
-        this.markerButton.addEventListener('click', () => {
+        this.markerButton?.addEventListener('click', () => {
             this.toggleMarker();
         });
-        this.showButton.addEventListener('click', () => {
+        this.showButton?.addEventListener('click', () => {
             this.toggle();
         });
-        this.eraserButton.addEventListener('click', () => {
+        this.eraserButton?.addEventListener('click', () => {
             this.toggleEraser();
         });
-        this.undoButton.addEventListener('click', () => {
+        this.undoButton?.addEventListener('click', () => {
             this.undo();
         });
         Navigation.addHandler((newPage, currentPage) => {
@@ -150,68 +150,68 @@ export class Annotations {
         Zoom.add(() => {
             this.draw();
         });
-        this.markerSizeRange.addEventListener('change', (event) => {
+        this.markerSizeRange?.addEventListener('change', (event) => {
             this.changeMarkerSize(event);
         });
         for (const markerColorButton of this.markerColorButtons)
             markerColorButton.addEventListener('click', (event) => {
                 this.changeMarkerColor(event);
             });
-        this.button.classList.remove(CLASS_HIDDEN);
+        this.button?.classList.remove(CLASS_HIDDEN);
         if (Storage.data.pointer) {
-            this.annotationLeftCanvas.addEventListener('pointerdown', (event) => {
+            this.annotationLeftCanvas?.addEventListener('pointerdown', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('pointerup', endEvent);
             });
-            this.annotationLeftCanvas.addEventListener('pointermove', (event) => {
+            this.annotationLeftCanvas?.addEventListener('pointermove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
-            this.annotationRightCanvas.addEventListener('pointerdown', (event) => {
+            this.annotationRightCanvas?.addEventListener('pointerdown', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('pointerup', endEvent);
             });
-            this.annotationRightCanvas.addEventListener('pointermove', (event) => {
+            this.annotationRightCanvas?.addEventListener('pointermove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
         }
         else if (Storage.data.touch) {
-            this.annotationLeftCanvas.addEventListener('touchstart', (event) => {
+            this.annotationLeftCanvas?.addEventListener('touchstart', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('touchcancel', endEvent);
                 window.addEventListener('touchend', endEvent);
             }, { passive: true });
-            this.annotationLeftCanvas.addEventListener('touchmove', (event) => {
+            this.annotationLeftCanvas?.addEventListener('touchmove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
-            this.annotationRightCanvas.addEventListener('touchstart', (event) => {
+            this.annotationRightCanvas?.addEventListener('touchstart', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('touchcancel', endEvent);
                 window.addEventListener('touchend', endEvent);
             }, { passive: true });
-            this.annotationRightCanvas.addEventListener('touchmove', (event) => {
+            this.annotationRightCanvas?.addEventListener('touchmove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
         }
         else {
-            this.annotationLeftCanvas.addEventListener('mousedown', (event) => {
+            this.annotationLeftCanvas?.addEventListener('mousedown', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('mouseup', endEvent);
             });
-            this.annotationLeftCanvas.addEventListener('mousemove', (event) => {
+            this.annotationLeftCanvas?.addEventListener('mousemove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
-            this.annotationRightCanvas.addEventListener('mousedown', (event) => {
+            this.annotationRightCanvas?.addEventListener('mousedown', (event) => {
                 this.annotationHandler('start', event);
                 window.addEventListener('mouseup', endEvent);
             });
-            this.annotationRightCanvas.addEventListener('mousemove', (event) => {
+            this.annotationRightCanvas?.addEventListener('mousemove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
         }
-        this.annotationLeftComments.addEventListener('click', (event) => {
+        this.annotationLeftComments?.addEventListener('click', (event) => {
             this.commentHandler(event);
         });
-        this.annotationRightComments.addEventListener('click', (event) => {
+        this.annotationRightComments?.addEventListener('click', (event) => {
             this.commentHandler(event);
         });
         window.addEventListener('beforeunload', () => {
@@ -289,6 +289,8 @@ export class Annotations {
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
+        if (container === null)
+            return;
         const rect = container.getBoundingClientRect();
         const coordinates = {
             position: isLeft ? AnnotationPosition.Left : AnnotationPosition.Right,
@@ -306,6 +308,8 @@ export class Annotations {
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
+        if (container === null)
+            return;
         const rect = container.getBoundingClientRect();
         const coordinates = {
             position: isLeft ? AnnotationPosition.Left : AnnotationPosition.Right,
@@ -315,13 +319,18 @@ export class Annotations {
         this.markerEvent.push(coordinates);
     }
     static clear() {
-        if (this.annotationLeftContext === null ||
-            this.annotationRightContext === null)
-            return;
-        this.annotationLeftContext.clearRect(0, 0, this.annotationLeftCanvas.width, this.annotationLeftCanvas.height);
-        this.annotationLeftComments.innerHTML = '';
-        this.annotationRightContext.clearRect(0, 0, this.annotationRightCanvas.width, this.annotationRightCanvas.height);
-        this.annotationRightComments.innerHTML = '';
+        if (this.annotationLeftContext !== null &&
+            typeof this.annotationLeftContext !== 'undefined' &&
+            this.annotationLeftCanvas !== null)
+            this.annotationLeftContext.clearRect(0, 0, this.annotationLeftCanvas.width, this.annotationLeftCanvas.height);
+        if (this.annotationLeftComments !== null)
+            this.annotationLeftComments.innerHTML = '';
+        if (this.annotationRightContext !== null &&
+            typeof this.annotationRightContext !== 'undefined' &&
+            this.annotationRightCanvas !== null)
+            this.annotationRightContext.clearRect(0, 0, this.annotationRightCanvas.width, this.annotationRightCanvas.height);
+        if (this.annotationRightComments !== null)
+            this.annotationRightComments.innerHTML = '';
     }
     static commentHandler(event) {
         if (!this.editComments || event.currentTarget !== event.target)
@@ -332,6 +341,8 @@ export class Annotations {
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
+        if (container === null)
+            return;
         const rect = container.getBoundingClientRect();
         const coordinates = {
             x: (x - rect.left + window.scrollX) / container.offsetWidth,
@@ -367,10 +378,10 @@ export class Annotations {
         this.size = Number(input.value);
     }
     static disableComments() {
-        this.annotationLeftComments.classList.remove(CLASS_ACTIVE);
-        this.annotationRightComments.classList.remove(CLASS_ACTIVE);
+        this.annotationLeftComments?.classList.remove(CLASS_ACTIVE);
+        this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
+        this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
         this.editComments = false;
-        this.commentButton.classList.remove(CLASS_BLOCK_ACTIVE);
     }
     static draw() {
         this.clear();
@@ -385,7 +396,7 @@ export class Annotations {
                     const context = currentPage.position === PagePosition.Left
                         ? this.annotationLeftContext
                         : this.annotationRightContext;
-                    if (context === null)
+                    if (context === null || typeof context === 'undefined')
                         continue;
                     context.globalCompositeOperation = event.eraser
                         ? 'destination-out'
@@ -415,7 +426,9 @@ export class Annotations {
                     const comments = currentPage.position === PagePosition.Left
                         ? this.annotationLeftComments
                         : this.annotationRightComments;
-                    const icon = this.commentButton.firstChild.cloneNode(true);
+                    if (comments === null)
+                        continue;
+                    const icon = (this.commentButton?.firstChild).cloneNode(true);
                     const comment = document.createElement('div');
                     comment.setAttribute('class', `rdnt__comment-item rdnt__tooltip top ${event.coordinates.x > 0.5 ? 'left' : 'right'}`);
                     comment.setAttribute('aria-label', this.editCommentTooltip);
@@ -459,10 +472,12 @@ export class Annotations {
         }
     }
     static list() {
-        while (this.commentsList.hasChildNodes())
-            this.commentsList.removeChild(this.commentsList.firstChild);
-        while (this.markingsList.hasChildNodes())
-            this.markingsList.removeChild(this.markingsList.firstChild);
+        if (this.commentsList !== null)
+            while (this.commentsList.hasChildNodes())
+                this.commentsList.removeChild(this.commentsList.firstChild);
+        if (this.markingsList !== null)
+            while (this.markingsList.hasChildNodes())
+                this.markingsList.removeChild(this.markingsList.firstChild);
         const comments = document.createDocumentFragment();
         const markings = document.createDocumentFragment();
         const all = Object.keys(this.annotations).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
@@ -500,17 +515,21 @@ export class Annotations {
             });
             markings.appendChild(li);
         }
-        this.commentsList.appendChild(comments);
-        this.markingsList.appendChild(markings);
+        if (this.commentsList)
+            this.commentsList.appendChild(comments);
+        if (this.markingsList)
+            this.markingsList.appendChild(markings);
     }
     static load(page) {
         if (page in this.annotations)
             this.draw();
     }
     static remove() {
-        this.annotationLeftContainer.remove();
-        this.annotationRightContainer.remove();
-        if (typeof this.annotationSettings !== 'undefined')
+        if (this.annotationLeftContainer !== null)
+            this.annotationLeftContainer.remove();
+        if (this.annotationRightContainer !== null)
+            this.annotationRightContainer.remove();
+        if (this.annotationSettings !== null)
             this.annotationSettings.remove();
     }
     static removeComment(event) {
@@ -530,9 +549,11 @@ export class Annotations {
         const canvas = side === PagePosition.Left
             ? this.annotationLeftCanvas
             : this.annotationRightCanvas;
-        canvas.height = height;
-        canvas.width = width;
-        this.draw();
+        if (canvas !== null) {
+            canvas.height = height;
+            canvas.width = width;
+            this.draw();
+        }
     }
     static save(page) {
         this.clear();
@@ -578,11 +599,12 @@ export class Annotations {
             this.toggleComments();
         if (this.showAnnotations && this.editMarkings)
             this.toggleMarker();
-        this.annotationLeftContainer.classList.toggle(CLASS_HIDDEN);
-        this.annotationRightContainer.classList.toggle(CLASS_HIDDEN);
-        this.showButton.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.annotationLeftContainer?.classList.toggle(CLASS_HIDDEN);
+        this.annotationRightContainer?.classList.toggle(CLASS_HIDDEN);
+        this.showButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
         this.showAnnotations = !this.showAnnotations;
-        this.current.textContent = this.showAnnotations ? this.on : this.off;
+        if (this.current !== null)
+            this.current.textContent = this.showAnnotations ? this.on : this.off;
         this.draw();
     }
     static toggleComment(event) {
@@ -610,63 +632,73 @@ export class Annotations {
         if (!this.showAnnotations)
             this.toggle();
         if (this.editMarkings) {
-            this.annotationLeftCanvas.classList.remove(CLASS_ACTIVE);
-            this.annotationRightCanvas.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
-            this.markerButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
         if (this.isErasing) {
-            this.annotationLeftCanvas.classList.remove(CLASS_ACTIVE);
-            this.annotationRightCanvas.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
-            this.eraserButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
-        this.annotationLeftComments.classList.toggle(CLASS_ACTIVE);
-        this.annotationRightComments.classList.toggle(CLASS_ACTIVE);
+        this.annotationLeftComments?.classList.toggle(CLASS_ACTIVE);
+        this.annotationRightComments?.classList.toggle(CLASS_ACTIVE);
         this.editComments = !this.editComments;
-        this.commentButton.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.commentButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
     }
     static toggleEraser() {
         if (!this.showAnnotations)
             this.toggle();
         if (this.editComments) {
-            this.annotationLeftComments.classList.remove(CLASS_ACTIVE);
-            this.annotationRightComments.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftComments?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
-            this.commentButton.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
         }
         if (this.editMarkings) {
-            this.annotationLeftCanvas.classList.remove(CLASS_ACTIVE);
-            this.annotationRightCanvas.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
-            this.markerButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
-        this.annotationLeftCanvas.classList.toggle(CLASS_ACTIVE);
-        this.annotationRightCanvas.classList.toggle(CLASS_ACTIVE);
+        this.annotationLeftCanvas?.classList.toggle(CLASS_ACTIVE);
+        this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.isErasing = !this.isErasing;
-        this.eraserButton.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.eraserButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
         if (this.isErasing) {
-            if (this.markerSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerSettings !== null &&
+                this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.remove(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
         else {
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
     }
@@ -674,35 +706,41 @@ export class Annotations {
         if (!this.showAnnotations)
             this.toggle();
         if (this.editComments) {
-            this.annotationLeftComments.classList.remove(CLASS_ACTIVE);
-            this.annotationRightComments.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftComments?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
-            this.commentButton.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
         }
         if (this.isErasing) {
-            this.annotationLeftCanvas.classList.remove(CLASS_ACTIVE);
-            this.annotationRightCanvas.classList.remove(CLASS_ACTIVE);
+            this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
+            this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
-            this.eraserButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
-        this.annotationLeftCanvas.classList.toggle(CLASS_ACTIVE);
-        this.annotationRightCanvas.classList.toggle(CLASS_ACTIVE);
+        this.annotationLeftCanvas?.classList.toggle(CLASS_ACTIVE);
+        this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.editMarkings = !this.editMarkings;
-        this.markerButton.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.markerButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
         if (this.editMarkings) {
-            if (this.markerSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerSettings !== null &&
+                this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.remove(CLASS_HIDDEN);
-            if (this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.remove(CLASS_HIDDEN);
         }
         else {
-            if (!this.markerSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerSettings !== null &&
+                !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
-            if (!this.markerColorSettings.classList.contains(CLASS_HIDDEN))
+            if (this.markerColorSettings !== null &&
+                !this.markerColorSettings.classList.contains(CLASS_HIDDEN))
                 this.markerColorSettings.classList.add(CLASS_HIDDEN);
         }
     }

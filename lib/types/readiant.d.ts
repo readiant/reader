@@ -46,16 +46,22 @@ export class Readiant {
             ];
         for (const container of containers) {
             const element = Readiant.root.querySelector(`.${container}`);
-            if (typeof element !== 'undefined' &&
-                !element.classList.contains(CLASS_HIDDEN))
+            if (element !== null && !element.classList.contains(CLASS_HIDDEN))
                 this.toggle(container);
         }
         const rootNode = Readiant.root.getRootNode();
         if (rootNode instanceof Document) {
             rootNode.documentElement.removeEventListener('click', this.closeOnClick);
+            rootNode.documentElement.removeEventListener('keydown', this.closeOnEscape);
         }
         else {
             rootNode.host.removeEventListener('click', this.closeOnClick);
+            rootNode.host.removeEventListener('keydown', this.closeOnEscape);
+        }
+    }
+    static closeOnEscape(event) {
+        if (event.key === 'Escape') {
+            Readiant.close();
         }
     }
     static closeOnClick(event) {
@@ -127,20 +133,32 @@ export class Readiant {
             this.close();
         element.classList.toggle(CLASS_HIDDEN);
         nextButton.classList.toggle(CLASS_NAVIGATION_NEXT_ACTIVE);
-        if (element.classList.contains(CLASS_HIDDEN))
+        if (element.classList.contains(CLASS_HIDDEN)) {
             button.classList.remove(CLASS_BUTTON_ACTIVE);
-        else {
-            if (element.classList.contains(CLASS_HIDDEN))
-                button.classList.remove(CLASS_BUTTON_ACTIVE);
-            else
-                button.classList.add(CLASS_BUTTON_ACTIVE);
+            button.setAttribute('aria-expanded', 'false');
         }
-        if (!element.classList.contains(CLASS_HIDDEN))
-            document.documentElement.addEventListener('click', this.closeOnClick);
+        else {
+            button.classList.add(CLASS_BUTTON_ACTIVE);
+            button.setAttribute('aria-expanded', 'true');
+        }
+        if (!element.classList.contains(CLASS_HIDDEN)) {
+            const rootNode = Readiant.root.getRootNode();
+            if (rootNode instanceof Document) {
+                rootNode.documentElement.addEventListener('click', this.closeOnClick);
+                rootNode.documentElement.addEventListener('keydown', this.closeOnEscape);
+            }
+            else {
+                rootNode.host.addEventListener('click', this.closeOnClick);
+                rootNode.host.addEventListener('keydown', this.closeOnEscape);
+            }
+            const firstMenuItem = element.querySelector('[role="menuitem"]');
+            if (firstMenuItem !== null)
+                firstMenuItem.focus();
+        }
     }
     static toggleMenu() {
-        this.menuButtons.classList.toggle(CLASS_HIDDEN);
-        this.pageNumber.classList.toggle(CLASS_HIDDEN);
+        this.menuButtons?.classList.toggle(CLASS_HIDDEN);
+        this.pageNumber?.classList.toggle(CLASS_HIDDEN);
     }
     constructor(root) {
         this.advancedSettings = Readiant.root.querySelectorAll('.rdnt__advanced-settings');
@@ -437,23 +455,23 @@ export class Readiant {
     }
     async register(availableAudio, documentChapters, translations) {
         this.connected = true;
-        this.closeScreenSettingsButton.addEventListener('click', () => {
+        this.closeScreenSettingsButton?.addEventListener('click', () => {
             Readiant.close([Container.ScreenSettings]);
         });
-        this.closeSettingsButton.addEventListener('click', () => {
+        this.closeSettingsButton?.addEventListener('click', () => {
             Readiant.close([Container.Settings]);
         });
-        this.moreButton.addEventListener('click', () => {
+        this.moreButton?.addEventListener('click', () => {
             Readiant.toggleMenu();
         });
         for (const toggleButton of this.toggleButtons)
             toggleButton.parentNode.addEventListener('click', (event) => {
                 this.toggleBlock(event);
             });
-        this.screenSettingsButton.addEventListener('click', () => {
+        this.screenSettingsButton?.addEventListener('click', () => {
             Readiant.toggle(Container.ScreenSettings);
         });
-        this.settingsButton.addEventListener('click', () => {
+        this.settingsButton?.addEventListener('click', () => {
             Readiant.toggle(Container.Settings);
         });
         Bar.register();
@@ -508,8 +526,7 @@ export class Readiant {
             Annotations.register();
         else
             Annotations.remove();
-        if (typeof this.audioButton !== 'undefined' &&
-            Readiant.type === ContentType.SVG) {
+        if (this.audioButton !== null && Readiant.type === ContentType.SVG) {
             await Audio.register(availableAudio);
             if (typeof this.options.audioHighlightingLevel !== 'undefined')
                 Audio.setLineHighlighterType(this.options.audioHighlightingLevel);
@@ -530,8 +547,10 @@ export class Readiant {
             Search.register();
         else
             Search.remove();
+        if (this.options.disable.includes(Fn.Animations))
+            Builder.disableAnimations();
         if (!this.options.disable.includes(Fn.Print) &&
-            typeof this.printButton !== 'undefined' &&
+            this.printButton !== null &&
             Readiant.type === ContentType.SVG)
             Print.register();
         else
@@ -539,7 +558,6 @@ export class Readiant {
         A11y.register();
         ReadiantElement.dispatchEvent('document-loaded', {
             documentId: this.options.id,
-            totalPages: Navigation.pages.length,
             isReady: true,
         });
         eventLogger({
@@ -547,11 +565,10 @@ export class Readiant {
         });
     }
     async parentMessageHandler(event) {
-        if (event.source === window)
+        if (event.source === window || event.source === null)
             return;
         if (typeof event.data === 'undefined' ||
-            !Object.prototype.hasOwnProperty.call(event.data, 'type') ||
-            event.source === window)
+            !Object.prototype.hasOwnProperty.call(event.data, 'type'))
             return;
         const data = event.data;
         switch (data.type) {

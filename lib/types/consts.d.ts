@@ -80,6 +80,7 @@ export var Container;
 export var Fn;
 (function (Fn) {
     Fn["AdvancedSettings"] = "advanced";
+    Fn["Animations"] = "animations";
     Fn["Annotations"] = "annotations";
     Fn["Print"] = "print";
     Fn["Search"] = "search";

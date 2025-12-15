@@ -14,7 +14,7 @@ export class Zoom {
         this.handlers.add(handler);
     }
     static register() {
-        this.range.addEventListener('change', (event) => {
+        this.range?.addEventListener('change', (event) => {
             this.change(event);
         });
     }
@@ -26,8 +26,10 @@ export class Zoom {
                 event = 1;
             if (event > 5)
                 event = 5;
-            this.range.setAttribute('aria-valuenow', String(event));
-            this.range.value = String(event);
+            if (this.range !== null) {
+                this.range.setAttribute('aria-valuenow', String(event));
+                this.range.value = String(event);
+            }
             value = event;
         }
         else {
@@ -35,17 +37,18 @@ export class Zoom {
             input.setAttribute('aria-valuenow', input.value);
             value = Number(input.value);
         }
-        this.current.textContent = `${String(this.modes[value - 1])}%`;
+        if (this.current !== null)
+            this.current.textContent = `${String(this.modes[value - 1])}%`;
         Builder.zoom(this.level, value);
         this.level = value;
         this.notify();
         this.scroll().catch((e) => {
             throw e;
         });
-        Builder.layers.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        Builder.layers.addEventListener('mousemove', this.handleMouseMove.bind(this));
-        Builder.layers.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
-        Builder.layers.addEventListener('mouseup', this.handleMouseUp.bind(this));
+        Builder.layers?.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        Builder.layers?.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        Builder.layers?.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
+        Builder.layers?.addEventListener('mouseup', this.handleMouseUp.bind(this));
         eventLogger({
             type: LogType.ChangeZoomLevel,
             zoomLevel: value,
@@ -56,7 +59,8 @@ export class Zoom {
             return;
         event.preventDefault();
         this.isGrabbing = true;
-        Builder.layers.style.cursor = 'grabbing';
+        if (Builder.layers !== null)
+            Builder.layers.style.cursor = 'grabbing';
         this.startX = event.pageX;
         this.startY = event.pageY;
         this.scrollLeft = window.scrollX;
@@ -79,7 +83,8 @@ export class Zoom {
         if (this.level <= 2)
             return;
         this.isGrabbing = false;
-        Builder.layers.style.cursor = 'grab';
+        if (Builder.layers !== null)
+            Builder.layers.style.cursor = 'grab';
         if (typeof this.animationFrameId !== 'undefined') {
             window.cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = undefined;
@@ -91,21 +96,17 @@ export class Zoom {
     }
     static async scroll() {
         const actualZoom = [0.5, 1, 1.5, 2, 2.5];
+        const offsetWidth = Builder.viewport !== null ? Builder.viewport.offsetWidth : 0;
         let scrollX = 0;
         let scrollY = 0;
         if (Zoom.level === 1 || Zoom.level === 2)
-            scrollX =
-                (Builder.viewport.offsetWidth * actualZoom[Zoom.level - 1] -
-                    Builder.viewport.offsetWidth) /
-                    2;
+            scrollX = (offsetWidth * actualZoom[Zoom.level - 1] - offsetWidth) / 2;
         else {
             const position = await Builder.textPosition();
             scrollX =
                 Navigation.currentPages.length === 2 || position[0] === 0
                     ? position[0]
-                    : (Builder.viewport.offsetWidth * actualZoom[Zoom.level - 1] -
-                        Builder.viewport.offsetWidth) /
-                        2;
+                    : (offsetWidth * actualZoom[Zoom.level - 1] - offsetWidth) / 2;
             scrollY = position[1];
         }
         window.scroll(scrollX, scrollY);

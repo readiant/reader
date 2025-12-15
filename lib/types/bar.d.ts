@@ -47,19 +47,19 @@ export class Bar {
         return Readiant.root.querySelector('.rdnt__bottom-bar__options');
     }
     static register() {
-        this.subtitlesRange.addEventListener('change', (event) => {
+        this.subtitlesRange?.addEventListener('change', (event) => {
             this.fontSizeSubtitles(event);
         });
-        this.backwardButton.addEventListener('click', () => {
+        this.backwardButton?.addEventListener('click', () => {
             this.backward();
         });
-        this.closeButton.addEventListener('click', () => {
+        this.closeButton?.addEventListener('click', () => {
             this.toggle();
         });
-        this.forwardButton.addEventListener('click', () => {
+        this.forwardButton?.addEventListener('click', () => {
             this.forward();
         });
-        this.closeSettingsButton.addEventListener('click', () => {
+        this.closeSettingsButton?.addEventListener('click', () => {
             Readiant.close([Container.BarSettings]);
         });
         for (const readStopButton of this.readStopButtons)
@@ -68,35 +68,47 @@ export class Bar {
             });
         for (const settingsButton of this.settingsButtons)
             settingsButton.addEventListener('click', () => {
-                if (this.settings.classList.contains(CLASS_HIDDEN)) {
-                    this.settings.style.bottom = `calc(${String(this.bar.offsetHeight)}px + 1rem)`;
-                    this.settings.style.maxHeight = `calc(100% - ${String(this.bar.offsetHeight + 56)}px - 2rem)`;
+                const barHeight = this.bar?.offsetHeight;
+                if (this.settings !== null &&
+                    this.settings.classList.contains(CLASS_HIDDEN)) {
+                    this.settings.style.bottom = `calc(${String(barHeight)}px + 1rem)`;
+                    this.settings.style.maxHeight = `calc(100% - ${String(barHeight + 56)}px - 2rem)`;
                 }
                 Readiant.toggle(Container.BarSettings);
             });
-        new MutationObserver(() => {
-            if (!this.settings.classList.contains(CLASS_HIDDEN)) {
-                this.settings.style.bottom = `calc(${String(this.bar.offsetHeight)}px + 1rem)`;
-                this.settings.style.maxHeight = `calc(100% - ${String(this.bar.offsetHeight + 56)}px - 2rem)`;
-            }
-        }).observe(this.syntaxElement, {
-            attributes: true,
-            childList: true,
-        });
-        new ResizeObserver(() => {
-            Builder.adjust(this.bar.offsetHeight);
-        }).observe(this.bar);
+        const syntaxEl = this.syntaxElement;
+        if (syntaxEl !== null) {
+            new MutationObserver(() => {
+                const barHeight = this.bar?.offsetHeight;
+                if (this.settings !== null &&
+                    this.settings.classList.contains(CLASS_HIDDEN)) {
+                    this.settings.style.bottom = `calc(${String(barHeight)}px + 1rem)`;
+                    this.settings.style.maxHeight = `calc(100% - ${String(barHeight + 56)}px - 2rem)`;
+                }
+            }).observe(syntaxEl, {
+                attributes: true,
+                childList: true,
+            });
+        }
+        if (this.bar !== null)
+            new ResizeObserver(() => {
+                const barHeight = this.bar.offsetHeight;
+                Builder.adjust(barHeight);
+            }).observe(this.bar);
     }
     static add(sentence, force = false) {
         const stripped = this.strip(sentence);
         if (!this.showing)
             this.toggle();
-        if (!force)
-            this.syntaxElement.setAttribute('data-original', stripped);
-        if (!Text.isTranslating || force)
-            this.syntaxElement.innerHTML = sentence;
-        else
-            Text.translate(stripped);
+        const syntaxEl = this.syntaxElement;
+        if (syntaxEl) {
+            if (!force)
+                syntaxEl.setAttribute('data-original', stripped);
+            if (!Text.isTranslating || force)
+                syntaxEl.innerHTML = sentence;
+            else
+                Text.translate(stripped);
+        }
     }
     static backward() {
         switch (this.readStop) {
@@ -137,14 +149,15 @@ export class Bar {
                 readStopButton.classList.add(CLASS_BLOCK_ACTIVE);
         }
         if (value === 1) {
-            this.backwardButton.classList.add(CLASS_DISABLED);
-            this.forwardButton.classList.add(CLASS_DISABLED);
+            this.backwardButton?.classList.add(CLASS_DISABLED);
+            this.forwardButton?.classList.add(CLASS_DISABLED);
         }
         else {
-            this.backwardButton.classList.remove(CLASS_DISABLED);
-            this.forwardButton.classList.remove(CLASS_DISABLED);
+            this.backwardButton?.classList.remove(CLASS_DISABLED);
+            this.forwardButton?.classList.remove(CLASS_DISABLED);
         }
-        this.currentReadStop.textContent = title;
+        if (this.currentReadStop)
+            this.currentReadStop.textContent = title;
         this.readStop = value;
         eventLogger({
             type: LogType.ChangeReadStop,
@@ -152,6 +165,8 @@ export class Bar {
         });
     }
     static empty() {
+        if (this.syntaxElement === null)
+            return;
         this.syntaxElement.innerHTML = '';
         this.syntaxElement.removeAttribute('data-original');
     }
@@ -167,10 +182,11 @@ export class Bar {
             value = 1;
         if (value > 5)
             value = 5;
-        this.syntaxElement.classList.remove(`rdnt__bottom-bar__syntax--${String(this.fontSize)}`);
+        this.syntaxElement?.classList.remove(`rdnt__bottom-bar__syntax--${String(this.fontSize)}`);
         this.fontSize = value;
-        this.syntaxElement.classList.add(`rdnt__bottom-bar__syntax--${String(this.fontSize)}`);
-        this.currentSubtitleFontSize.textContent = String(value + 10);
+        this.syntaxElement?.classList.add(`rdnt__bottom-bar__syntax--${String(this.fontSize)}`);
+        if (this.currentSubtitleFontSize !== null)
+            this.currentSubtitleFontSize.textContent = String(value + 10);
         eventLogger({
             type: LogType.ChangeSubtitleFontSize,
             subtitleFontSize: value,
@@ -187,7 +203,7 @@ export class Bar {
         }
     }
     static get() {
-        return String(this.syntaxElement.getAttribute('data-original')).trim();
+        return String(this.syntaxElement?.getAttribute('data-original')).trim();
     }
     static strip(string) {
         const doc = new DOMParser().parseFromString(string, 'text/html');
@@ -196,8 +212,8 @@ export class Bar {
     }
     static toggle() {
         this.bar.classList.toggle(CLASS_HIDDEN);
-        this.syntaxElement.classList.toggle(CLASS_HIDDEN);
-        this.syntaxOptionsElement.classList.toggle(CLASS_HIDDEN);
+        this.syntaxElement?.classList.toggle(CLASS_HIDDEN);
+        this.syntaxOptionsElement?.classList.toggle(CLASS_HIDDEN);
         this.showing = !this.showing;
         Readiant.close([Container.BarSettings]);
         if (!this.showing && Audio.playingState !== AudioPlayingState.Stopped)

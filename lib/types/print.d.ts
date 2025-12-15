@@ -37,7 +37,7 @@ export class Print {
             page.classList.remove('rdnt__page--height', 'rdnt__page--width', 'rdnt__page-print');
             page.classList.add(String(this.originals.shift()));
         }
-        this.viewport.classList.remove(pages.length === 1
+        this.viewport?.classList.remove(pages.length === 1
             ? 'rdnt__viewport--print-portrait'
             : 'rdnt__viewport--print-landscape');
         eventLogger({
@@ -49,7 +49,7 @@ export class Print {
         if (this.originals.length > 0)
             return;
         const pages = Readiant.root.querySelectorAll('.rdnt__page:not(.hidden)');
-        this.viewport.classList.add(pages.length === 1
+        this.viewport?.classList.add(pages.length === 1
             ? 'rdnt__viewport--print-portrait'
             : 'rdnt__viewport--print-landscape');
         for (const page of pages) {
@@ -65,7 +65,7 @@ export class Print {
         }
     }
     static remove() {
-        if (typeof this.button !== 'undefined')
+        if (this.button !== null)
             this.button.remove();
     }
     static shortcut(event) {

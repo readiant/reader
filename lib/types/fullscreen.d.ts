@@ -24,9 +24,9 @@ export class Fullscreen {
             return;
         for (const button of this.buttons)
             button.addEventListener('click', (event) => this.change(event));
-        this.toggleButton.addEventListener('click', () => this.toggle());
-        this.toggleButton.classList.remove(CLASS_HIDDEN);
-        this.enableIcon.classList.remove(CLASS_HIDDEN);
+        this.toggleButton?.addEventListener('click', () => this.toggle());
+        this.toggleButton?.classList.remove(CLASS_HIDDEN);
+        this.enableIcon?.classList.remove(CLASS_HIDDEN);
         document.addEventListener('fullscreenchange', () => this.detect());
     }
     static async change(event) {
@@ -55,7 +55,8 @@ export class Fullscreen {
             if (button.getAttribute('data-fullscreen') === String(value))
                 button.classList.add(CLASS_BLOCK_ACTIVE);
         }
-        this.current.textContent = title;
+        if (this.current !== null)
+            this.current.textContent = title;
         if (value === 0)
             await this.exit();
         else
@@ -115,9 +116,9 @@ export class Fullscreen {
         }
     }
     static async toggle(skip = false) {
-        this.toggleButton.classList.toggle(CLASS_BUTTON_ACTIVE);
-        this.enableIcon.classList.toggle(CLASS_HIDDEN);
-        this.exitIcon.classList.toggle(CLASS_HIDDEN);
+        this.toggleButton?.classList.toggle(CLASS_BUTTON_ACTIVE);
+        this.enableIcon?.classList.toggle(CLASS_HIDDEN);
+        this.exitIcon?.classList.toggle(CLASS_HIDDEN);
         if (!skip) {
             if (this.active)
                 await this.exit();

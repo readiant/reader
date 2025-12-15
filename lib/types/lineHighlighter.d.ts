@@ -19,10 +19,10 @@ export class LineHighlighter {
         return Readiant.root.querySelectorAll('.rdnt__current-selection--line-highlighter');
     }
     static get off() {
-        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-off'));
+        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-off'));
     }
     static get on() {
-        return String(Readiant.root.querySelector('.rdnt__i18n').getAttribute('data-on'));
+        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-on'));
     }
     static get ranges() {
         return Readiant.root.querySelectorAll('.rdnt__line-highlighter-range');
@@ -67,7 +67,8 @@ export class LineHighlighter {
             if (lineHighlighterColorButton.getAttribute('data-color') === this.color)
                 lineHighlighterColorButton.classList.add(CLASS_ROUND_BUTTON_ACTIVE);
         }
-        this.center.style.backgroundColor = this.color;
+        if (this.center !== null)
+            this.center.style.backgroundColor = this.color;
     }
     static changeWidth(event) {
         let value;
@@ -82,7 +83,10 @@ export class LineHighlighter {
         this.width = value;
     }
     static position(event) {
-        if (!this.active)
+        if (!this.active ||
+            this.top === null ||
+            this.center === null ||
+            this.bottom === null)
             return;
         const y = 'changedTouches' in event ? event.changedTouches[0].pageY : event.pageY;
         this.top.style.height = `${String(y - 56 - this.width / 2)}px`;
@@ -92,19 +96,19 @@ export class LineHighlighter {
     }
     static toggle() {
         this.active = !this.active;
-        this.bottom.classList.toggle(CLASS_HIDDEN);
+        this.bottom?.classList.toggle(CLASS_HIDDEN);
         for (const button of this.buttons)
             button.classList.toggle(CLASS_BLOCK_ACTIVE);
-        this.center.classList.toggle(CLASS_HIDDEN);
+        this.center?.classList.toggle(CLASS_HIDDEN);
         for (const settings of this.settings)
             settings.classList.toggle(CLASS_HIDDEN);
-        this.top.classList.toggle(CLASS_HIDDEN);
+        this.top?.classList.toggle(CLASS_HIDDEN);
         for (const current of this.currents)
             current.textContent = this.active ? this.on : this.off;
         if (this.active)
-            Builder.layers.classList.add(CLASS_DISABLED);
+            Builder.layers?.classList.add(CLASS_DISABLED);
         else
-            Builder.layers.classList.remove(CLASS_DISABLED);
+            Builder.layers?.classList.remove(CLASS_DISABLED);
     }
 }
 LineHighlighter.active = false;

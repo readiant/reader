@@ -43,7 +43,8 @@ export class ScreenMode {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
         }
         Builder.screenMode(this.screenMode, value);
-        this.current.textContent = title;
+        if (this.current !== null)
+            this.current.textContent = title;
         this.screenMode = value;
         eventLogger({
             type: LogType.ChangeScreenMode,

@@ -50,19 +50,19 @@ export class Navigation {
             this.registerHTML(page, pageCounts, indexes, direction);
         else
             this.registerSVG(page, pages, pageCounts, direction, offset, spread);
-        this.nextButton.addEventListener('click', () => {
+        this.nextButton?.addEventListener('click', () => {
             this.onRightPressed();
         });
-        this.pageNumberInput.addEventListener('change', (event) => {
+        this.pageNumberInput?.addEventListener('change', (event) => {
             this.gotoPageDirectly(event);
         });
-        this.previousButton.addEventListener('click', () => {
+        this.previousButton?.addEventListener('click', () => {
             this.onLeftPressed();
         });
         if (Storage.data.touch || Storage.data.pointer) {
             if (!Storage.data.hover) {
-                this.nextButton.classList.add(CLASS_HIDDEN);
-                this.previousButton.classList.add(CLASS_HIDDEN);
+                this.nextButton?.classList.add(CLASS_HIDDEN);
+                this.previousButton?.classList.add(CLASS_HIDDEN);
             }
             if (Storage.data.pointer) {
                 document.addEventListener('pointerdown', (event) => {
@@ -132,9 +132,10 @@ export class Navigation {
             type: ClientActionType.ChapterRequest,
             chapterIndex: this.chapterIndex,
         });
-        this.pageNumberInput.setAttribute('max', String(this.maxPage));
-        this.pageNumberTotal.innerHTML = `/ ${String(this.maxPage)}`;
-        this.pageNumberProgress.classList.remove(CLASS_HIDDEN);
+        this.pageNumberInput?.setAttribute('max', String(this.maxPage));
+        if (this.pageNumberTotal)
+            this.pageNumberTotal.innerHTML = `/ ${String(this.maxPage)}`;
+        this.pageNumberProgress?.classList.remove(CLASS_HIDDEN);
         this.htmlProgress();
         window.addEventListener('beforeunload', () => {
             eventLogger({
@@ -182,7 +183,7 @@ export class Navigation {
         this.logInitialPage(this.currentPage);
         const max = this.numPages;
         if (max !== this.pages.length)
-            this.pageNumber.classList.add(CLASS_HIDDEN);
+            this.pageNumber?.classList.add(CLASS_HIDDEN);
         else {
             let currentPage = this.currentPage;
             if (this.direction === Direction.Rtl) {
@@ -190,12 +191,15 @@ export class Navigation {
                 const pages = [...this.pages].reverse();
                 currentPage = pages[key];
             }
-            this.pageNumberTotal.innerHTML = `/ ${String(max + this.pageOffset)}`;
-            this.pageNumberInput.setAttribute('max', String(max + this.pageOffset));
-            this.pageNumberInput.value =
-                currentPage + this.pageOffset >= 1
-                    ? String(currentPage + this.pageOffset)
-                    : '';
+            if (this.pageNumberTotal !== null)
+                this.pageNumberTotal.innerHTML = `/ ${String(max + this.pageOffset)}`;
+            if (this.pageNumberInput !== null) {
+                this.pageNumberInput.setAttribute('max', String(max + this.pageOffset));
+                this.pageNumberInput.value =
+                    currentPage + this.pageOffset >= 1
+                        ? String(currentPage + this.pageOffset)
+                        : '';
+            }
         }
         window.addEventListener('beforeunload', () => {
             this.logPageChange(PageChangeType.Close);
@@ -618,10 +622,12 @@ export class Navigation {
             const pages = [...this.pages].reverse();
             currentPage = pages[key];
         }
-        this.pageNumberInput.value =
-            currentPage + this.pageOffset >= 1
-                ? String(currentPage + this.pageOffset)
-                : '';
+        if (this.pageNumberInput !== null) {
+            this.pageNumberInput.value =
+                currentPage + this.pageOffset >= 1
+                    ? String(currentPage + this.pageOffset)
+                    : '';
+        }
     }
     static gotoSearchResult(chapterIndex, query) {
         Stream.send({ type: ClientActionType.ChapterRequest, chapterIndex });
@@ -632,6 +638,8 @@ export class Navigation {
         };
     }
     static htmlProgress() {
+        if (this.pageNumberInput === null || this.pageNumberProgressValue === null)
+            return;
         const globalPage = this.globalPage;
         this.pageNumberInput.value = String(Math.floor(globalPage));
         this.pageNumberProgressValue.style.width = `${String((globalPage - Math.floor(globalPage)) * 100)}%`;
@@ -883,14 +891,16 @@ export class Navigation {
             return;
         }
         if (TextMode.level !== 3) {
-            if (requests.some((val) => val.position === PagePosition.Left))
+            const startLeft = requests.some((val) => val.position === PagePosition.Left);
+            const startRight = requests.some((val) => val.position === PagePosition.Right);
+            if (startLeft)
                 Builder.start(PagePosition.Left);
             else
-                Builder.hide(PagePosition.Left);
-            if (requests.some((val) => val.position === PagePosition.Right))
+                Builder.hide(PagePosition.Left, startRight);
+            if (startRight)
                 Builder.start(PagePosition.Right);
             else
-                Builder.hide(PagePosition.Right);
+                Builder.hide(PagePosition.Right, startLeft);
         }
         Builder.changeProgress(this.computePercentage()).catch((e) => {
             throw e;

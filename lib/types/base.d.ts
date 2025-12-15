@@ -47,7 +47,11 @@ class ReadiantElement extends HTMLElement {
                 return;
             const shadow = this.attachShadow({ mode: 'open' });
             try {
-                const styleResponse = await fetch('./dist/lib/css/style.css');
+                const moduleUrl = new URL(import.meta.url);
+                const basePath = moduleUrl.pathname.substring(0, moduleUrl.pathname.lastIndexOf('/'));
+                const baseUrl = `${moduleUrl.protocol}//${moduleUrl.host}${basePath}`;
+                const styleUrl = `${baseUrl}/../css/style.css`;
+                const styleResponse = await fetch(styleUrl);
                 if (!styleResponse.ok) {
                     const { Readiant } = await import('./readiant.js');
                     Readiant.errorHandler(new Error(`Failed to load styles: ${String(styleResponse.status)} ${styleResponse.statusText}`));
@@ -57,7 +61,8 @@ class ReadiantElement extends HTMLElement {
                 const style = document.createElement('style');
                 style.textContent = styleText;
                 shadow.appendChild(style);
-                const response = await fetch('./dist/lib/template.html');
+                const templateUrl = `${baseUrl}/../template.html`;
+                const response = await fetch(templateUrl);
                 if (!response.ok) {
                     const { Readiant } = await import('./readiant.js');
                     Readiant.errorHandler(new Error(`Failed to load template: ${String(response.status)} ${response.statusText}`));
@@ -69,6 +74,7 @@ class ReadiantElement extends HTMLElement {
                 const documentId = this.getAttribute('document-id');
                 const url = this.getAttribute('url');
                 if (documentId !== null || url !== null) {
+                    await new Promise((resolve) => requestAnimationFrame(resolve));
                     const { Readiant } = await import('./readiant.js');
                     new Readiant(shadow);
                 }
