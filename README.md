@@ -4,17 +4,8 @@ A minimal Web Component wrapper for the Readiant reader that provides seamless i
 
 ## Installation
 
-### NPM
-
 ```bash
 npm install @readiant/reader
-```
-
-### CDN
-
-```html
-<script type="module" src="https://unpkg.com/readiant@latest/dist/index.js"></script>
-<readiant-reader document-id="your-document-id"></readiant-reader>
 ```
 
 ## Quick Start

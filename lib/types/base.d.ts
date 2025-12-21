@@ -3,6 +3,8 @@ import { Navigation } from './navigation.js';
 import { Readiant } from './readiant.js';
 import { ScreenMode } from './screenMode.js';
 import { Zoom } from './zoom.js';
+import { template } from './template.js';
+import { styles } from './styles.js';
 const initializedElements = new WeakSet();
 class ReadiantElement extends HTMLElement {
     static get observedAttributes() {
@@ -47,29 +49,12 @@ class ReadiantElement extends HTMLElement {
                 return;
             const shadow = this.attachShadow({ mode: 'open' });
             try {
-                const moduleUrl = new URL(import.meta.url);
-                const basePath = moduleUrl.pathname.substring(0, moduleUrl.pathname.lastIndexOf('/'));
-                const baseUrl = `${moduleUrl.protocol}//${moduleUrl.host}${basePath}`;
-                const styleUrl = `${baseUrl}/../css/style.css`;
-                const styleResponse = await fetch(styleUrl);
-                if (!styleResponse.ok) {
-                    const { Readiant } = await import('./readiant.js');
-                    Readiant.errorHandler(new Error(`Failed to load styles: ${String(styleResponse.status)} ${styleResponse.statusText}`));
-                    return;
-                }
-                const styleText = await styleResponse.text();
+                // Inject styles
                 const style = document.createElement('style');
-                style.textContent = styleText;
+                style.textContent = styles;
                 shadow.appendChild(style);
-                const templateUrl = `${baseUrl}/../template.html`;
-                const response = await fetch(templateUrl);
-                if (!response.ok) {
-                    const { Readiant } = await import('./readiant.js');
-                    Readiant.errorHandler(new Error(`Failed to load template: ${String(response.status)} ${response.statusText}`));
-                    return;
-                }
-                const html = await response.text();
-                const parsedDoc = new DOMParser().parseFromString(html, 'text/html');
+                // Inject template
+                const parsedDoc = new DOMParser().parseFromString(template, 'text/html');
                 shadow.appendChild(parsedDoc.body.firstElementChild ?? parsedDoc.body);
                 const documentId = this.getAttribute('document-id');
                 const url = this.getAttribute('url');
