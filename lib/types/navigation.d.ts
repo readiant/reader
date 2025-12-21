@@ -65,33 +65,33 @@ export class Navigation {
                 this.previousButton?.classList.add(CLASS_HIDDEN);
             }
             if (Storage.data.pointer) {
-                document.addEventListener('pointerdown', (event) => {
+                Readiant.root.addEventListener('pointerdown', (event) => {
                     this.touchHandler(TouchHandlerAction.Start, event);
                 }, { passive: true });
-                document.addEventListener('pointermove', (event) => {
+                Readiant.root.addEventListener('pointermove', (event) => {
                     this.touchHandler(TouchHandlerAction.Move, event);
                 }, { passive: true });
-                document.addEventListener('pointerup', (event) => {
+                Readiant.root.addEventListener('pointerup', (event) => {
                     this.touchHandler(TouchHandlerAction.End, event);
                 }, { passive: true });
             }
             if (Storage.data.touch) {
-                document.addEventListener('touchcancel', (event) => {
+                Readiant.root.addEventListener('touchcancel', (event) => {
                     this.touchHandler(TouchHandlerAction.End, event);
                 }, { passive: true });
-                document.addEventListener('touchend', (event) => {
+                Readiant.root.addEventListener('touchend', (event) => {
                     this.touchHandler(TouchHandlerAction.End, event);
                 }, { passive: true });
-                document.addEventListener('touchmove', (event) => {
+                Readiant.root.addEventListener('touchmove', (event) => {
                     this.touchHandler(TouchHandlerAction.Move, event);
                 }, { passive: true });
-                document.addEventListener('touchstart', (event) => {
+                Readiant.root.addEventListener('touchstart', (event) => {
                     this.touchHandler(TouchHandlerAction.Start, event);
                 }, { passive: true });
             }
         }
         else
-            document.addEventListener('keydown', (event) => {
+            Readiant.root.addEventListener('keydown', (event) => {
                 this.shortcut(event);
             });
         this.hasRegistered = true;
@@ -1092,10 +1092,10 @@ export class Navigation {
             }
         this.touch = undefined;
     }
-    static unescapeHTMLNamedEntities(s) {
-        const elt = document.createElement('span');
-        elt.innerHTML = s;
-        return elt.innerText;
+    static unescapeHTMLNamedEntities(string) {
+        const element = document.createElement('span');
+        element.innerHTML = string;
+        return element.innerText;
     }
 }
 Navigation.TOUCH_THRESHOLD = 50;

@@ -47,15 +47,15 @@ export class LineHighlighter {
                 this.changeColor(event);
             });
         if (Storage.data.pointer)
-            document.addEventListener('pointermove', (event) => {
+            Readiant.root.addEventListener('pointermove', (event) => {
                 this.position(event);
             });
         else if (Storage.data.touch)
-            document.addEventListener('touchmove', (event) => {
+            Readiant.root.addEventListener('touchmove', (event) => {
                 this.position(event);
             });
         else
-            document.addEventListener('mousemove', (event) => {
+            Readiant.root.addEventListener('mousemove', (event) => {
                 this.position(event);
             });
     }
