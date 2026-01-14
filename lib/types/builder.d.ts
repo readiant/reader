@@ -1180,8 +1180,8 @@ export class Builder {
         }
         else {
             if (this.layers !== null) {
-                this.layers.style.height = '100vh';
-                this.layers.style.width = '100vw';
+                this.layers.style.height = '100%';
+                this.layers.style.width = '100%';
             }
         }
         Annotations.resize(side, computed.height, computed.width);
