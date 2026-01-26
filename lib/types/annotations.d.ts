@@ -116,10 +116,10 @@ export class Annotations {
     }
     static register() {
         const endEvent = (event) => {
-            window.removeEventListener('mouseup', endEvent);
-            window.removeEventListener('pointerup', endEvent);
-            window.removeEventListener('touchcancel', endEvent);
-            window.removeEventListener('touchend', endEvent);
+            Readiant.windowContext.removeEventListener('mouseup', endEvent);
+            Readiant.windowContext.removeEventListener('pointerup', endEvent);
+            Readiant.windowContext.removeEventListener('touchcancel', endEvent);
+            Readiant.windowContext.removeEventListener('touchend', endEvent);
             this.annotationHandler('end', event);
         };
         this.button?.addEventListener('click', () => {
@@ -161,14 +161,14 @@ export class Annotations {
         if (Storage.data.pointer) {
             this.annotationLeftCanvas?.addEventListener('pointerdown', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('pointerup', endEvent);
+                Readiant.windowContext.addEventListener('pointerup', endEvent);
             });
             this.annotationLeftCanvas?.addEventListener('pointermove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
             this.annotationRightCanvas?.addEventListener('pointerdown', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('pointerup', endEvent);
+                Readiant.windowContext.addEventListener('pointerup', endEvent);
             });
             this.annotationRightCanvas?.addEventListener('pointermove', (event) => {
                 this.annotationHandler('move', event);
@@ -177,16 +177,16 @@ export class Annotations {
         else if (Storage.data.touch) {
             this.annotationLeftCanvas?.addEventListener('touchstart', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('touchcancel', endEvent);
-                window.addEventListener('touchend', endEvent);
+                Readiant.windowContext.addEventListener('touchcancel', endEvent);
+                Readiant.windowContext.addEventListener('touchend', endEvent);
             }, { passive: true });
             this.annotationLeftCanvas?.addEventListener('touchmove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
             this.annotationRightCanvas?.addEventListener('touchstart', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('touchcancel', endEvent);
-                window.addEventListener('touchend', endEvent);
+                Readiant.windowContext.addEventListener('touchcancel', endEvent);
+                Readiant.windowContext.addEventListener('touchend', endEvent);
             }, { passive: true });
             this.annotationRightCanvas?.addEventListener('touchmove', (event) => {
                 this.annotationHandler('move', event);
@@ -195,14 +195,14 @@ export class Annotations {
         else {
             this.annotationLeftCanvas?.addEventListener('mousedown', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('mouseup', endEvent);
+                Readiant.windowContext.addEventListener('mouseup', endEvent);
             });
             this.annotationLeftCanvas?.addEventListener('mousemove', (event) => {
                 this.annotationHandler('move', event);
             }, { passive: true });
             this.annotationRightCanvas?.addEventListener('mousedown', (event) => {
                 this.annotationHandler('start', event);
-                window.addEventListener('mouseup', endEvent);
+                Readiant.windowContext.addEventListener('mouseup', endEvent);
             });
             this.annotationRightCanvas?.addEventListener('mousemove', (event) => {
                 this.annotationHandler('move', event);
@@ -214,7 +214,7 @@ export class Annotations {
         this.annotationRightComments?.addEventListener('click', (event) => {
             this.commentHandler(event);
         });
-        window.addEventListener('beforeunload', () => {
+        Readiant.windowContext.addEventListener('beforeunload', () => {
             this.save(Navigation.currentPage);
         });
     }
@@ -283,9 +283,13 @@ export class Annotations {
     }
     static annotateStart(event) {
         this.markerEvent = [];
-        const x = 'changedTouches' in event ? event.changedTouches[0].pageX : event.pageX;
-        const y = 'changedTouches' in event ? event.changedTouches[0].pageY : event.pageY;
-        const isLeft = [...Readiant.root.elementsFromPoint(x, y)].some((element) => element.classList.contains('rdnt__markings--left'));
+        const clientX = 'changedTouches' in event
+            ? event.changedTouches[0].clientX
+            : event.clientX;
+        const clientY = 'changedTouches' in event
+            ? event.changedTouches[0].clientY
+            : event.clientY;
+        const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__markings--left'));
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
@@ -294,17 +298,21 @@ export class Annotations {
         const rect = container.getBoundingClientRect();
         const coordinates = {
             position: isLeft ? AnnotationPosition.Left : AnnotationPosition.Right,
-            x: (x - rect.left + window.scrollX) / container.offsetWidth,
-            y: (y - rect.top + window.scrollY) / container.offsetHeight,
+            x: (clientX - rect.left) / container.offsetWidth,
+            y: (clientY - rect.top) / container.offsetHeight,
         };
         this.markerEvent.push(coordinates);
     }
     static annotateMove(event) {
         if ('buttons' in event && event.buttons !== 1)
             return;
-        const x = 'changedTouches' in event ? event.changedTouches[0].pageX : event.pageX;
-        const y = 'changedTouches' in event ? event.changedTouches[0].pageY : event.pageY;
-        const isLeft = [...Readiant.root.elementsFromPoint(x, y)].some((element) => element.classList.contains('rdnt__markings--left'));
+        const clientX = 'changedTouches' in event
+            ? event.changedTouches[0].clientX
+            : event.clientX;
+        const clientY = 'changedTouches' in event
+            ? event.changedTouches[0].clientY
+            : event.clientY;
+        const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__markings--left'));
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
@@ -313,8 +321,8 @@ export class Annotations {
         const rect = container.getBoundingClientRect();
         const coordinates = {
             position: isLeft ? AnnotationPosition.Left : AnnotationPosition.Right,
-            x: (x - rect.left + window.scrollX) / container.offsetWidth,
-            y: (y - rect.top + window.scrollY) / container.offsetHeight,
+            x: (clientX - rect.left) / container.offsetWidth,
+            y: (clientY - rect.top) / container.offsetHeight,
         };
         this.markerEvent.push(coordinates);
     }
@@ -335,9 +343,13 @@ export class Annotations {
     static commentHandler(event) {
         if (!this.editComments || event.currentTarget !== event.target)
             return;
-        const x = 'changedTouches' in event ? event.changedTouches[0].pageX : event.pageX;
-        const y = 'changedTouches' in event ? event.changedTouches[0].pageY : event.pageY;
-        const isLeft = [...Readiant.root.elementsFromPoint(x, y)].some((element) => element.classList.contains('rdnt__comments--left'));
+        const clientX = 'changedTouches' in event
+            ? event.changedTouches[0].clientX
+            : event.clientX;
+        const clientY = 'changedTouches' in event
+            ? event.changedTouches[0].clientY
+            : event.clientY;
+        const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__comments--left'));
         const container = isLeft
             ? this.annotationLeftContainer
             : this.annotationRightContainer;
@@ -345,8 +357,8 @@ export class Annotations {
             return;
         const rect = container.getBoundingClientRect();
         const coordinates = {
-            x: (x - rect.left + window.scrollX) / container.offsetWidth,
-            y: (y - rect.top + window.scrollY) / container.offsetHeight,
+            x: (clientX - rect.left + Readiant.scrollX) / container.offsetWidth,
+            y: (clientY - rect.top + Readiant.scrollY) / container.offsetHeight,
         };
         const currentPage = Navigation.currentPages.find((page) => page.position === (isLeft ? PagePosition.Left : PagePosition.Right));
         if (typeof currentPage === 'undefined')
@@ -429,18 +441,18 @@ export class Annotations {
                     if (comments === null)
                         continue;
                     const icon = (this.commentButton?.firstChild).cloneNode(true);
-                    const comment = document.createElement('div');
+                    const comment = Readiant.documentContext.createElement('div');
                     comment.setAttribute('class', `rdnt__comment-item rdnt__tooltip top ${event.coordinates.x > 0.5 ? 'left' : 'right'}`);
                     comment.setAttribute('aria-label', this.editCommentTooltip);
                     comment.setAttribute('data-title', this.editCommentTooltip);
                     comment.setAttribute('id', event.id);
-                    const remove = document.createElement('span');
+                    const remove = Readiant.documentContext.createElement('span');
                     remove.setAttribute('class', `rdnt__comment-remove rdnt__tooltip bottom ${event.coordinates.x > 0.5 ? 'left' : 'right'}`);
                     remove.setAttribute('data-id', event.id);
                     remove.setAttribute('aria-label', this.removeCommentTooltip);
                     remove.setAttribute('data-title', this.removeCommentTooltip);
                     remove.innerHTML = '&times;';
-                    const input = document.createElement('textarea');
+                    const input = Readiant.documentContext.createElement('textarea');
                     input.setAttribute('class', `rdnt__comment-input ${event.coordinates.x > 0.5
                         ? 'rdnt__comment-input--left'
                         : 'rdnt__comment-input--right'}`);
@@ -478,8 +490,8 @@ export class Annotations {
         if (this.markingsList !== null)
             while (this.markingsList.hasChildNodes())
                 this.markingsList.removeChild(this.markingsList.firstChild);
-        const comments = document.createDocumentFragment();
-        const markings = document.createDocumentFragment();
+        const comments = Readiant.documentContext.createDocumentFragment();
+        const markings = Readiant.documentContext.createDocumentFragment();
         const all = Object.keys(this.annotations).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
         const commentObject = {};
         const markingObject = {};
@@ -495,7 +507,7 @@ export class Annotations {
         }
         for (const [page, annotations] of Object.entries(commentObject)) {
             for (const annotation of annotations) {
-                const li = document.createElement('li');
+                const li = Readiant.documentContext.createElement('li');
                 li.setAttribute('class', 'rdnt__comments-list-item');
                 li.innerHTML = `<span class="rdnt__comments-list-item__page">${this.page} ${page}</span><span class="rdnt__sentence--comment">${annotation}</span>`;
                 li.addEventListener('click', () => {
@@ -505,7 +517,7 @@ export class Annotations {
             }
         }
         for (const [page, annotations] of Object.entries(markingObject)) {
-            const li = document.createElement('li');
+            const li = Readiant.documentContext.createElement('li');
             li.setAttribute('class', 'rdnt__markings-list-item');
             li.innerHTML = `<span class="rdnt__markings-list-item__page">${this.page} ${page}</span>${[...annotations]
                 .map((annotation) => `<span class="rdnt__sentence--marking" style="background-color:${annotation}"></span>`)

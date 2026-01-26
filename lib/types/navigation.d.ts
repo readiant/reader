@@ -137,7 +137,7 @@ export class Navigation {
             this.pageNumberTotal.innerHTML = `/ ${String(this.maxPage)}`;
         this.pageNumberProgress?.classList.remove(CLASS_HIDDEN);
         this.htmlProgress();
-        window.addEventListener('beforeunload', () => {
+        Readiant.windowContext.addEventListener('beforeunload', () => {
             eventLogger({
                 type: LogType.ClosingPage,
                 pages: [this.globalPage],
@@ -201,7 +201,7 @@ export class Navigation {
                         : '';
             }
         }
-        window.addEventListener('beforeunload', () => {
+        Readiant.windowContext.addEventListener('beforeunload', () => {
             this.logPageChange(PageChangeType.Close);
         });
     }
@@ -661,6 +661,13 @@ export class Navigation {
         const pages = requests.map((request) => request.page);
         this.requestPages(pages);
         this.generateCache(pages);
+        for (const request of requests) {
+            if (Storage.hasPage(request.page)) {
+                Builder.svg(request.page, request.position).catch((e) => {
+                    throw e;
+                });
+            }
+        }
     }
     static logInitialPage(currentPage) {
         const pages = [currentPage];
@@ -1034,17 +1041,17 @@ export class Navigation {
         this.touch = {
             active: true,
             currentX: 'changedTouches' in event
-                ? event.changedTouches[0].pageX
+                ? event.changedTouches[0].clientX
                 : event.clientX,
             currentY: 'changedTouches' in event
-                ? event.changedTouches[0].pageY
+                ? event.changedTouches[0].clientY
                 : event.clientY,
             length: 0,
             startX: 'changedTouches' in event
-                ? event.changedTouches[0].pageX
+                ? event.changedTouches[0].clientX
                 : event.clientX,
             startY: 'changedTouches' in event
-                ? event.changedTouches[0].pageY
+                ? event.changedTouches[0].clientY
                 : event.clientY,
             touches: 'changedTouches' in event ? event.changedTouches.length : 1,
         };
@@ -1053,9 +1060,13 @@ export class Navigation {
         if (typeof this.touch === 'undefined')
             return;
         this.touch.currentX =
-            'changedTouches' in event ? event.changedTouches[0].pageX : event.clientX;
+            'changedTouches' in event
+                ? event.changedTouches[0].clientX
+                : event.clientX;
         this.touch.currentY =
-            'changedTouches' in event ? event.changedTouches[0].pageY : event.clientY;
+            'changedTouches' in event
+                ? event.changedTouches[0].clientY
+                : event.clientY;
         this.touch.length = Math.round(Math.sqrt(Math.pow(this.touch.currentX - this.touch.startX, 2)));
     }
     static touchDirection() {
@@ -1093,7 +1104,7 @@ export class Navigation {
         this.touch = undefined;
     }
     static unescapeHTMLNamedEntities(string) {
-        const element = document.createElement('span');
+        const element = Readiant.documentContext.createElement('span');
         element.innerHTML = string;
         return element.innerText;
     }

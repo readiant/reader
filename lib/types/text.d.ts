@@ -26,17 +26,17 @@ export class Text {
         if (typeof defaultLanguage !== 'undefined')
             this.language = defaultLanguage;
         for (const [languageCode, language] of Object.entries(this.languages).sort((a, b) => a[1].localeCompare(b[1]))) {
-            const label = document.createElement('label');
+            const label = Readiant.documentContext.createElement('label');
             label.setAttribute('class', 'rdnt__radio');
             label.setAttribute('role', 'button');
             label.setAttribute('tabindex', '0');
-            const input = document.createElement('input');
+            const input = Readiant.documentContext.createElement('input');
             input.setAttribute('class', 'rdnt__translation');
             input.setAttribute('name', 'translation');
             input.setAttribute('type', 'radio');
             if (languageCode === this.language)
                 input.checked = true;
-            const span = document.createElement('span');
+            const span = Readiant.documentContext.createElement('span');
             span.setAttribute('class', 'rdnt__radio-title');
             span.innerText = language;
             label.appendChild(input);

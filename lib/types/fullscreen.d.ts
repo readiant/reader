@@ -68,14 +68,13 @@ export class Fullscreen {
         });
     }
     static async detect() {
-        const element = Readiant.root instanceof ShadowRoot
-            ? Readiant.root.host
-            : document.documentElement;
-        const isFullscreen = document.fullscreenElement === element;
+        const isFullscreen = document.fullscreenElement === Readiant.documentElementContext;
         if (this.active !== isFullscreen)
             await this.toggle(true);
     }
     static exit() {
+        if (document.fullscreenElement !== Readiant.documentElementContext)
+            return;
         if (typeof document.exitFullscreen !==
             'undefined')
             return document.exitFullscreen();
@@ -96,27 +95,21 @@ export class Fullscreen {
         }
     }
     static request() {
-        const element = Readiant.root instanceof ShadowRoot
-            ? Readiant.root.host
-            : document.documentElement;
-        if (typeof element.requestFullscreen !==
-            'undefined') {
-            element.requestFullscreen();
+        if (typeof Readiant.documentElementContext
+            .requestFullscreen !== 'undefined') {
+            Readiant.documentElementContext.requestFullscreen();
             return;
         }
-        else if (typeof element
-            .msRequestFullscreen !== 'undefined') {
-            element.msRequestFullscreen();
+        else if (typeof Readiant.documentElementContext.msRequestFullscreen !== 'undefined') {
+            Readiant.documentElementContext.msRequestFullscreen();
             return;
         }
-        else if (typeof element
-            .mozRequestFullScreen !== 'undefined') {
-            element.mozRequestFullScreen();
+        else if (typeof Readiant.documentElementContext.mozRequestFullScreen !== 'undefined') {
+            Readiant.documentElementContext.mozRequestFullScreen();
             return;
         }
-        else if (typeof element
-            .webkitRequestFullscreen !== 'undefined') {
-            element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        else if (typeof Readiant.documentElementContext.webkitRequestFullscreen !== 'undefined') {
+            Readiant.documentElementContext.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
             return;
         }
     }
@@ -131,8 +124,9 @@ export class Fullscreen {
                 this.request();
         }
         this.active = !this.active;
-        if (Readiant.preview)
-            document.body.classList.toggle(CLASS_PREVIEW);
+        if (Readiant.preview) {
+            Readiant.documentContext.body.classList.toggle(CLASS_PREVIEW);
+        }
         eventLogger({
             type: LogType.ToggleFullscreen,
             isFullscreen: this.active,

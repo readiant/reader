@@ -21,15 +21,15 @@ export class Chapters {
             Readiant.close([Container.Chapters]);
         });
         for (const chapter of this.chapters) {
-            const label = document.createElement('label');
+            const label = Readiant.documentContext.createElement('label');
             label.setAttribute('class', 'rdnt__radio');
             label.setAttribute('role', 'button');
             label.setAttribute('tabindex', '0');
-            const input = document.createElement('input');
+            const input = Readiant.documentContext.createElement('input');
             input.setAttribute('class', 'rdnt__chapter');
             input.setAttribute('name', 'chapters');
             input.setAttribute('type', 'radio');
-            const span = document.createElement('span');
+            const span = Readiant.documentContext.createElement('span');
             span.setAttribute('class', 'rdnt__radio-title');
             span.innerText = chapter.title;
             label.appendChild(input);

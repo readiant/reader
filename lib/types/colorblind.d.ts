@@ -17,12 +17,8 @@ export class Colorblind {
             });
     }
     static change(event) {
-        if (typeof this.active !== 'undefined') {
-            const element = Readiant.root instanceof ShadowRoot
-                ? Readiant.root.host
-                : document.documentElement;
-            element.classList.remove(this.active);
-        }
+        if (typeof this.active !== 'undefined')
+            Readiant.documentBody.classList.remove(this.active);
         let title = '';
         let value;
         if (typeof event === 'string') {
@@ -57,12 +53,8 @@ export class Colorblind {
             if (button.getAttribute('data-title') === title)
                 button.classList.add(CLASS_BLOCK_ACTIVE);
         }
-        if (value !== null) {
-            const element = Readiant.root instanceof ShadowRoot
-                ? Readiant.root.host
-                : document.documentElement;
-            element.classList.add(value);
-        }
+        if (value !== null)
+            Readiant.documentBody.classList.add(value);
         this.active = value ?? undefined;
         if (this.current !== null)
             this.current.textContent = title;

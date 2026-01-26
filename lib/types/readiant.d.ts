@@ -28,6 +28,44 @@ import { Text } from './text.js';
 import { TextMode } from './textMode.js';
 import { Zoom } from './zoom.js';
 export class Readiant {
+    static get root() {
+        return this._currentRoot;
+    }
+    static set root(value) {
+        this._currentRoot = value;
+    }
+    static getInstance(root) {
+        return this.instances.get(root);
+    }
+    static removeInstance(root) {
+        this.instances.delete(root);
+    }
+    static get documentBody() {
+        return Readiant.root instanceof ShadowRoot
+            ? Readiant.root.firstElementChild
+            : document.body;
+    }
+    static get documentContext() {
+        return Readiant.root instanceof ShadowRoot
+            ? Readiant.root.host.ownerDocument
+            : document;
+    }
+    static get documentElementContext() {
+        return Readiant.root instanceof ShadowRoot
+            ? Readiant.root.host
+            : document.documentElement;
+    }
+    static get windowContext() {
+        return Readiant.root instanceof ShadowRoot
+            ? (Readiant.root.host.ownerDocument?.defaultView ?? window)
+            : window;
+    }
+    static get scrollX() {
+        return Readiant.root instanceof ShadowRoot ? 0 : window.scrollX;
+    }
+    static get scrollY() {
+        return Readiant.root instanceof ShadowRoot ? 0 : window.scrollY;
+    }
     static get menuButtons() {
         return Readiant.root.querySelector('.rdnt__menu__buttons');
     }
@@ -90,13 +128,13 @@ export class Readiant {
             });
         }
         else {
-            const div = document.createElement('div');
+            const div = Readiant.documentContext.createElement('div');
             div.setAttribute('class', 'rdnt__error');
-            const p = document.createElement('p');
+            const p = Readiant.documentContext.createElement('p');
             p.setAttribute('class', 'rdnt__error-message');
             p.textContent = String(message);
             div.appendChild(p);
-            document.body.appendChild(div);
+            Readiant.documentContext.body.appendChild(div);
         }
     }
     static set localization(locale) {
@@ -197,8 +235,38 @@ export class Readiant {
         };
         this.connected = false;
         this.fonts = {};
-        if (root)
+        const moduleBase = new URL('.', import.meta.url).href;
+        const fontsBase = new URL('./fonts/', moduleBase).href;
+        this.fonts = {
+            Dyslexia: {
+                woff2: `${fontsBase}df.woff2`,
+                woff: `${fontsBase}df.woff`,
+            },
+            Lora: {
+                woff2: `${fontsBase}lora.woff2`,
+                woff: `${fontsBase}lora.woff`,
+            },
+            Merriweather: {
+                woff2: `${fontsBase}merriweather.woff2`,
+                woff: `${fontsBase}merriweather.woff`,
+            },
+            Mulish: {
+                woff2: `${fontsBase}mulish.woff2`,
+                woff: `${fontsBase}mulish.woff`,
+            },
+            Mukta: {
+                woff2: `${fontsBase}mukta.woff2`,
+                woff: `${fontsBase}mukta.woff`,
+            },
+            Roboto: {
+                woff2: `${fontsBase}roboto-regular.woff2`,
+                woff: `${fontsBase}roboto-regular.woff`,
+            },
+        };
+        if (root) {
             Readiant.root = root;
+            Readiant.instances.set(root, this);
+        }
         this.advancedSettings = Readiant.root.querySelectorAll('.rdnt__advanced-settings');
         this.audioButton = Readiant.root.querySelector('.rdnt__start');
         this.closeScreenSettingsButton = Readiant.root.querySelector('.rdnt__close-screen-settings');
@@ -222,7 +290,7 @@ export class Readiant {
                 else {
                     this.connect()
                         .then(() => {
-                        window.addEventListener('message', (event) => this.parentMessageHandler(event));
+                        Readiant.windowContext.addEventListener('message', (event) => this.parentMessageHandler(event));
                     })
                         .catch((e) => {
                         Readiant.errorHandler(e);
@@ -234,7 +302,7 @@ export class Readiant {
     async connect() {
         this.options = { ...this.options, ...this.parse() };
         if (this.options.singlePage === true) {
-            document.body.classList.add(CLASS_PREVIEW);
+            Readiant.documentBody.classList.add(CLASS_PREVIEW);
             this.options.orientation = OrientationMode.Portrait;
             Readiant.preview = true;
         }
@@ -381,7 +449,7 @@ export class Readiant {
             if (filePath.startsWith('textContent/') ||
                 filePath.includes('/textContent/')) {
                 const textContent = (await response.json());
-                Storage.storeText(Number(filename), {
+                Storage.storeText(Number(fileNameWithoutExtension), {
                     content: textContent.content.map((a) => ({
                         ...a,
                         content: Navigation.unescapeHTMLNamedEntities(a.content),
@@ -891,7 +959,8 @@ export class Readiant {
         block.classList.toggle('rdnt__block-view--active');
     }
 }
-Readiant.root = document;
+Readiant.instances = new Map();
+Readiant._currentRoot = document;
 Readiant.preview = false;
 Readiant.type = ContentType.SVG;
 export default () => new Readiant();
