@@ -17,6 +17,7 @@ export class TextMode {
     static register() {
         for (const button of this.buttons)
             button.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.change(event);
             });
         if (Readiant.type === ContentType.HTML)

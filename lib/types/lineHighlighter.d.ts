@@ -35,7 +35,8 @@ export class LineHighlighter {
     }
     static register() {
         for (const button of this.buttons)
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.toggle();
             });
         for (const range of this.ranges)
@@ -44,6 +45,7 @@ export class LineHighlighter {
             });
         for (const colorButton of this.colorButtons)
             colorButton.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.changeColor(event);
             });
         if (Storage.data.pointer)

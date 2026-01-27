@@ -191,7 +191,7 @@ export class Readiant {
             }
             const firstMenuItem = element.querySelector('[role="menuitem"]');
             if (firstMenuItem !== null)
-                firstMenuItem.focus();
+                firstMenuItem.focus({ preventScroll: true });
         }
     }
     static toggleMenu() {
@@ -521,23 +521,29 @@ export class Readiant {
     }
     async register(availableAudio, documentChapters, translations) {
         this.connected = true;
-        this.closeScreenSettingsButton?.addEventListener('click', () => {
+        this.closeScreenSettingsButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.close([Container.ScreenSettings]);
         });
-        this.closeSettingsButton?.addEventListener('click', () => {
+        this.closeSettingsButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.close([Container.Settings]);
         });
-        this.moreButton?.addEventListener('click', () => {
+        this.moreButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.toggleMenu();
         });
         for (const toggleButton of this.toggleButtons)
             toggleButton.parentNode.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.toggleBlock(event);
             });
-        this.screenSettingsButton?.addEventListener('click', () => {
+        this.screenSettingsButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.toggle(Container.ScreenSettings);
         });
-        this.settingsButton?.addEventListener('click', () => {
+        this.settingsButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.toggle(Container.Settings);
         });
         Bar.register();

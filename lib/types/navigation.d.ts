@@ -50,13 +50,15 @@ export class Navigation {
             this.registerHTML(page, pageCounts, indexes, direction);
         else
             this.registerSVG(page, pages, pageCounts, direction, offset, spread);
-        this.nextButton?.addEventListener('click', () => {
+        this.nextButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             this.onRightPressed();
         });
         this.pageNumberInput?.addEventListener('change', (event) => {
             this.gotoPageDirectly(event);
         });
-        this.previousButton?.addEventListener('click', () => {
+        this.previousButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             this.onLeftPressed();
         });
         if (Storage.data.touch || Storage.data.pointer) {

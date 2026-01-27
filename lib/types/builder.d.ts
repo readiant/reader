@@ -551,7 +551,8 @@ export class Builder {
         const aElements = fragment.querySelectorAll('a');
         for (const aElement of aElements) {
             if (aElement.hasAttribute('data-goto'))
-                aElement.addEventListener('click', () => {
+                aElement.addEventListener('click', (event) => {
+                    event.preventDefault();
                     Navigation.gotoPage(Number(String(aElement.getAttribute('data-goto'))));
                 });
         }
@@ -1352,6 +1353,7 @@ export class Builder {
         ];
         for (const word of words) {
             word.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.openLink(event);
                 this.showSentence(PagePosition.Left, String(word.getAttribute('data-s')), String(word.getAttribute('data-w')));
             });
@@ -2135,7 +2137,8 @@ export class Builder {
               span.setAttribute('data-w', dataWord);
               span.setAttribute('data-word', originalWord);
     
-              span.addEventListener('click', () => {
+              span.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.showSentence(undefined, dataSentence, dataWord);
               });
               span.addEventListener('keydown', (event) => {
@@ -2315,6 +2318,7 @@ export class Builder {
                     word.setAttribute('data-time', String(time));
                 }
                 word.addEventListener('click', (event) => {
+                    event.preventDefault();
                     if (typeof time !== 'undefined')
                         Audio.setStartTime(currentPage.page, time);
                     if (Audio.playingState !== AudioPlayingState.Playing) {
@@ -2325,6 +2329,7 @@ export class Builder {
             }
             else
                 word.addEventListener('click', (event) => {
+                    event.preventDefault();
                     this.openLink(event);
                     this.showSentence(side, dataSentence, dataWord);
                 });

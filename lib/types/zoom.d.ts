@@ -109,7 +109,8 @@ export class Zoom {
                     : (offsetWidth * actualZoom[Zoom.level - 1] - offsetWidth) / 2;
             scrollY = position[1];
         }
-        Readiant.windowContext.scroll(scrollX, scrollY);
+        if (!(Readiant.root instanceof ShadowRoot))
+            Readiant.windowContext.scroll(scrollX, scrollY);
     }
     static updateScrollPosition() {
         const deltaX = this.lastKnownMouseX - this.startX;

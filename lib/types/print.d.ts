@@ -13,7 +13,8 @@ export class Print {
     static register() {
         if (this.button === null)
             return;
-        this.button.addEventListener('click', () => {
+        this.button.addEventListener('click', (event) => {
+            event.preventDefault();
             this.before();
             Readiant.windowContext.print();
         });

@@ -12,6 +12,7 @@ export class Issues {
     static register() {
         for (const button of this.buttons)
             button.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.report(event);
             });
         Navigation.addHandler(() => {

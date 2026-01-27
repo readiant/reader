@@ -19,6 +19,7 @@ export class Orientation {
         this.mode = orientation;
         for (const button of this.buttons)
             button.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.change(event);
             });
         if (!Storage.data.hover && (Storage.data.pointer || Storage.data.touch)) {

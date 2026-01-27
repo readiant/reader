@@ -20,7 +20,8 @@ export class Text {
         if (this.translateButton === null)
             return;
         this.languages = translations;
-        this.translateButton.addEventListener('click', () => {
+        this.translateButton.addEventListener('click', (event) => {
+            event.preventDefault();
             this.toggleTranslate();
         });
         if (typeof defaultLanguage !== 'undefined')
@@ -41,7 +42,8 @@ export class Text {
             span.innerText = language;
             label.appendChild(input);
             label.appendChild(span);
-            label.addEventListener('click', () => {
+            label.addEventListener('click', (event) => {
+                event.preventDefault();
                 this.switchTranslation(language, languageCode);
             });
             label.addEventListener('keydown', (event) => {

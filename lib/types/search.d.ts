@@ -41,10 +41,12 @@ export class Search {
         return Readiant.root.querySelector('.rdnt__search-summary');
     }
     static register() {
-        this.button?.addEventListener('click', () => {
+        this.button?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.toggle(Container.Search);
         });
-        this.closeButton?.addEventListener('click', () => {
+        this.closeButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.close([Container.Search]);
         });
         this.input?.addEventListener('input', debounce(() => {
@@ -74,13 +76,15 @@ export class Search {
             li.setAttribute('class', 'rdnt__search-result');
             if (Readiant.type === ContentType.SVG) {
                 li.innerHTML = `<span class="rdnt__search-result__page">${this.page} ${String(result.page)}</span>${this.summarizeMatches(result.match, data.query)}`;
-                li.addEventListener('click', () => {
+                li.addEventListener('click', (event) => {
+                    event.preventDefault();
                     Navigation.gotoPage(result.page);
                 });
             }
             else {
                 li.innerHTML = this.summarizeMatches(result.match, data.query);
-                li.addEventListener('click', () => {
+                li.addEventListener('click', (event) => {
+                    event.preventDefault();
                     Navigation.gotoSearchResult(result.chapterIndex, data.query);
                 });
             }

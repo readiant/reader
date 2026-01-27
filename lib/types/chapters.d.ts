@@ -14,10 +14,12 @@ export class Chapters {
     }
     static register(chapters) {
         this.chapters = chapters;
-        this.button?.addEventListener('click', () => {
+        this.button?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.toggle(Container.Chapters);
         });
-        this.closeButton?.addEventListener('click', () => {
+        this.closeButton?.addEventListener('click', (event) => {
+            event.preventDefault();
             Readiant.close([Container.Chapters]);
         });
         for (const chapter of this.chapters) {
@@ -34,7 +36,12 @@ export class Chapters {
             span.innerText = chapter.title;
             label.appendChild(input);
             label.appendChild(span);
-            label.addEventListener('click', () => Navigation.gotoChapter(chapter));
+            label.addEventListener('click', (event) => {
+                event.preventDefault();
+                Navigation.gotoChapter(chapter).catch((e) => {
+                    throw e;
+                });
+            });
             label.addEventListener('keydown', (event) => {
                 A11y.shortcut(event);
             });
