@@ -761,9 +761,25 @@ export class Builder {
         this.direction = direction;
     }
     static setStylesheet(id, fonts, stylesheetText) {
+        const allFontFaceRules = [];
+        if (Object.keys(fonts).length > 0) {
+            for (const [fontFamily, fontUrls] of Object.entries(fonts)) {
+                const sources = [];
+                if (typeof fontUrls.woff2 === 'string')
+                    sources.push(`url("${fontUrls.woff2}") format('woff2')`);
+                if (typeof fontUrls.woff === 'string')
+                    sources.push(`url("${fontUrls.woff}") format('woff')`);
+                if (sources.length > 0) {
+                    allFontFaceRules.push(`@font-face {
+              font-family: "${fontFamily}";
+              src: ${sources.join(', ')};
+              font-weight: normal;
+              font-style: normal;
+            }`);
+                }
+            }
+        }
         if (typeof stylesheetText !== 'undefined') {
-            const fontNamespace = `rdnt-${Math.random().toString(36).substring(2, 9)}`;
-            const fontFamilyMap = new Map();
             let cssText = stylesheetText;
             const fontFaceRegex = /@font-face\s*{([^}]+)}/g;
             cssText = cssText.replace(fontFaceRegex, (match, content) => {
@@ -772,9 +788,6 @@ export class Builder {
                 if (familyMatch === null)
                     return match;
                 const fontFamily = familyMatch[1].trim();
-                const uniqueFontFamily = `${fontFamily}-${fontNamespace}`;
-                fontFamilyMap.set(fontFamily, uniqueFontFamily);
-                let updatedMatch = match.replace(/font-family\s*:\s*['"]?[^'";]+['"]?/, `font-family: "${uniqueFontFamily}"`);
                 if (typeof fonts[fontFamily] !== 'undefined') {
                     const fontUrls = fonts[fontFamily];
                     const sources = [];
@@ -783,39 +796,30 @@ export class Builder {
                     if (typeof fontUrls.woff === 'string')
                         sources.push(`url("${fontUrls.woff}") format('woff')`);
                     if (sources.length > 0)
-                        updatedMatch = updatedMatch.replace(/src\s*:\s*[^;}]+;?/, `src: ${sources.join(', ')};`);
+                        return match.replace(/src\s*:\s*[^;}]+;?/, `src: ${sources.join(', ')};`);
                 }
-                return updatedMatch;
+                return match;
             });
-            const fontFaceRules = [];
             let match;
             const fontFacePattern = /@font-face\s*\{[^}]+\}/g;
             while ((match = fontFacePattern.exec(cssText)) !== null)
-                fontFaceRules.push(match[0]);
+                allFontFaceRules.push(match[0]);
             const cssWithoutFontFace = cssText.replace(/@font-face\s*\{[^}]+\}/g, '');
-            let updatedCss = cssWithoutFontFace;
-            for (const [originalName, uniqueName] of fontFamilyMap) {
-                const escapedOriginal = originalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const fontFamilyRegex = new RegExp(`(font-family\\s*:\\s*(?:[^;]*,\\s*)?)(['"]?)${escapedOriginal}\\2(?=\\s*[,;])`, 'gi');
-                updatedCss = updatedCss.replace(fontFamilyRegex, `$1$2${uniqueName}$2`);
-                const fontShorthandRegex = new RegExp(`(font\\s*:\\s*[^;]*?)\\b${escapedOriginal}\\b`, 'gi');
-                updatedCss = updatedCss.replace(fontShorthandRegex, `$1${uniqueName}`);
-            }
-            if (fontFaceRules.length > 0) {
-                const fontStyleElement = Readiant.documentContext.createElement('style');
-                fontStyleElement.textContent = fontFaceRules.join('\n');
-                Readiant.documentContext.head.appendChild(fontStyleElement);
-            }
-            if (updatedCss.trim().length > 0) {
+            if (cssWithoutFontFace.trim().length > 0) {
                 const stylesheet = new CSSStyleSheet();
-                stylesheet.replaceSync(updatedCss);
+                stylesheet.replaceSync(cssWithoutFontFace);
                 Readiant.root.adoptedStyleSheets = [
                     ...Readiant.root.adoptedStyleSheets,
                     stylesheet,
                 ];
             }
         }
-        else {
+        if (allFontFaceRules.length > 0) {
+            const fontStyleElement = Readiant.documentContext.createElement('style');
+            fontStyleElement.textContent = allFontFaceRules.join('\n');
+            Readiant.documentContext.head.appendChild(fontStyleElement);
+        }
+        if (typeof stylesheetText === 'undefined') {
             const link = Readiant.documentContext.createElement('link');
             link.setAttribute('href', `/files/stylesheet/${id}`);
             link.setAttribute('rel', 'stylesheet');

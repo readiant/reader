@@ -235,34 +235,14 @@ export class Readiant {
         };
         this.connected = false;
         this.fonts = {};
-        const moduleBase = new URL('.', import.meta.url).href;
-        const fontsBase = new URL('./fonts/', moduleBase).href;
-        this.fonts = {
-            Dyslexia: {
-                woff2: `${fontsBase}df.woff2`,
-                woff: `${fontsBase}df.woff`,
-            },
-            Lora: {
-                woff2: `${fontsBase}lora.woff2`,
-                woff: `${fontsBase}lora.woff`,
-            },
-            Merriweather: {
-                woff2: `${fontsBase}merriweather.woff2`,
-                woff: `${fontsBase}merriweather.woff`,
-            },
-            Mulish: {
-                woff2: `${fontsBase}mulish.woff2`,
-                woff: `${fontsBase}mulish.woff`,
-            },
-            Mukta: {
-                woff2: `${fontsBase}mukta.woff2`,
-                woff: `${fontsBase}mukta.woff`,
-            },
-            Roboto: {
-                woff2: `${fontsBase}roboto-regular.woff2`,
-                woff: `${fontsBase}roboto-regular.woff`,
-            },
-        };
+        if (isOffline) {
+            void import('./fontAssets.js').then(({ fontAssets, }) => {
+                this.fonts = fontAssets;
+            });
+        }
+        else {
+            this.fonts = {};
+        }
         if (root) {
             Readiant.root = root;
             Readiant.instances.set(root, this);
@@ -478,10 +458,13 @@ export class Readiant {
             }
             if (filePath.startsWith('fonts/') || filePath.includes('/fonts/')) {
                 const fontName = fileNameWithoutExtension;
-                if (typeof this.fonts[fontName] === 'undefined')
+                if (typeof this.fonts[fontName] === 'undefined') {
                     this.fonts[fontName] = {};
-                const fontUrl = isFullUrl ? file : `${String(this.options.url)}${file}`;
-                this.fonts[fontName][fileExtension] = fontUrl;
+                    const fontUrl = isFullUrl
+                        ? file
+                        : `${String(this.options.url)}${file}`;
+                    this.fonts[fontName][fileExtension] = fontUrl;
+                }
                 return;
             }
         };
