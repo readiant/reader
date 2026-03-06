@@ -20,7 +20,7 @@ export class Colorblind {
     static change(event) {
         if (typeof this.active !== 'undefined')
             Readiant.documentBody.classList.remove(this.active);
-        let title = '';
+        let title;
         let value;
         if (typeof event === 'string') {
             const element = Readiant.root.querySelector(`[value="${event}"]`);

@@ -7,7 +7,7 @@ export class LineHighlighter {
         return Readiant.root.querySelector('.rdnt__line-highlighter--bottom');
     }
     static get buttons() {
-        return Readiant.root.querySelectorAll('.rdnt__line-highlight');
+        return Readiant.root.querySelectorAll('.rdnt__line-highlight-button');
     }
     static get center() {
         return Readiant.root.querySelector('.rdnt__line-highlighter--center');
@@ -95,7 +95,7 @@ export class LineHighlighter {
             : event.clientY;
         const rootRect = Readiant.documentBody.getBoundingClientRect();
         const y = clientY - rootRect.top + Readiant.documentBody.scrollTop;
-        this.top.style.height = `${String(y - 56 - this.width / 2)}px`;
+        this.top.style.height = `${String(y - this.width / 2)}px`;
         this.center.style.top = `${String(y - this.width / 2)}px`;
         this.center.style.height = `${String(this.width)}px`;
         this.bottom.style.top = `${String(y + this.width / 2)}px`;

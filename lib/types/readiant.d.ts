@@ -240,9 +240,8 @@ export class Readiant {
                 this.fonts = fontAssets;
             });
         }
-        else {
+        else
             this.fonts = {};
-        }
         if (root) {
             Readiant.root = root;
             Readiant.instances.set(root, this);
