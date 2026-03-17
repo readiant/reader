@@ -68,6 +68,7 @@ document.body.appendChild(viewer);
 | `font` | string | `'default'` | Font family |
 | `letter-spacing` | number | `0` | Letter spacing adjustment |
 | `line-height` | number | `1.2` | Line height multiplier |
+| `line-highlighter-width` | number | `30` | Line highlighter band width in pixels |
 | `word-spacing` | number | `0` | Word spacing adjustment |
 | `screen-mode-level` | number | `1` | Theme mode (1=light, 2=sepia, 3=dark) |
 | `color-blind-filter` | string | `'none'` | Color blind accessibility filter |
@@ -338,6 +339,7 @@ interface ReaderProps {
   font?: string;
   'letter-spacing'?: number | string;
   'line-height'?: number | string;
+  'line-highlighter-width'?: number | string;
   'word-spacing'?: number | string;
   'screen-mode-level'?: number | string;
   'color-blind-filter'?: string;
@@ -813,7 +815,9 @@ Set any of these to `none` to hide the element, or `inline-block`/`block`/`flex`
 | `--readiant-fullscreen-toggle-display` | `inline-block` | Fullscreen toggle button |
 | `--readiant-line-highlight-display` | `inline-block` | Line highlighter button |
 | `--readiant-mute-display` | `inline-block` | Mute button |
+| `--readiant-pause-display` | `none` | Pause button (hidden by default; use with `--readiant-play-display`) |
 | `--readiant-page-number-display` | `inline-block` | Page number widget |
+| `--readiant-play-display` | `none` | Play button (hidden by default; use with `--readiant-pause-display`) |
 | `--readiant-page-number-text-display` | `none` | Text label alongside page number |
 | `--readiant-playback-rate-toggle-display` | `inline-block` | Playback rate toggle button |
 | `--readiant-playback-rate-top-parent-display` | `inline-block` | Playback rate container (top bar) |
@@ -821,6 +825,8 @@ Set any of these to `none` to hide the element, or `inline-block`/`block`/`flex`
 | `--readiant-screen-settings-button-display` | `inline-block` | Screen settings button |
 | `--readiant-search-button-display` | `inline-block` | Search button |
 | `--readiant-settings-button-display` | `inline-block` | Settings button |
+| `--readiant-start-display` | `inline-block` | Start button (visible when audio is available; set to `none` to use play/pause mode) |
+| `--readiant-stop-display` | `inline-block` | Stop button (visible while audio is playing; set to `none` to use play/pause mode) |
 | `--readiant-tooltip-display` | `block` | Tooltips |
 | `--readiant-unmute-display` | `inline-block` | Unmute button |
 

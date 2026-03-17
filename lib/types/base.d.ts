@@ -1,7 +1,15 @@
+import { Audio } from './audio.js';
+import { Bar } from './bar.js';
+import { Colorblind } from './colorblind.js';
+import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
+import { ImageQuality } from './imageQuality.js';
+import { LineHighlighter } from './lineHighlighter.js';
 import { Navigation } from './navigation.js';
+import { Orientation } from './orientation.js';
 import { Readiant } from './readiant.js';
 import { ScreenMode } from './screenMode.js';
+import { TextMode } from './textMode.js';
 import { Zoom } from './zoom.js';
 import { template } from './template.js';
 import { styles } from './styles.js';
@@ -19,6 +27,7 @@ class ReadiantElement extends HTMLElement {
             'image-quality-level',
             'letter-spacing',
             'line-height',
+            'line-highlighter-width',
             'orientation',
             'page',
             'playback-rate',
@@ -32,6 +41,79 @@ class ReadiantElement extends HTMLElement {
             'word-spacing',
             'zoom-level',
         ];
+    }
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name === 'disable' ||
+            name === 'concurrency-limit' ||
+            name === 'use-signed-urls')
+            return;
+        if (name === 'document-id' || name === 'url') {
+            if (this.shadowRoot && newValue !== null) {
+                this.reload().catch((error) => {
+                    console.error('[Readiant] Reload error:', error);
+                });
+            }
+            return;
+        }
+        if (!this.isLoaded || newValue === null)
+            return;
+        this.setContext();
+        switch (name) {
+            case 'audio-highlighting-level':
+                Audio.setLineHighlighterType(Number(newValue));
+                break;
+            case 'color-blind-filter':
+                Colorblind.change(newValue);
+                break;
+            case 'countdown-level':
+                Audio.countdownType(Number(newValue));
+                break;
+            case 'font':
+                Fonts.change(newValue);
+                break;
+            case 'image-quality-level':
+                ImageQuality.change(Number(newValue));
+                break;
+            case 'letter-spacing':
+                Fonts.letterSpacing(Number(newValue));
+                break;
+            case 'line-height':
+                Fonts.lineHeight(Number(newValue));
+                break;
+            case 'line-highlighter-width':
+                LineHighlighter.changeWidth(Number(newValue));
+                break;
+            case 'orientation':
+                Orientation.change(newValue === 'portrait' ? 2 : 1);
+                break;
+            case 'page':
+                Navigation.gotoPageDirectly(Number(newValue));
+                break;
+            case 'playback-rate':
+                Audio.setPlaybackRate(Number(newValue));
+                break;
+            case 'read-stop-level':
+                Bar.changeReadStop(Number(newValue));
+                break;
+            case 'screen-mode-level':
+                ScreenMode.change(Number(newValue));
+                break;
+            case 'subtitle-font-size':
+                Bar.fontSizeSubtitles(Number(newValue));
+                break;
+            case 'subtitle-level':
+                Audio.setSubtitlesType(Number(newValue));
+                break;
+            case 'text-mode-level':
+                TextMode.change(Number(newValue));
+                break;
+            case 'word-spacing':
+                Fonts.wordSpacing(Number(newValue));
+                break;
+            case 'zoom-level':
+                Zoom.change(Number(newValue));
+                break;
+        }
     }
     connectedCallback() {
         if (initializedElements.has(this))
@@ -74,6 +156,31 @@ class ReadiantElement extends HTMLElement {
         ReadiantElement.instance = null;
         if (this.shadowRoot)
             Readiant.removeInstance(this.shadowRoot);
+    }
+    async reload() {
+        try {
+            const shadow = this.shadowRoot;
+            if (!shadow)
+                return;
+            Readiant.removeInstance(shadow);
+            while (shadow.firstChild)
+                shadow.removeChild(shadow.firstChild);
+            const sheet = new CSSStyleSheet();
+            await sheet.replace(styles);
+            shadow.adoptedStyleSheets = [sheet];
+            const parsedDoc = new DOMParser().parseFromString(template, 'text/html');
+            shadow.appendChild(parsedDoc.body.firstElementChild ?? parsedDoc.body);
+            const documentId = this.getAttribute('document-id');
+            const url = this.getAttribute('url');
+            if (documentId !== null || url !== null) {
+                await new Promise((resolve) => window.requestAnimationFrame(resolve));
+                const { Readiant: ReadiantClass } = await import('./readiant.js');
+                new ReadiantClass(shadow);
+            }
+        }
+        catch (error) {
+            Readiant.errorHandler(error);
+        }
     }
     setContext() {
         if (this.shadowRoot) {

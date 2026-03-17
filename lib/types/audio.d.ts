@@ -32,11 +32,11 @@ export class Audio {
     static get muteButton() {
         return Readiant.root.querySelector('.rdnt__mute-button');
     }
-    static get pauseButton() {
-        return Readiant.root.querySelector('.rdnt__pause');
+    static get pauseButtons() {
+        return Readiant.root.querySelectorAll('.rdnt__pause');
     }
-    static get playButton() {
-        return Readiant.root.querySelector('.rdnt__play');
+    static get playButtons() {
+        return Readiant.root.querySelectorAll('.rdnt__play');
     }
     static get playbackRateMinus() {
         return Readiant.root.querySelector('.rdnt__playback-rate--minus');
@@ -55,9 +55,6 @@ export class Audio {
     }
     static get playbackRateToggle() {
         return Readiant.root.querySelector('.rdnt__playback-rate-toggle');
-    }
-    static get playbackRateTopSettings() {
-        return Readiant.root.querySelector('.rdnt__menu__buttons-audio');
     }
     static get progressElements() {
         return Readiant.root.querySelectorAll('.rdnt__audio-progress, .rdnt__audio-progress-top');
@@ -112,7 +109,8 @@ export class Audio {
         this.availableAudio = availableAudio;
         this.startButton?.classList.remove(CLASS_HIDDEN);
         this.countdownSettings?.classList.remove(CLASS_HIDDEN);
-        this.playButton?.classList.remove(CLASS_HIDDEN);
+        for (const playButton of this.playButtons)
+            playButton.classList.remove(CLASS_HIDDEN);
         this.playbackRateSettings?.classList.remove(CLASS_HIDDEN);
         for (const provider of Object.keys(this.availableAudio))
             this.providers.add(provider);
@@ -148,18 +146,20 @@ export class Audio {
             lineHighlighterButton.addEventListener('click', (event) => {
                 this.setLineHighlighterType(event);
             });
-        this.pauseButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.pause().catch((e) => {
-                throw e;
+        for (const pauseButton of this.pauseButtons)
+            pauseButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.pause().catch((e) => {
+                    throw e;
+                });
             });
-        });
-        this.playButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.play().catch((e) => {
-                throw e;
+        for (const playButton of this.playButtons)
+            playButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.play().catch((e) => {
+                    throw e;
+                });
             });
-        });
         this.muteButton?.addEventListener('click', (event) => {
             event.preventDefault();
             this.mute();
@@ -474,11 +474,12 @@ export class Audio {
             return;
         this.element.pause();
         this.playingState = AudioPlayingState.Paused;
-        if (this.pauseButton !== null &&
-            !this.pauseButton.classList.contains(CLASS_HIDDEN)) {
-            this.pauseButton.classList.add(CLASS_HIDDEN);
-            this.playButton?.classList.remove(CLASS_HIDDEN);
-        }
+        for (const pauseButton of this.pauseButtons)
+            if (!pauseButton.classList.contains(CLASS_HIDDEN))
+                pauseButton.classList.add(CLASS_HIDDEN);
+        for (const playButton of this.playButtons)
+            if (playButton.classList.contains(CLASS_HIDDEN))
+                playButton.classList.remove(CLASS_HIDDEN);
         if (this.stopButton !== null &&
             !this.stopButton.classList.contains(CLASS_HIDDEN)) {
             this.stopButton.classList.add(CLASS_HIDDEN);
@@ -518,11 +519,12 @@ export class Audio {
         if (this.stopButton !== null &&
             this.stopButton.classList.contains(CLASS_HIDDEN))
             this.stopButton.classList.remove(CLASS_HIDDEN);
-        if (this.playButton !== null &&
-            !this.playButton.classList.contains(CLASS_HIDDEN)) {
-            this.playButton.classList.add(CLASS_HIDDEN);
-            this.pauseButton?.classList.remove(CLASS_HIDDEN);
-        }
+        for (const pauseButton of this.pauseButtons)
+            if (pauseButton.classList.contains(CLASS_HIDDEN))
+                pauseButton.classList.remove(CLASS_HIDDEN);
+        for (const playButton of this.playButtons)
+            if (!playButton.classList.contains(CLASS_HIDDEN))
+                playButton.classList.add(CLASS_HIDDEN);
         eventLogger({
             type: LogType.AudioPlay,
         });
@@ -537,19 +539,23 @@ export class Audio {
             this.stopButton.remove();
         if (this.countdownSettings !== null)
             this.countdownSettings.remove();
-        if (this.pauseButton !== null)
-            this.pauseButton.remove();
-        if (this.playButton !== null)
-            this.playButton.remove();
+        if (this.muteButton !== null)
+            this.muteButton.remove();
+        for (const pauseButton of this.pauseButtons)
+            pauseButton.remove();
+        for (const playButton of this.playButtons)
+            playButton.remove();
         if (this.playbackRateSettings !== null)
             this.playbackRateSettings.remove();
-        if (this.playbackRateTopSettings !== null)
-            this.playbackRateTopSettings.remove();
+        if (this.playbackRateToggle !== null)
+            this.playbackRateToggle.remove();
         if (this.progressElements !== null)
             for (const progressElement of this.progressElements)
                 progressElement.remove();
         if (this.providersSettings !== null)
             this.providersSettings.remove();
+        if (this.unmuteButton !== null)
+            this.unmuteButton.remove();
     }
     static resetEndSentenceTime() {
         this.endSentenceTime = undefined;
@@ -805,37 +811,49 @@ export class Audio {
         this.element.load();
     }
     static startTimerForNextPage(seconds = 3) {
-        if (!Navigation.isAtLastPage()) {
-            if (Navigation.currentPage % 2 === 0 &&
-                Orientation.mode === OrientationMode.Landscape)
+        if (Navigation.isAtLastPage())
+            return;
+        if (Orientation.mode === OrientationMode.Landscape) {
+            const index = Navigation.pages.indexOf(Navigation.currentPage);
+            const nextPage = Navigation.pages[index + 1];
+            const nextPageOnSpread = Navigation.currentPages.find((cp) => cp.page === nextPage);
+            if (typeof nextPageOnSpread !== 'undefined') {
+                Bar.empty();
+                this.stopTimer();
+                this.start(0, nextPageOnSpread.position).catch((e) => {
+                    throw e;
+                });
+                return;
+            }
+            if (Navigation.currentPage % 2 === 0) {
                 Navigation.nextPage();
-            else {
-                if (this.timerType === 3)
-                    return;
-                if (this.timerType === 1) {
-                    this.runningTimer = true;
-                    Readiant.windowContext.setTimeout(() => {
-                        if (!this.runningTimer)
-                            return;
-                        if (seconds <= 0) {
-                            if (this.countdownElement !== null)
-                                this.countdownElement.classList.add(CLASS_HIDDEN);
-                            this.stopTimer();
-                            Navigation.nextPage();
-                        }
-                        else {
-                            if (this.countdownElement !== null) {
-                                this.countdownElement.classList.remove(CLASS_HIDDEN);
-                                this.countdownElement.innerHTML = String(seconds);
-                            }
-                            this.startTimerForNextPage(seconds - 1);
-                        }
-                    }, 1000);
-                }
-                else
-                    Navigation.nextPage();
+                return;
             }
         }
+        if (this.timerType === 3)
+            return;
+        if (this.timerType === 1) {
+            this.runningTimer = true;
+            Readiant.windowContext.setTimeout(() => {
+                if (!this.runningTimer)
+                    return;
+                if (seconds <= 0) {
+                    if (this.countdownElement !== null)
+                        this.countdownElement.classList.add(CLASS_HIDDEN);
+                    this.stopTimer();
+                    Navigation.nextPage();
+                }
+                else {
+                    if (this.countdownElement !== null) {
+                        this.countdownElement.classList.remove(CLASS_HIDDEN);
+                        this.countdownElement.innerHTML = String(seconds);
+                    }
+                    this.startTimerForNextPage(seconds - 1);
+                }
+            }, 1000);
+        }
+        else
+            Navigation.nextPage();
     }
     static async stop() {
         this.stopCurrentAudio();
@@ -847,11 +865,12 @@ export class Audio {
         if (this.stopButton !== null &&
             !this.stopButton.classList.contains(CLASS_HIDDEN))
             this.stopButton.classList.add(CLASS_HIDDEN);
-        if (this.pauseButton !== null &&
-            !this.pauseButton.classList.contains(CLASS_HIDDEN)) {
-            this.pauseButton.classList.add(CLASS_HIDDEN);
-            this.playButton?.classList.remove(CLASS_HIDDEN);
-        }
+        for (const pauseButton of this.pauseButtons)
+            if (!pauseButton.classList.contains(CLASS_HIDDEN))
+                pauseButton.classList.add(CLASS_HIDDEN);
+        for (const playButton of this.playButtons)
+            if (playButton.classList.contains(CLASS_HIDDEN))
+                playButton.classList.remove(CLASS_HIDDEN);
         Bar.empty();
         Builder.stopHighlightingSyntax();
     }

@@ -788,18 +788,18 @@ export class Navigation {
         let page = this.currentPage;
         const lastPage = this.pages[this.pages.length - 1];
         const index = this.pages.indexOf(page);
-        if (Audio.playingState === AudioPlayingState.Paused ||
-            Audio.playingState === AudioPlayingState.Playing ||
-            Orientation.mode === OrientationMode.Portrait)
+        if (Orientation.mode === OrientationMode.Portrait)
             page = this.pages[index + 1];
         else
             page =
                 this.pages[index + (this.currentPage % 2 === 0 || this.spread === true ? 2 : 1)];
-        if (Orientation.mode !== OrientationMode.Portrait)
-            Builder.animateRight();
         page = Math.min(this.numPages, typeof page !== 'undefined' ? page : lastPage);
-        if (page !== this.currentPage)
-            this.gotoPage(page, PageChangeType.Next);
+        if (page === this.currentPage)
+            return;
+        if (Orientation.mode !== OrientationMode.Portrait &&
+            !this.isPageVisible(page))
+            Builder.animateRight();
+        this.gotoPage(page, PageChangeType.Next);
     }
     static notify(newPage, currentPage) {
         for (const handler of this.handlers) {
@@ -959,14 +959,16 @@ export class Navigation {
         const index = this.pages.indexOf(page);
         if (Orientation.mode === OrientationMode.Portrait)
             page = this.pages[index - 1];
-        else {
-            Builder.animateLeft();
+        else
             page =
                 this.pages[index - (this.currentPage % 2 === 0 || this.spread === true ? 2 : 3)];
-        }
         page = Math.max(firstPage, typeof page !== 'undefined' ? page : this.pages[0]);
-        if (page !== this.currentPage)
-            this.gotoPage(page, PageChangeType.Previous);
+        if (page === this.currentPage)
+            return;
+        if (Orientation.mode !== OrientationMode.Portrait &&
+            !this.isPageVisible(page))
+            Builder.animateLeft();
+        this.gotoPage(page, PageChangeType.Previous);
     }
     static requestPages(pages) {
         Stream.send({

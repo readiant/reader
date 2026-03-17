@@ -80,8 +80,8 @@
           >
             <span class="rdnt__icon rdnt__icon--settings rdnt__button-icon" aria-hidden="true"></span>
           </button>
-          
           <div class="rdnt__menu__buttons-audio">
+            
             <button
               aria-label="Play the audio playback from the beginning"
               class="rdnt__button rdnt__start rdnt__tooltip bottom left hidden"
@@ -95,6 +95,20 @@
               data-title="Play"
             >
               <span class="rdnt__icon rdnt__icon--stop rdnt__stop-icon" aria-hidden="true"></span>
+            </button>
+            <button
+              aria-label="Play the audio playback"
+              class="rdnt__button rdnt__play rdnt__tooltip bottom right hidden"
+              data-title="Play"
+            >
+              <span class="rdnt__icon rdnt__icon--play rdnt__play-icon" aria-hidden="true"></span>
+            </button>
+            <button
+              aria-label="Pause the audio playback"
+              class="rdnt__button rdnt__pause rdnt__tooltip bottom right hidden"
+              data-title="Pause"
+            >
+              <span class="rdnt__icon rdnt__icon--pause rdnt__pause-icon" aria-hidden="true"></span>
             </button>
             <button
               aria-expanded="false"
@@ -165,11 +179,13 @@
             >
               <span class="rdnt__icon rdnt__icon--unmute rdnt__button-icon" aria-hidden="true"></span>
             </button>
+            
             <div class="rdnt__page-number-text">
               <span class="rdnt__page-number-text__current"></span>
               <span class="rdnt__page-number-text__total"></span>
             </div>
           </div>
+          
           <div class="rdnt__audio-progress-top">
             <div class="rdnt__audio-progress-top-value"></div>
             <div class="rdnt__audio-progress-top-caret"></div>

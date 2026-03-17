@@ -211,6 +211,7 @@ export class Readiant {
             imageQualityLevel: AcceptedTypes.Number,
             letterSpacing: AcceptedTypes.Number,
             lineHeight: AcceptedTypes.Number,
+            lineHighlighterWidth: AcceptedTypes.Number,
             locale: AcceptedTypes.String,
             localeTranslations: AcceptedTypes.String,
             orientation: AcceptedTypes.String,
@@ -413,7 +414,7 @@ export class Readiant {
                 }
                 else if (fileExtension === 'json') {
                     const syntax = (await response.json());
-                    Storage.storeSyntax(`${provider}__${fileNameWithoutExtension}`, syntax);
+                    Storage.storeSyntax(`${provider}${fileNameWithoutExtension.replace('speechmark', '')}`, syntax);
                 }
                 return;
             }
@@ -561,6 +562,8 @@ export class Readiant {
             Fonts.letterSpacing(this.options.letterSpacing);
         if (typeof this.options.lineHeight !== 'undefined')
             Fonts.lineHeight(this.options.lineHeight);
+        if (typeof this.options.lineHighlighterWidth !== 'undefined')
+            LineHighlighter.changeWidth(this.options.lineHighlighterWidth);
         if (typeof this.options.screenModeLevel !== 'undefined')
             ScreenMode.change(this.options.screenModeLevel);
         if (typeof this.options.subtitleFontSize !== 'undefined')
