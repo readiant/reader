@@ -59,6 +59,8 @@ document.body.appendChild(viewer);
 | `orientation` | string | `'auto'` | Document orientation (portrait, landscape) |
 | `disable` | string | `''` | Comma-separated features to disable |
 | `concurrency-limit` | number | `6` | Maximum concurrent file downloads (1-20) |
+| `lang` | string | `'en'` | BCP 47 language tag — automatically loads the matching locale file; falls back to English if not found |
+| `translations` | string (JSON) | `''` | JSON-encoded key overrides applied on top of the `lang` locale (see [Localization](#localization)) |
 
 ### Visual Appearance
 
@@ -123,6 +125,60 @@ document.body.appendChild(viewer);
     document-id="doc-large"
     concurrency-limit="10">
 </readiant-reader>
+```
+
+## Localization
+
+Set the `lang` attribute to any supported language tag. The component automatically loads the matching locale file from the package. If the language is not available it falls back to English.
+
+```html
+<readiant-reader document-id="doc-123" lang="nl"></readiant-reader>
+```
+
+### Overriding specific strings
+
+Pass a `translations` JSON object to override individual keys on top of the loaded language file. You only need to supply the keys you want to change — everything else comes from the locale file (or English if the locale is missing).
+
+```html
+<readiant-reader
+    document-id="doc-123"
+    lang="nl"
+    translations='{"chapters":"Inhoudsopgave"}'>
+</readiant-reader>
+```
+
+If `lang` is absent or `"en"`, the baked-in English strings are used and no network request is made.
+
+### Available locales
+
+| `lang` value | Language |
+|---|---|
+| `en` (default) | English — baked in, no request |
+| `nl` | Dutch |
+
+### React example
+
+```tsx
+import { Reader } from '@readiant/reader/jsx';
+
+function DocumentViewer({ documentId, lang = 'en' }) {
+    return (
+        <Reader
+            document-id={documentId}
+            lang={lang}
+        />
+    );
+}
+```
+
+If you need to override specific strings on top of the locale:
+
+```tsx
+<Reader
+    document-id={documentId}
+    lang="nl"
+    translations={JSON.stringify({ chapters: 'Inhoudsopgave' })}
+/>
 ```
 
 ## Document Sources
