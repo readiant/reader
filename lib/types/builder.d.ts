@@ -254,6 +254,19 @@ export class Builder {
             this.layer(PagePosition.Left);
             return;
         }
+        if (this.animationRight !== null) {
+            const rightComputedStyle = Readiant.windowContext.getComputedStyle(this.animationRight);
+            if (rightComputedStyle.animationName !== 'none') {
+                this.animationRight.classList.remove(CLASS_ACTIVE);
+                this.leftLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
+                this.rightLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
+                this.layers.style.transition = 'none';
+                this.layers.style.removeProperty('perspective');
+                this.layers.style.removeProperty('transform');
+                this.viewport.style.transition = 'none';
+                this.viewport.style.removeProperty('transform');
+            }
+        }
         this.animationPages = Navigation.animationPages;
         this.isAnimating = true;
         const myEpoch = ++this.animationEpoch;
@@ -335,6 +348,19 @@ export class Builder {
             Math.max(...Navigation.pages) === Navigation.currentPage) {
             this.layer(PagePosition.Right);
             return;
+        }
+        if (this.animationLeft !== null) {
+            const leftComputedStyle = Readiant.windowContext.getComputedStyle(this.animationLeft);
+            if (leftComputedStyle.animationName !== 'none') {
+                this.animationLeft.classList.remove(CLASS_ACTIVE);
+                this.leftLayer?.classList.remove(CLASS_ANIMATE_LEFT);
+                this.rightLayer?.classList.remove(CLASS_ANIMATE_LEFT);
+                this.layers.style.transition = 'none';
+                this.layers.style.removeProperty('perspective');
+                this.layers.style.removeProperty('transform');
+                this.viewport.style.transition = 'none';
+                this.viewport.style.removeProperty('transform');
+            }
         }
         this.animationPages = Navigation.animationPages;
         this.isAnimating = true;
@@ -2651,25 +2677,7 @@ export class Builder {
                     attributeFilter: ['class'],
                 });
             });
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                if (element.classList.contains(CLASS_ACTIVE)) {
-                    clearInterval(checkInterval);
-                    new MutationObserver((_records, observer) => {
-                        if (!element.classList.contains(CLASS_ACTIVE)) {
-                            observer.disconnect();
-                            resolve();
-                        }
-                    }).observe(element, {
-                        attributeFilter: ['class'],
-                    });
-                }
-                else if (!this.isAnimating) {
-                    clearInterval(checkInterval);
-                    resolve();
-                }
-            }, 10);
-        });
+        return Promise.resolve();
     }
     static waitForElements(elements) {
         elements = elements.map((element) => `#${element.replace('.', '\\.')}`);
