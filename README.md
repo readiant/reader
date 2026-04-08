@@ -541,31 +541,82 @@ const viewer = document.querySelector('readiant-reader');
 // Document loaded
 viewer.addEventListener('document-loaded', (event) => {
     console.log('Document loaded:', event.detail);
-    // event.detail: { documentId, totalPages, isReady }
+    // event.detail: { documentId, isReady: true }
 });
 
-// Page changed
+// Page changed — fired for all navigation: UI buttons, swipe, keyboard, goToPage(), nextPage(), previousPage()
 viewer.addEventListener('page-changed', (event) => {
-    console.log('Current page:', event.detail.page);
-    // event.detail: { page, currentPage, totalPages, direction? }
+    console.log('Current pages:', event.detail.pages);
+    // event.detail: { pages: number[], direction?, previous? }
+    // pages: all currently visible page numbers (1 in portrait, up to 2 in landscape)
+    // direction: 'next' | 'previous' (omitted for direct jumps and initial load)
+    // previous: { duration, pages: [{ page, audio?: { playbackPercentage } }] } (omitted on initial load)
+});
+
+// Page closed (before unload)
+viewer.addEventListener('page-closed', (event) => {
+    console.log('Page closed:', event.detail.pages);
+    // event.detail: { pages: number[] }
 });
 
 // Zoom changed
 viewer.addEventListener('zoom-changed', (event) => {
     console.log('Zoom level:', event.detail.zoom);
-    // event.detail: { zoom, level }
+    // event.detail: { zoom }
 });
 
 // Theme changed
 viewer.addEventListener('theme-changed', (event) => {
     console.log('Theme changed:', event.detail.theme);
-    // event.detail: { theme, level }
+    // event.detail: { theme }
 });
 
 // Font changed
 viewer.addEventListener('font-changed', (event) => {
     console.log('Font changed:', event.detail.font);
-    // event.detail: { font, fontKey }
+    // event.detail: { font }
+});
+
+// Font size changed
+viewer.addEventListener('font-size-changed', (event) => {
+    console.log('Font size:', event.detail.fontSize);
+    // event.detail: { fontSize }
+});
+
+// Letter spacing changed
+viewer.addEventListener('letter-spacing-changed', (event) => {
+    console.log('Letter spacing:', event.detail.letterSpacing);
+    // event.detail: { letterSpacing }
+});
+
+// Line height changed
+viewer.addEventListener('line-height-changed', (event) => {
+    console.log('Line height:', event.detail.lineHeight);
+    // event.detail: { lineHeight }
+});
+
+// Word spacing changed
+viewer.addEventListener('word-spacing-changed', (event) => {
+    console.log('Word spacing:', event.detail.wordSpacing);
+    // event.detail: { wordSpacing }
+});
+
+// Image quality changed
+viewer.addEventListener('image-quality-changed', (event) => {
+    console.log('Image quality level:', event.detail.imageQualityLevel);
+    // event.detail: { imageQualityLevel, imageQuality }
+});
+
+// Color blind filter changed
+viewer.addEventListener('color-blind-filter-changed', (event) => {
+    console.log('Color blind filter:', event.detail.filter);
+    // event.detail: { filter }
+});
+
+// Text mode changed
+viewer.addEventListener('text-mode-changed', (event) => {
+    console.log('Text mode level:', event.detail.textModeLevel);
+    // event.detail: { textModeLevel }
 });
 
 // Audio play/pause
@@ -579,97 +630,73 @@ viewer.addEventListener('audio-pause', (event) => {
     // event.detail: { isPlaying: false, action: 'pause' }
 });
 
+// Audio highlighting changed
+viewer.addEventListener('audio-highlighting-changed', (event) => {
+    console.log('Audio highlighting level:', event.detail.audioHighlightingLevel);
+    // event.detail: { audioHighlightingLevel }
+});
+
+// Countdown changed
+viewer.addEventListener('countdown-changed', (event) => {
+    console.log('Countdown level:', event.detail.countdownLevel);
+    // event.detail: { countdownLevel }
+});
+
+// Playback rate changed
+viewer.addEventListener('playback-rate-changed', (event) => {
+    console.log('Playback rate:', event.detail.playbackRate);
+    // event.detail: { playbackRate }
+});
+
+// Read stop changed
+viewer.addEventListener('read-stop-changed', (event) => {
+    console.log('Read stop level:', event.detail.readStopLevel);
+    // event.detail: { readStopLevel }
+});
+
+// Subtitle changed
+viewer.addEventListener('subtitle-changed', (event) => {
+    console.log('Subtitle level:', event.detail.subtitleLevel);
+    // event.detail: { subtitleLevel }
+});
+
+// Subtitle font size changed
+viewer.addEventListener('subtitle-font-size-changed', (event) => {
+    console.log('Subtitle font size:', event.detail.subtitleFontSize);
+    // event.detail: { subtitleFontSize }
+});
+
 // Fullscreen changed
 viewer.addEventListener('fullscreen-changed', (event) => {
     console.log('Fullscreen:', event.detail.isFullscreen);
     // event.detail: { isFullscreen }
 });
 
-// Error occurred
-viewer.addEventListener('error', (event) => {
-    console.error('Error:', event.detail.message);
-    // event.detail: { message, type }
+// Orientation changed
+viewer.addEventListener('orientation-changed', (event) => {
+    console.log('Orientation changed');
+    // event.detail: { action: 'toggle', orientation }
 });
 
-// Annotations added
-viewer.addEventListener('annotations-added', (event) => {
-    console.log('Annotations added:', event.detail.count);
-    // event.detail: { annotations, count }
+// Print
+viewer.addEventListener('print', (event) => {
+    console.log('Print triggered:', event.detail.pages);
+    // event.detail: { pages: number[] }
 });
 
-// Audio highlighting changed
-viewer.addEventListener('audio-highlighting-changed', (event) => {
-    console.log('Audio highlighting level:', event.detail.level);
-    // event.detail: { level, audioHighlightingLevel }
+// Resize
+viewer.addEventListener('resize', (event) => {
+    console.log('Resize:', event.detail.width, event.detail.height);
+    // event.detail: { width, height }
 });
 
-// Color blind filter changed
-viewer.addEventListener('color-blind-filter-changed', (event) => {
-    console.log('Color blind filter:', event.detail.filter);
-    // event.detail: { filter, filterKey }
+// Translation
+viewer.addEventListener('translate', (event) => {
+    console.log('Translate:', event.detail.language, event.detail.text);
+    // event.detail: { language, text }
 });
 
-// Countdown changed
-viewer.addEventListener('countdown-changed', (event) => {
-    console.log('Countdown level:', event.detail.level);
-    // event.detail: { level, countdownLevel }
-});
-
-// Image quality changed
-viewer.addEventListener('image-quality-changed', (event) => {
-    console.log('Image quality level:', event.detail.level);
-    // event.detail: { level, imageQualityLevel }
-});
-
-// Letter spacing changed
-viewer.addEventListener('letter-spacing-changed', (event) => {
-    console.log('Letter spacing:', event.detail.spacing);
-    // event.detail: { spacing, letterSpacing }
-});
-
-// Line height changed
-viewer.addEventListener('line-height-changed', (event) => {
-    console.log('Line height:', event.detail.height);
-    // event.detail: { height, lineHeight }
-});
-
-// Playback rate changed
-viewer.addEventListener('playback-rate-changed', (event) => {
-    console.log('Playback rate:', event.detail.rate);
-    // event.detail: { rate, playbackRate }
-});
-
-// Read stop changed
-viewer.addEventListener('read-stop-changed', (event) => {
-    console.log('Read stop level:', event.detail.level);
-    // event.detail: { level, readStopLevel }
-});
-
-// Subtitle changed
-viewer.addEventListener('subtitle-changed', (event) => {
-    console.log('Subtitle level:', event.detail.level);
-    // event.detail: { level, subtitleLevel }
-});
-
-// Subtitle font size changed
-viewer.addEventListener('subtitle-font-size-changed', (event) => {
-    console.log('Subtitle font size:', event.detail.fontSize);
-    // event.detail: { fontSize, subtitleFontSize }
-});
-
-// Text mode changed
-viewer.addEventListener('text-mode-changed', (event) => {
-    console.log('Text mode level:', event.detail.level);
-    // event.detail: { level, textModeLevel }
-});
-
-// Word spacing changed
-viewer.addEventListener('word-spacing-changed', (event) => {
-    console.log('Word spacing:', event.detail.spacing);
-    // event.detail: { spacing, wordSpacing }
-});
-
-// Audio management events
+// Audio management
 viewer.addEventListener('audio-added', (event) => {
     console.log('Audio added:', event.detail);
     // event.detail: { page, provider, language, voiceId }
@@ -677,13 +704,30 @@ viewer.addEventListener('audio-added', (event) => {
 
 viewer.addEventListener('audio-switched', (event) => {
     console.log('Audio switched:', event.detail.key);
-    // event.detail: { key, audioKey }
+    // event.detail: { key }
 });
 
-// Highlighting events
+// Annotations
+viewer.addEventListener('annotations-added', (event) => {
+    console.log('Annotations added:', event.detail.count);
+    // event.detail: { annotations, count }
+});
+
+viewer.addEventListener('annotation-added', (event) => {
+    console.log('Annotation saved:', event.detail.page);
+    // event.detail: { annotations, page }
+});
+
+// Issue reported
+viewer.addEventListener('issue-reported', (event) => {
+    console.log('Issue reported:', event.detail);
+    // event.detail: { documentType, issueType, pageOrChapter }
+});
+
+// Highlighting
 viewer.addEventListener('highlighting-started', (event) => {
     console.log('Highlighting started:', event.detail.indices);
-    // event.detail: { position, indices }
+    // event.detail: { indices }
 });
 
 viewer.addEventListener('highlighting-stopped', (event) => {
@@ -691,12 +735,13 @@ viewer.addEventListener('highlighting-stopped', (event) => {
     // event.detail: { action: 'stop' }
 });
 
-// Orientation changed
-viewer.addEventListener('orientation-changed', (event) => {
-    console.log('Orientation changed');
-    // event.detail: { action: 'toggle', orientation: 'toggled' }
+// Error
+viewer.addEventListener('error', (event) => {
+    console.error('Error:', event.detail.message);
+    // event.detail: { message, type }
 });
 ```
+
 
 ## Document Structure
 

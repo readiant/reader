@@ -10,7 +10,7 @@ import { Colorblind } from './colorblind.js';
 import { CLASS_BUTTON_ACTIVE, CLASS_HIDDEN, CLASS_NAVIGATION_NEXT_ACTIVE, CLASS_PREVIEW, AcceptedTypes, Container, ContentType, Direction, Fn, OrientationMode, PagePosition, } from './consts.js';
 import { connectionInfo, orientation, webP } from './detection.js';
 import { isOffline } from './env.js';
-import { eventLogger } from './eventLogger.js';
+import { eventLogger, notifyComponent } from './eventLogger.js';
 import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
 import { ImageQuality } from './imageQuality.js';
@@ -611,12 +611,9 @@ export class Readiant {
         else
             Print.remove();
         A11y.register();
-        ReadiantElement.dispatchEvent('document-loaded', {
-            documentId: this.options.id,
-            isReady: true,
-        });
         eventLogger({
             type: LogType.Ready,
+            documentId: this.options.id,
         });
     }
     async parentMessageHandler(event) {
@@ -631,7 +628,7 @@ export class Readiant {
                 if (!this.options.disable.includes(Fn.Annotations) &&
                     Readiant.type === ContentType.SVG) {
                     Annotations.add(data.annotations);
-                    ReadiantElement.dispatchEvent('annotations-added', {
+                    notifyComponent('annotations-added', {
                         annotations: data.annotations,
                         count: data.annotations.length,
                     });
@@ -639,169 +636,81 @@ export class Readiant {
                 break;
             case LogType.AudioPlay:
                 await Audio.play();
-                ReadiantElement.dispatchEvent('audio-play', {
-                    isPlaying: true,
-                    action: 'play',
-                });
                 break;
             case LogType.AudioPause:
                 await Audio.pause();
-                ReadiantElement.dispatchEvent('audio-pause', {
-                    isPlaying: false,
-                    action: 'pause',
-                });
                 break;
             case LogType.ChangeAudioHighlighting:
                 Audio.setLineHighlighterType(data.audioHighlightingLevel);
-                ReadiantElement.dispatchEvent('audio-highlighting-changed', {
-                    level: data.audioHighlightingLevel,
-                    audioHighlightingLevel: data.audioHighlightingLevel,
-                });
                 break;
             case LogType.ChangeColorBlindFilter: {
                 const colorBlindFilter = [...EventMapper].find(([_k, v]) => v === data.colorBlindFilter);
-                if (typeof colorBlindFilter !== 'undefined') {
+                if (typeof colorBlindFilter !== 'undefined')
                     Colorblind.change(colorBlindFilter[0]);
-                    ReadiantElement.dispatchEvent('color-blind-filter-changed', {
-                        filter: data.colorBlindFilter,
-                        filterKey: colorBlindFilter[0],
-                    });
-                }
                 break;
             }
-            case LogType.ChangeCountdown: {
+            case LogType.ChangeCountdown:
                 Audio.countdownType(data.countdownLevel);
-                ReadiantElement.dispatchEvent('countdown-changed', {
-                    level: data.countdownLevel,
-                    countdownLevel: data.countdownLevel,
-                });
                 break;
-            }
             case LogType.ChangeFont: {
                 const font = [...EventMapper].find(([_k, v]) => v === data.font);
-                if (typeof font !== 'undefined') {
+                if (typeof font !== 'undefined')
                     Fonts.change(font[0]);
-                    ReadiantElement.dispatchEvent('font-changed', {
-                        font: data.font,
-                        fontKey: font[0],
-                    });
-                }
                 break;
             }
             case LogType.ChangeFontSize:
                 Fonts.fontSize(data.fontSize);
-                ReadiantElement.dispatchEvent('font-size-changed', {
-                    fontSize: data.fontSize,
-                    size: data.fontSize,
-                });
                 break;
             case LogType.ChangeImageQuality:
                 ImageQuality.change(data.imageQualityLevel);
-                ReadiantElement.dispatchEvent('image-quality-changed', {
-                    level: data.imageQualityLevel,
-                    imageQualityLevel: data.imageQualityLevel,
-                });
                 break;
             case LogType.ChangeLetterSpacing:
                 Fonts.letterSpacing(data.letterSpacing);
-                ReadiantElement.dispatchEvent('letter-spacing-changed', {
-                    spacing: data.letterSpacing,
-                    letterSpacing: data.letterSpacing,
-                });
                 break;
             case LogType.ChangeLineHeight:
                 Fonts.lineHeight(data.lineHeight);
-                ReadiantElement.dispatchEvent('line-height-changed', {
-                    height: data.lineHeight,
-                    lineHeight: data.lineHeight,
-                });
                 break;
             case LogType.ChangePlaybackRate:
                 Audio.setPlaybackRate(data.playbackRate);
-                ReadiantElement.dispatchEvent('playback-rate-changed', {
+                notifyComponent('playback-rate-changed', {
                     rate: data.playbackRate,
                     playbackRate: data.playbackRate,
                 });
                 break;
             case LogType.ChangeReadStop:
                 Bar.changeReadStop(data.readStopLevel);
-                ReadiantElement.dispatchEvent('read-stop-changed', {
-                    level: data.readStopLevel,
-                    readStopLevel: data.readStopLevel,
-                });
                 break;
             case LogType.ChangeScreenMode:
                 ScreenMode.change(data.screenModeLevel);
-                ReadiantElement.dispatchEvent('theme-changed', {
-                    theme: data.screenModeLevel,
-                    level: data.screenModeLevel,
-                });
                 break;
             case LogType.ChangeSubtitle:
                 Audio.setSubtitlesType(data.subtitleLevel);
-                ReadiantElement.dispatchEvent('subtitle-changed', {
-                    level: data.subtitleLevel,
-                    subtitleLevel: data.subtitleLevel,
-                });
                 break;
             case LogType.ChangeSubtitleFontSize:
                 Bar.fontSizeSubtitles(data.subtitleFontSize);
-                ReadiantElement.dispatchEvent('subtitle-font-size-changed', {
-                    fontSize: data.subtitleFontSize,
-                    subtitleFontSize: data.subtitleFontSize,
-                });
                 break;
             case LogType.ChangeTextMode:
                 TextMode.change(data.textModeLevel);
-                ReadiantElement.dispatchEvent('text-mode-changed', {
-                    level: data.textModeLevel,
-                    textModeLevel: data.textModeLevel,
-                });
                 break;
             case LogType.ChangeWordSpacing:
                 Fonts.wordSpacing(data.wordSpacing);
-                ReadiantElement.dispatchEvent('word-spacing-changed', {
-                    spacing: data.wordSpacing,
-                    wordSpacing: data.wordSpacing,
-                });
                 break;
             case LogType.ChangeZoomLevel:
                 Zoom.change(data.zoomLevel);
-                ReadiantElement.dispatchEvent('zoom-changed', {
-                    zoom: data.zoomLevel,
-                    level: data.zoomLevel,
-                });
                 break;
             case LogType.GotoPage:
             case LogType.InitialPage:
                 Navigation.gotoPageDirectly(data.pages[0]);
-                ReadiantElement.dispatchEvent('page-changed', {
-                    page: data.pages[0],
-                    currentPage: data.pages[0],
-                    totalPages: Navigation.pages.length,
-                });
                 break;
             case LogType.NextPage:
                 Navigation.onRightPressed();
-                ReadiantElement.dispatchEvent('page-changed', {
-                    page: Navigation.currentPage,
-                    currentPage: Navigation.currentPage,
-                    totalPages: Navigation.pages.length,
-                    direction: 'next',
-                });
                 break;
             case LogType.PreviousPage:
                 Navigation.onLeftPressed();
-                ReadiantElement.dispatchEvent('page-changed', {
-                    page: Navigation.currentPage,
-                    currentPage: Navigation.currentPage,
-                    totalPages: Navigation.pages.length,
-                    direction: 'previous',
-                });
                 break;
             case LogType.ShouldAddAvailableAudio:
                 Audio.add(data.page, data.provider, data.language, data.voiceId);
-                ReadiantElement.dispatchEvent('audio-added', {
+                notifyComponent('audio-added', {
                     page: data.page,
                     provider: data.provider,
                     language: data.language,
@@ -810,36 +719,27 @@ export class Readiant {
                 break;
             case LogType.StartHighlighting:
                 Builder.startHighlighting(PagePosition.Left, data.indices);
-                ReadiantElement.dispatchEvent('highlighting-started', {
+                notifyComponent('highlighting-started', {
                     position: PagePosition.Left,
                     indices: data.indices,
                 });
                 break;
             case LogType.StopHighlighting:
                 Builder.stopHighlighting();
-                ReadiantElement.dispatchEvent('highlighting-stopped', {
-                    action: 'stop',
-                });
+                notifyComponent('highlighting-stopped', { action: 'stop' });
                 break;
             case LogType.SwitchAudio:
                 await Audio.switchAudio(data.key);
-                ReadiantElement.dispatchEvent('audio-switched', {
+                notifyComponent('audio-switched', {
                     key: data.key,
                     audioKey: data.key,
                 });
                 break;
             case LogType.ToggleFullscreen:
                 await Fullscreen.toggle();
-                ReadiantElement.dispatchEvent('fullscreen-changed', {
-                    isFullscreen: document.fullscreenElement !== null,
-                });
                 break;
             case LogType.ToggleOrientation:
                 Orientation.toggle();
-                ReadiantElement.dispatchEvent('orientation-changed', {
-                    action: 'toggle',
-                    orientation: 'toggled',
-                });
                 break;
         }
     }
