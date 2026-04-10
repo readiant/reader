@@ -362,7 +362,7 @@ function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: n
             zoom-level={2}
             screen-mode-level={3}
             onDocumentLoaded={(e) => console.log('Document loaded:', e.detail)}
-            onPageChanged={(e) => console.log('Current page:', e.detail.page)}
+            onPageChanged={(e) => console.log('Current pages:', e.detail.pages)}
             onZoomChanged={(e) => console.log('Zoom level:', e.detail.zoom)}
             onError={(e) => console.error('Error:', e.detail.message)}
         />
@@ -413,22 +413,21 @@ interface ReaderProps {
   // Event handlers
   onDocumentLoaded?: (event: CustomEvent<{
     documentId: string;
-    totalPages: number;
     isReady: boolean;
   }>) => void;
   onPageChanged?: (event: CustomEvent<{
-    page: number;
-    currentPage: number;
-    totalPages: number;
+    pages: number[];
     direction?: string;
+    previous?: {
+      duration: number;
+      pages: { page: number; audio?: { playbackPercentage: number } }[];
+    };
   }>) => void;
   onZoomChanged?: (event: CustomEvent<{
     zoom: number;
-    level: number;
   }>) => void;
   onThemeChanged?: (event: CustomEvent<{
     theme: number;
-    level: number;
   }>) => void;
   onError?: (event: CustomEvent<{
     message: string;
@@ -541,7 +540,7 @@ const viewer = document.querySelector('readiant-reader');
 // Document loaded
 viewer.addEventListener('document-loaded', (event) => {
     console.log('Document loaded:', event.detail);
-    // event.detail: { documentId, isReady: true }
+    // event.detail: { documentId: string, isReady: boolean }
 });
 
 // Page changed — fired for all navigation: UI buttons, swipe, keyboard, goToPage(), nextPage(), previousPage()
@@ -562,61 +561,61 @@ viewer.addEventListener('page-closed', (event) => {
 // Zoom changed
 viewer.addEventListener('zoom-changed', (event) => {
     console.log('Zoom level:', event.detail.zoom);
-    // event.detail: { zoom }
+    // event.detail: { zoom: number }
 });
 
 // Theme changed
 viewer.addEventListener('theme-changed', (event) => {
     console.log('Theme changed:', event.detail.theme);
-    // event.detail: { theme }
+    // event.detail: { theme: number }
 });
 
 // Font changed
 viewer.addEventListener('font-changed', (event) => {
     console.log('Font changed:', event.detail.font);
-    // event.detail: { font }
+    // event.detail: { font: string }
 });
 
 // Font size changed
 viewer.addEventListener('font-size-changed', (event) => {
     console.log('Font size:', event.detail.fontSize);
-    // event.detail: { fontSize }
+    // event.detail: { fontSize: number }
 });
 
 // Letter spacing changed
 viewer.addEventListener('letter-spacing-changed', (event) => {
     console.log('Letter spacing:', event.detail.letterSpacing);
-    // event.detail: { letterSpacing }
+    // event.detail: { letterSpacing: number }
 });
 
 // Line height changed
 viewer.addEventListener('line-height-changed', (event) => {
     console.log('Line height:', event.detail.lineHeight);
-    // event.detail: { lineHeight }
+    // event.detail: { lineHeight: number }
 });
 
 // Word spacing changed
 viewer.addEventListener('word-spacing-changed', (event) => {
     console.log('Word spacing:', event.detail.wordSpacing);
-    // event.detail: { wordSpacing }
+    // event.detail: { wordSpacing: number }
 });
 
 // Image quality changed
 viewer.addEventListener('image-quality-changed', (event) => {
     console.log('Image quality level:', event.detail.imageQualityLevel);
-    // event.detail: { imageQualityLevel, imageQuality }
+    // event.detail: { imageQualityLevel: number, imageQuality: string }
 });
 
 // Color blind filter changed
 viewer.addEventListener('color-blind-filter-changed', (event) => {
     console.log('Color blind filter:', event.detail.filter);
-    // event.detail: { filter }
+    // event.detail: { filter: string }
 });
 
 // Text mode changed
 viewer.addEventListener('text-mode-changed', (event) => {
     console.log('Text mode level:', event.detail.textModeLevel);
-    // event.detail: { textModeLevel }
+    // event.detail: { textModeLevel: number }
 });
 
 // Audio play/pause
@@ -633,49 +632,49 @@ viewer.addEventListener('audio-pause', (event) => {
 // Audio highlighting changed
 viewer.addEventListener('audio-highlighting-changed', (event) => {
     console.log('Audio highlighting level:', event.detail.audioHighlightingLevel);
-    // event.detail: { audioHighlightingLevel }
+    // event.detail: { audioHighlightingLevel: number }
 });
 
 // Countdown changed
 viewer.addEventListener('countdown-changed', (event) => {
     console.log('Countdown level:', event.detail.countdownLevel);
-    // event.detail: { countdownLevel }
+    // event.detail: { countdownLevel: number }
 });
 
 // Playback rate changed
 viewer.addEventListener('playback-rate-changed', (event) => {
     console.log('Playback rate:', event.detail.playbackRate);
-    // event.detail: { playbackRate }
+    // event.detail: { playbackRate: number }
 });
 
 // Read stop changed
 viewer.addEventListener('read-stop-changed', (event) => {
     console.log('Read stop level:', event.detail.readStopLevel);
-    // event.detail: { readStopLevel }
+    // event.detail: { readStopLevel: number }
 });
 
 // Subtitle changed
 viewer.addEventListener('subtitle-changed', (event) => {
     console.log('Subtitle level:', event.detail.subtitleLevel);
-    // event.detail: { subtitleLevel }
+    // event.detail: { subtitleLevel: number }
 });
 
 // Subtitle font size changed
 viewer.addEventListener('subtitle-font-size-changed', (event) => {
     console.log('Subtitle font size:', event.detail.subtitleFontSize);
-    // event.detail: { subtitleFontSize }
+    // event.detail: { subtitleFontSize: number }
 });
 
 // Fullscreen changed
 viewer.addEventListener('fullscreen-changed', (event) => {
     console.log('Fullscreen:', event.detail.isFullscreen);
-    // event.detail: { isFullscreen }
+    // event.detail: { isFullscreen: boolean }
 });
 
 // Orientation changed
 viewer.addEventListener('orientation-changed', (event) => {
     console.log('Orientation changed');
-    // event.detail: { action: 'toggle', orientation }
+    // event.detail: { action: 'toggle', orientation: string }
 });
 
 // Print
@@ -693,41 +692,41 @@ viewer.addEventListener('resize', (event) => {
 // Translation
 viewer.addEventListener('translate', (event) => {
     console.log('Translate:', event.detail.language, event.detail.text);
-    // event.detail: { language, text }
+    // event.detail: { language: string, text: string }
 });
 
 // Audio management
 viewer.addEventListener('audio-added', (event) => {
     console.log('Audio added:', event.detail);
-    // event.detail: { page, provider, language, voiceId }
+    // event.detail: { page: number, provider: string, language?: string, voiceId?: string }
 });
 
 viewer.addEventListener('audio-switched', (event) => {
     console.log('Audio switched:', event.detail.key);
-    // event.detail: { key }
+    // event.detail: { key: string }
 });
 
 // Annotations
 viewer.addEventListener('annotations-added', (event) => {
     console.log('Annotations added:', event.detail.count);
-    // event.detail: { annotations, count }
+    // event.detail: { annotations: { annotations: string, page: number }[], count: number }
 });
 
 viewer.addEventListener('annotation-added', (event) => {
     console.log('Annotation saved:', event.detail.page);
-    // event.detail: { annotations, page }
+    // event.detail: { annotations: string, page: number }
 });
 
 // Issue reported
 viewer.addEventListener('issue-reported', (event) => {
     console.log('Issue reported:', event.detail);
-    // event.detail: { documentType, issueType, pageOrChapter }
+    // event.detail: { documentType: 'ePub' | 'PDF', issueType: 'audio' | 'content' | 'visual', pageOrChapter: number }
 });
 
 // Highlighting
 viewer.addEventListener('highlighting-started', (event) => {
     console.log('Highlighting started:', event.detail.indices);
-    // event.detail: { indices }
+    // event.detail: { indices: number[] }
 });
 
 viewer.addEventListener('highlighting-stopped', (event) => {
@@ -738,7 +737,7 @@ viewer.addEventListener('highlighting-stopped', (event) => {
 // Error
 viewer.addEventListener('error', (event) => {
     console.error('Error:', event.detail.message);
-    // event.detail: { message, type }
+    // event.detail: { message: string, type: string }
 });
 ```
 
@@ -1017,7 +1016,7 @@ readiant-reader {
 | `--readiant-icon-readstopword` | Read stop: per word |
 | `--readiant-icon-screenmodedark` | Dark screen mode |
 | `--readiant-icon-screenmodesepia` | Sepia screen mode |
-| `--readiant-icon-screenmodesepia` | Normal screen mode |
+| `--readiant-icon-screenmodenormal` | Normal screen mode |
 | `--readiant-icon-screensettings` | Screen/display settings |
 | `--readiant-icon-search` | Search |
 | `--readiant-icon-settings` | Settings |

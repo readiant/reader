@@ -532,9 +532,6 @@ export class Audio {
         });
     }
     static remove() {
-        if (this.settingsButtons !== null)
-            for (const settingsButton of this.settingsButtons)
-                settingsButton.remove();
         if (this.startButton !== null)
             this.startButton.remove();
         if (this.stopButton !== null)
@@ -602,11 +599,10 @@ export class Audio {
             const element = Readiant.root.querySelector(`[data-audio-line-highlighter="${String(event)}"]`);
             if (element !== null) {
                 element.click();
-                title = String(element.getAttribute('data-title'));
+                return;
             }
-            else
-                title = '';
             value = event;
+            title = '';
         }
         else {
             const input = event.currentTarget;
@@ -637,10 +633,16 @@ export class Audio {
         if (playbackRate > 1.6)
             playbackRate = 1.6;
         this.playbackRate = playbackRate;
+        if (typeof this.element !== 'undefined')
+            this.element.playbackRate = this.playbackRate;
         for (const playbackRateInput of this.playbackRateInputs)
             playbackRateInput.value = String(playbackRate);
         if (this.playbackRateCurrent !== null)
             this.playbackRateCurrent.textContent = `${String(this.playbackRate * 100)}%`;
+        eventLogger({
+            type: LogType.ChangePlaybackRate,
+            playbackRate: this.playbackRate,
+        });
     }
     static setStartTime(page, time) {
         time = time / 1000;
