@@ -525,10 +525,10 @@ viewer.zoomOut();
 viewer.setZoom(1.5);
 
 // Theme control
-viewer.setTheme('dark');
+viewer.setTheme('dark'); // 'light' | 'sepia' | 'dark'
 
 // Feature control
-viewer.toggleFullscreen();
+await viewer.toggleFullscreen();
 viewer.print();
 ```
 
@@ -540,7 +540,7 @@ const viewer = document.querySelector('readiant-reader');
 // Document loaded
 viewer.addEventListener('document-loaded', (event) => {
     console.log('Document loaded:', event.detail);
-    // event.detail: { documentId: string, isReady: boolean }
+    // event.detail: { documentId?: string, isReady: boolean }
 });
 
 // Page changed — fired for all navigation: UI buttons, swipe, keyboard, goToPage(), nextPage(), previousPage()
@@ -573,7 +573,7 @@ viewer.addEventListener('theme-changed', (event) => {
 // Font changed
 viewer.addEventListener('font-changed', (event) => {
     console.log('Font changed:', event.detail.font);
-    // event.detail: { font: string }
+    // event.detail: { font?: string }
 });
 
 // Font size changed
@@ -609,7 +609,7 @@ viewer.addEventListener('image-quality-changed', (event) => {
 // Color blind filter changed
 viewer.addEventListener('color-blind-filter-changed', (event) => {
     console.log('Color blind filter:', event.detail.filter);
-    // event.detail: { filter: string }
+    // event.detail: { filter?: string }
 });
 
 // Text mode changed
@@ -686,7 +686,7 @@ viewer.addEventListener('print', (event) => {
 // Resize
 viewer.addEventListener('resize', (event) => {
     console.log('Resize:', event.detail.width, event.detail.height);
-    // event.detail: { width, height }
+    // event.detail: { width: number, height: number }
 });
 
 // Translation
@@ -707,11 +707,6 @@ viewer.addEventListener('audio-switched', (event) => {
 });
 
 // Annotations
-viewer.addEventListener('annotations-added', (event) => {
-    console.log('Annotations added:', event.detail.count);
-    // event.detail: { annotations: { annotations: string, page: number }[], count: number }
-});
-
 viewer.addEventListener('annotation-added', (event) => {
     console.log('Annotation saved:', event.detail.page);
     // event.detail: { annotations: string, page: number }
