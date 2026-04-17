@@ -391,8 +391,11 @@ export class Annotations {
         this.color = String(input.getAttribute('data-color'));
         for (const markerSizeButton of this.markerColorButtons) {
             markerSizeButton.classList.remove(CLASS_ROUND_BUTTON_ACTIVE);
-            if (markerSizeButton.getAttribute('data-color') === this.color)
+            markerSizeButton.setAttribute('aria-pressed', 'false');
+            if (markerSizeButton.getAttribute('data-color') === this.color) {
                 markerSizeButton.classList.add(CLASS_ROUND_BUTTON_ACTIVE);
+                markerSizeButton.setAttribute('aria-pressed', 'true');
+            }
         }
     }
     static changeMarkerSize(event) {
@@ -403,6 +406,7 @@ export class Annotations {
         this.annotationLeftComments?.classList.remove(CLASS_ACTIVE);
         this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
         this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+        this.commentButton?.setAttribute('aria-pressed', 'false');
         this.editComments = false;
     }
     static draw() {
@@ -483,12 +487,29 @@ export class Annotations {
                         event.preventDefault();
                         this.toggleComment(event);
                     });
+                    icon.setAttribute('role', 'button');
+                    icon.setAttribute('tabindex', '0');
+                    icon.setAttribute('aria-label', this.editCommentTooltip);
+                    icon.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            icon.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
+                    });
                     input.addEventListener('blur', (event) => {
                         this.saveComment(event);
                     });
                     remove.addEventListener('click', (event) => {
                         event.preventDefault();
                         this.removeComment(event);
+                    });
+                    remove.setAttribute('role', 'button');
+                    remove.setAttribute('tabindex', '0');
+                    remove.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            remove.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
                     });
                 }
                 i++;
@@ -522,6 +543,14 @@ export class Annotations {
                 const li = Readiant.documentContext.createElement('li');
                 li.setAttribute('class', 'rdnt__comments-list-item');
                 li.innerHTML = `<span class="rdnt__comments-list-item__page">${this.page} ${page}</span><span class="rdnt__sentence--comment">${annotation}</span>`;
+                li.setAttribute('tabindex', '0');
+                li.setAttribute('role', 'button');
+                li.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        Navigation.gotoPage(Number(page));
+                    }
+                });
                 li.addEventListener('click', (event) => {
                     event.preventDefault();
                     Navigation.gotoPage(Number(page));
@@ -535,6 +564,14 @@ export class Annotations {
             li.innerHTML = `<span class="rdnt__markings-list-item__page">${this.page} ${page}</span>${[...annotations]
                 .map((annotation) => `<span class="rdnt__sentence--marking" style="background-color:${annotation}"></span>`)
                 .join()}`;
+            li.setAttribute('tabindex', '0');
+            li.setAttribute('role', 'button');
+            li.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    Navigation.gotoPage(Number(page));
+                }
+            });
             li.addEventListener('click', () => {
                 Navigation.gotoPage(Number(page));
             });
@@ -628,6 +665,7 @@ export class Annotations {
         this.annotationRightContainer?.classList.toggle(CLASS_HIDDEN);
         this.showButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
         this.showAnnotations = !this.showAnnotations;
+        this.showButton?.setAttribute('aria-pressed', String(this.showAnnotations));
         if (this.current !== null)
             this.current.textContent = this.showAnnotations ? this.on : this.off;
         this.draw();
@@ -661,6 +699,7 @@ export class Annotations {
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
             this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.markerButton?.setAttribute('aria-pressed', 'false');
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -673,6 +712,7 @@ export class Annotations {
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
             this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.eraserButton?.setAttribute('aria-pressed', 'false');
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -684,6 +724,7 @@ export class Annotations {
         this.annotationRightComments?.classList.toggle(CLASS_ACTIVE);
         this.editComments = !this.editComments;
         this.commentButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.commentButton?.setAttribute('aria-pressed', String(this.editComments));
     }
     static toggleEraser() {
         if (!this.showAnnotations)
@@ -693,12 +734,14 @@ export class Annotations {
             this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
             this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.setAttribute('aria-pressed', 'false');
         }
         if (this.editMarkings) {
             this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
             this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.markerButton?.setAttribute('aria-pressed', 'false');
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -710,6 +753,7 @@ export class Annotations {
         this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.isErasing = !this.isErasing;
         this.eraserButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.eraserButton?.setAttribute('aria-pressed', String(this.isErasing));
         if (this.isErasing) {
             if (this.markerSettings !== null &&
                 this.markerSettings.classList.contains(CLASS_HIDDEN))
@@ -735,12 +779,14 @@ export class Annotations {
             this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
             this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.setAttribute('aria-pressed', 'false');
         }
         if (this.isErasing) {
             this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
             this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.eraserButton?.setAttribute('aria-pressed', 'false');
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -752,6 +798,7 @@ export class Annotations {
         this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.editMarkings = !this.editMarkings;
         this.markerButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.markerButton?.setAttribute('aria-pressed', String(this.editMarkings));
         if (this.editMarkings) {
             if (this.markerSettings !== null &&
                 this.markerSettings.classList.contains(CLASS_HIDDEN))

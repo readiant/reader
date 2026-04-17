@@ -236,6 +236,14 @@ export class Audio {
                 span.innerText = `${this.voice} ${String(index)}`;
                 label.appendChild(input);
                 label.appendChild(span);
+                label.setAttribute('tabindex', '0');
+                label.setAttribute('role', 'button');
+                label.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        label.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                    }
+                });
                 label.addEventListener('click', async (event) => {
                     event.preventDefault();
                     await this.switchAudio(provider);
@@ -311,9 +319,12 @@ export class Audio {
             this.countdownCurrent.textContent = title;
         for (const countdownButton of this.countdownButtons) {
             countdownButton.classList.remove(CLASS_BLOCK_ACTIVE);
+            countdownButton.setAttribute('aria-pressed', 'false');
             const currentcountdownType = countdownButton.getAttribute('data-countdown');
-            if (Number(currentcountdownType) === value)
+            if (Number(currentcountdownType) === value) {
                 countdownButton.classList.add(CLASS_BLOCK_ACTIVE);
+                countdownButton.setAttribute('aria-pressed', 'true');
+            }
         }
         eventLogger({
             type: LogType.ChangeCountdown,
@@ -354,6 +365,7 @@ export class Audio {
         this.element.muted = true;
         this.muteButton?.classList.add(CLASS_HIDDEN);
         this.unmuteButton?.classList.remove(CLASS_HIDDEN);
+        this.unmuteButton?.focus();
     }
     static async onAudio(data) {
         if (typeof data.transfer !== 'undefined') {
@@ -618,9 +630,12 @@ export class Audio {
             this.lineHighlighterCurrent.textContent = title;
         for (const lineHighlighterButton of this.lineHighlighterButtons) {
             lineHighlighterButton.classList.remove(CLASS_BLOCK_ACTIVE);
+            lineHighlighterButton.setAttribute('aria-pressed', 'false');
             const currentLineHighlighterType = lineHighlighterButton.getAttribute('data-audio-line-highlighter');
-            if (Number(currentLineHighlighterType) === value)
+            if (Number(currentLineHighlighterType) === value) {
                 lineHighlighterButton.classList.add(CLASS_BLOCK_ACTIVE);
+                lineHighlighterButton.setAttribute('aria-pressed', 'true');
+            }
         }
         eventLogger({
             type: LogType.ChangeAudioHighlighting,
@@ -712,9 +727,12 @@ export class Audio {
             this.subtitlesCurrent.textContent = title;
         for (const subtitlesButton of this.subtitlesButtons) {
             subtitlesButton.classList.remove(CLASS_BLOCK_ACTIVE);
+            subtitlesButton.setAttribute('aria-pressed', 'false');
             const currentSubtitlesType = subtitlesButton.getAttribute('data-subtitles');
-            if (Number(currentSubtitlesType) === value)
+            if (Number(currentSubtitlesType) === value) {
                 subtitlesButton.classList.add(CLASS_BLOCK_ACTIVE);
+                subtitlesButton.setAttribute('aria-pressed', 'true');
+            }
         }
         eventLogger({
             type: LogType.ChangeSubtitle,
@@ -914,6 +932,7 @@ export class Audio {
         this.element.muted = false;
         this.unmuteButton?.classList.add(CLASS_HIDDEN);
         this.muteButton?.classList.remove(CLASS_HIDDEN);
+        this.muteButton?.focus();
     }
     static update(syntax, playbackTime, side) {
         if (typeof syntax === 'undefined')

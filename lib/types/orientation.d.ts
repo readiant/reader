@@ -35,8 +35,11 @@ export class Orientation {
         const value = this.mode === OrientationMode.Landscape ? 1 : 2;
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-orientation') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-orientation') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
     }
     static get disableOrientationChange() {
@@ -82,8 +85,11 @@ export class Orientation {
         }
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-orientation') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-orientation') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         if (this.current !== null)
             this.current.textContent = title;
@@ -119,8 +125,11 @@ export class Orientation {
         const title = element !== null ? String(element.getAttribute('data-title')) : '';
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-orientation') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-orientation') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         if (this.current !== null)
             this.current.textContent = title;

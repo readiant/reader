@@ -46,8 +46,11 @@ export class TextMode {
         }
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-text-mode') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-text-mode') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         switch (value) {
             case 1:

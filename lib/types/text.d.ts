@@ -1,5 +1,6 @@
 import { A11y } from './a11y.js';
 import { Bar } from './bar.js';
+import { Builder } from './builder.js';
 import { CLASS_ROUND_BUTTON_ACTIVE } from './consts.js';
 import { eventLogger } from './eventLogger.js';
 import { LogType } from './log.js';
@@ -20,6 +21,7 @@ export class Text {
         if (this.translateButton === null)
             return;
         this.languages = translations;
+        this.translateButton.setAttribute('aria-pressed', 'false');
         this.translateButton.addEventListener('click', (event) => {
             event.preventDefault();
             this.toggleTranslate();
@@ -77,14 +79,56 @@ export class Text {
         Stream.setMessageHandler(ServerActionType.Translate, (data) => {
             this.onTranslate(data);
         });
+        Builder.onPlainTextRendered = () => {
+            this.translatePageSentences(Builder.plainTextSentences());
+        };
     }
     static onTranslate(data) {
         const cachedElement = this.cache.get(data.original);
         const cached = typeof cachedElement !== 'undefined' ? cachedElement : {};
-        const cacheKey = `${this.language}${this.simplified ? ':simplified' : ''}`;
+        const cacheKey = `${data.language}${data.simplified === true ? ':simplified' : ''}`;
         cached[cacheKey] = data.string;
-        Bar.add(data.string, true);
         this.cache.set(data.original, cached);
+        const pendingKey = `${data.language}:${data.simplified === true ? '1' : '0'}:${data.original}`;
+        const pendingIndices = this.pendingSentences.get(pendingKey);
+        if (typeof pendingIndices !== 'undefined') {
+            for (const index of pendingIndices)
+                Builder.setPlainTextSentenceTranslation(index, data.string);
+            this.pendingSentences.delete(pendingKey);
+        }
+        else {
+            Bar.add(data.string, true);
+        }
+    }
+    static translatePageSentences(sentences) {
+        if (!this.isTranslating || sentences.length === 0)
+            return;
+        const cacheKey = `${this.language}${this.simplified ? ':simplified' : ''}`;
+        for (const sentence of sentences) {
+            if (sentence.text === '')
+                continue;
+            const cached = this.cache.get(sentence.text);
+            if (typeof cached !== 'undefined' &&
+                typeof cached[cacheKey] !== 'undefined') {
+                Builder.setPlainTextSentenceTranslation(sentence.index, cached[cacheKey]);
+            }
+            else {
+                const pendingKey = `${this.language}:${this.simplified ? '1' : '0'}:${sentence.text}`;
+                const existing = this.pendingSentences.get(pendingKey);
+                if (typeof existing !== 'undefined') {
+                    existing.push(sentence.index);
+                }
+                else {
+                    this.pendingSentences.set(pendingKey, [sentence.index]);
+                    Stream.send({
+                        type: ClientActionType.TranslateRequest,
+                        language: this.language,
+                        simplified: this.simplified,
+                        string: sentence.text,
+                    });
+                }
+            }
+        }
     }
     static translate(string) {
         if (string !== '') {
@@ -113,23 +157,39 @@ export class Text {
         this.language = languageCode;
         for (const el of Readiant.root.querySelectorAll('.rdnt__translation'))
             el.checked = el.value === languageCode;
-        if (this.isTranslating)
+        if (this.isTranslating) {
             this.translate(Bar.get());
+            this.pendingSentences.clear();
+            Builder.clearPlainTextTranslations();
+            this.translatePageSentences(Builder.plainTextSentences());
+        }
     }
     static toggleSimplified(input) {
         this.simplified = !this.simplified;
         input.checked = this.simplified;
-        if (this.isTranslating)
+        if (this.isTranslating) {
             this.translate(Bar.get());
+            this.pendingSentences.clear();
+            Builder.clearPlainTextTranslations();
+            this.translatePageSentences(Builder.plainTextSentences());
+        }
     }
     static toggleTranslate() {
         this.isTranslating = !this.isTranslating;
         this.translateButton?.classList.toggle(CLASS_ROUND_BUTTON_ACTIVE);
-        if (this.isTranslating)
+        this.translateButton?.setAttribute('aria-pressed', String(this.isTranslating));
+        if (this.isTranslating) {
             this.translate(Bar.get());
+            this.translatePageSentences(Builder.plainTextSentences());
+        }
+        else {
+            this.pendingSentences.clear();
+            Builder.clearPlainTextTranslations();
+        }
     }
 }
 Text.cache = new Map();
+Text.pendingSentences = new Map();
 Text.language = 'en-GB';
 Text.languages = {};
 Text.simplified = false;

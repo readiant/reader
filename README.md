@@ -330,9 +330,7 @@ Each document requires an `index.json` file that describes the document structur
 
 ## Framework Integration
 
-### React
-
-#### Using the Web Component Directly
+### Using the Web Component Directly
 
 ```jsx
 import '@readiant/reader';
@@ -346,35 +344,6 @@ function DocumentViewer({ documentId, page = 1 }) {
     );
 }
 ```
-
-#### Using the React Wrapper Component (Recommended)
-
-For better TypeScript support and a more React-friendly API, use the `Reader` wrapper component:
-
-```tsx
-import { Reader } from '@readiant/reader/jsx';
-
-function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: number }) {
-    return (
-        <Reader 
-            document-id={documentId}
-            page={page}
-            zoom-level={2}
-            screen-mode-level={3}
-            onDocumentLoaded={(e) => console.log('Document loaded:', e.detail)}
-            onPageChanged={(e) => console.log('Current pages:', e.detail.pages)}
-            onZoomChanged={(e) => console.log('Zoom level:', e.detail.zoom)}
-            onError={(e) => console.error('Error:', e.detail.message)}
-        />
-    );
-}
-```
-
-**Benefits of the React Wrapper:**
-- Full TypeScript type definitions for all props
-- IntelliSense autocomplete for properties and event handlers
-- Type checking for attribute values and event payloads
-- No need to import the base web component separately
 
 **Available Props:**
 
@@ -433,6 +402,29 @@ interface ReaderProps {
     message: string;
     type: string;
   }>) => void;
+}
+```
+
+### React
+
+For better TypeScript support and a more React-friendly API, use the `Reader` wrapper component:
+
+```tsx
+import { Reader } from '@readiant/reader/jsx';
+
+function DocumentViewer({ documentId, page = 1 }: { documentId: string; page?: number }) {
+    return (
+        <Reader 
+            document-id={documentId}
+            page={page}
+            zoom-level={2}
+            screen-mode-level={3}
+            onDocumentLoaded={(e) => console.log('Document loaded:', e.detail)}
+            onPageChanged={(e) => console.log('Current pages:', e.detail.pages)}
+            onZoomChanged={(e) => console.log('Zoom level:', e.detail.zoom)}
+            onError={(e) => console.error('Error:', e.detail.message)}
+        />
+    );
 }
 ```
 

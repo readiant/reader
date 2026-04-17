@@ -219,8 +219,11 @@ export class Fonts {
         }
         for (const lineHeightButton of this.lineHeightButtons) {
             lineHeightButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (lineHeightButton.getAttribute('data-line-height') === String(value))
+            lineHeightButton.setAttribute('aria-pressed', 'false');
+            if (lineHeightButton.getAttribute('data-line-height') === String(value)) {
                 lineHeightButton.classList.add(CLASS_BLOCK_ACTIVE);
+                lineHeightButton.setAttribute('aria-pressed', 'true');
+            }
         }
         Builder.lineHeight(value);
         if (this.currentLineHeight !== null)
