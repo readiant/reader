@@ -186,8 +186,10 @@ class ReadiantElement extends HTMLElement {
     }
     disconnectedCallback() {
         ReadiantElement.instance = null;
-        if (this.shadowRoot)
+        if (this.shadowRoot) {
+            Readiant.getInstance(this.shadowRoot)?.abort();
             Readiant.removeInstance(this.shadowRoot);
+        }
     }
     async reload() {
         try {
