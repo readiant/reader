@@ -171,6 +171,8 @@ class ReadiantElement extends HTMLElement {
                 const url = this.getAttribute('url');
                 if (documentId !== null || url !== null) {
                     await new Promise((resolve) => window.requestAnimationFrame(resolve));
+                    if (!this.isConnected)
+                        return;
                     const { Readiant } = await import('./readiant.js');
                     new Readiant(shadow);
                 }

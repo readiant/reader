@@ -110,8 +110,14 @@ export class LineHighlighter {
             button.classList.toggle(button.classList.contains('rdnt__block-button')
                 ? CLASS_BLOCK_ACTIVE
                 : CLASS_BUTTON_ACTIVE);
-        for (const button of this.buttons)
+        for (const button of this.buttons) {
             button.setAttribute('aria-pressed', String(this.active));
+            const label = this.active
+                ? button.dataset.labelOff
+                : button.dataset.labelOn;
+            if (typeof label !== 'undefined')
+                button.setAttribute('aria-label', label);
+        }
         this.center?.classList.toggle(CLASS_HIDDEN);
         for (const settings of this.settings)
             settings.classList.toggle(CLASS_HIDDEN);
