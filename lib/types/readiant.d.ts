@@ -7,7 +7,7 @@ import { ReadiantElement } from './base.js';
 import { Builder } from './builder.js';
 import { Chapters } from './chapters.js';
 import { Colorblind } from './colorblind.js';
-import { CLASS_BUTTON_ACTIVE, CLASS_HIDDEN, CLASS_NAVIGATION_NEXT_ACTIVE, CLASS_PREVIEW, AcceptedTypes, Container, ContentType, Direction, Fn, OrientationMode, PagePosition, } from './consts.js';
+import { CLASS_BUTTON_ACTIVE, CLASS_HIDDEN, CLASS_NAVIGATION_NEXT_ACTIVE, CLASS_PREVIEW, AcceptedTypes, AudioPlayingState, Container, ContentType, Direction, Fn, OrientationMode, PagePosition, } from './consts.js';
 import { connectionInfo, orientation, webP } from './detection.js';
 import { isOffline, ENV_VALUE } from './env.js';
 import { eventLogger, notifyComponent } from './eventLogger.js';
@@ -540,6 +540,23 @@ export class Readiant {
     async register(availableAudio, documentChapters, translations) {
         if (this.abortController.signal.aborted)
             return;
+        Audio.playingState = AudioPlayingState.Initial;
+        Audio.playback = new Map();
+        Bar.readStop = 1;
+        Bar.showing = false;
+        Builder.animationDisabled = false;
+        Builder.isAnimating = false;
+        Builder.animationEpoch = 0;
+        Builder.previouslyShownPages = 0;
+        Builder.hasFontChanged = false;
+        Builder.highlightOnLoad = undefined;
+        Fonts.resetState();
+        LineHighlighter.resetState();
+        ScreenMode.resetState();
+        Text.resetState();
+        TextMode.level = 1;
+        Zoom.level = 2;
+        Zoom.isGrabbing = false;
         this.connected = true;
         this.closeScreenSettingsButton?.addEventListener('click', (event) => {
             event.preventDefault();

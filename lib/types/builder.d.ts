@@ -105,6 +105,13 @@ export class Builder {
             : Math.floor(specGetScrollLeft(this.htmlPage) / this.pageSizeHTML());
     }
     static register() {
+        this.cachedElements = new Set();
+        this.wantedElements = new Set();
+        this.handlers.clear();
+        this.elementsOnPage.clear();
+        this.cachedLinks.clear();
+        this.currentSentenceIndex = 0;
+        this.currentWordIndex = 0;
         if (Readiant.type === ContentType.HTML) {
             this.htmlPage?.classList.remove(CLASS_HIDDEN);
             this.left?.remove();

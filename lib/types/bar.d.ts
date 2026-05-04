@@ -47,6 +47,7 @@ export class Bar {
         return Readiant.root.querySelector('.rdnt__bottom-bar__options');
     }
     static register() {
+        this.fontSize = 1;
         this.subtitlesRange?.addEventListener('change', (event) => {
             this.fontSizeSubtitles(event);
         });

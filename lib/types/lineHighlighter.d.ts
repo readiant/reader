@@ -33,6 +33,11 @@ export class LineHighlighter {
     static get top() {
         return Readiant.root.querySelector('.rdnt__line-highlighter--top');
     }
+    static resetState() {
+        this.active = false;
+        this.color = 'transparent';
+        this.width = 30;
+    }
     static register() {
         for (const button of this.buttons)
             button.addEventListener('click', (event) => {

@@ -115,6 +115,12 @@ export class Annotations {
         this.toggle();
     }
     static register() {
+        this.annotations = {};
+        this.annotationHistory = [];
+        this.editComments = false;
+        this.editMarkings = false;
+        this.isErasing = false;
+        this.showAnnotations = false;
         const endEvent = (event) => {
             Readiant.windowContext.removeEventListener('mouseup', endEvent);
             Readiant.windowContext.removeEventListener('pointerup', endEvent);

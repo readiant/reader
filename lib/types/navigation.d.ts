@@ -55,6 +55,16 @@ export class Navigation {
         return Math.max(...this.pages);
     }
     static register(page, pages, pageCounts, indexes, direction, offset, spread) {
+        this.handlers.clear();
+        this.textHandlers.clear();
+        this.cachedPages = new Set();
+        this.missingPages = new Set();
+        this.renderEpoch = 0;
+        this.hasRegistered = false;
+        this.previousAction = undefined;
+        this.currentPage = 1;
+        this.animationPages = [{ page: 2, position: PagePosition.Right }];
+        this.currentPages = [{ page: 1, position: PagePosition.Right }];
         if (Readiant.type === ContentType.HTML)
             this.registerHTML(page, pageCounts, indexes, direction);
         else
