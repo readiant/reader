@@ -125,7 +125,8 @@ export class Builder {
             this.addHandler((page, side) => {
                 if (TextMode.level !== 3)
                     this.start(side);
-                if (Storage.hasText(page)) {
+                const hasText = Storage.hasText(page);
+                if (hasText) {
                     const { elements, viewBox } = Storage.getPage(page);
                     const textContent = Storage.getText(page);
                     this.textLayer(elements, textContent, side, viewBox);
@@ -1478,11 +1479,16 @@ export class Builder {
         ].flatMap((element) => [...element.children].map((word) => ({
             content: String(word.getAttribute('data-word')),
             left: parseFloat(element.style.left),
-            sentence: String(word.getAttribute('data-s')),
+            sentence: Number(word.getAttribute('data-s')),
             top: parseFloat(element.style.top),
             word: String(word.getAttribute('data-w')),
         })));
-        const grouped = Object.values(groupBy(sentenceElements, (element) => element.sentence)).sort((a, b) => a[0].top === b[0].top ? a[0].left - b[0].left : a[0].top - b[0].top);
+        const compareLeft = (a, b) => this.direction === Direction.Rtl ? b - a : a - b;
+        const grouped = Object.values(groupBy(sentenceElements, (element) => element.sentence))
+            .map((group) => group.sort((a, b) => a.top === b.top ? compareLeft(a.left, b.left) : a.top - b.top))
+            .sort((a, b) => a[0].top === b[0].top
+            ? compareLeft(a[0].left, b[0].left)
+            : a[0].top - b[0].top);
         return sentenceElements.length > 0
             ? grouped
                 .map((sentence) => {
@@ -2616,10 +2622,12 @@ export class Builder {
                             break;
                         }
                     }
-                    if (!found) {
+                    if (!found && normalizedWord.length > 0) {
                         for (let si = sentenceIndex + 1; si < sentences.length; si++) {
                             const candidateSentence = this.normalize(sentences[si], false);
-                            const candidateIndex = candidateSentence.indexOf(normalizedWord);
+                            const escapedNorm = normalizedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const wbMatch = new RegExp(`(^|[^a-z0-9])(${escapedNorm})([^a-z0-9]|$)`).exec(candidateSentence);
+                            const candidateIndex = wbMatch !== null ? wbMatch.index + wbMatch[1].length : -1;
                             if (candidateIndex > -1) {
                                 if (sentence.trim().length > 0)
                                     sentenceLeftovers.set(sentenceIndex, {

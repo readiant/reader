@@ -278,7 +278,7 @@ export class Audio {
             }
         });
         this.fetchSpeechMarks();
-        Readiant.windowContext.addEventListener('keydown', (event) => {
+        Readiant.documentElementContext.addEventListener('keydown', (event) => {
             this.shortcut(event);
         });
     }
@@ -758,9 +758,22 @@ export class Audio {
         });
     }
     static shortcut(event) {
+        // Check document-level active element to guard against editable elements
+        // outside the reader's shadow root (e.g. inputs/textareas in the host page).
+        const docFocus = Readiant.documentContext.activeElement;
+        if (docFocus !== null &&
+            (docFocus.tagName === 'INPUT' ||
+                docFocus.tagName === 'TEXTAREA' ||
+                docFocus.tagName === 'SELECT' ||
+                docFocus.isContentEditable))
+            return;
+        // Guard against interactive elements focused inside the reader itself.
         const focus = Readiant.root.activeElement;
         if (focus !== null &&
-            (focus.tagName === 'BUTTON' || focus.tagName === 'INPUT'))
+            (focus.tagName === 'BUTTON' ||
+                focus.tagName === 'INPUT' ||
+                focus.tagName === 'TEXTAREA' ||
+                focus.isContentEditable))
             return;
         let code;
         if (typeof event.key !== 'undefined')

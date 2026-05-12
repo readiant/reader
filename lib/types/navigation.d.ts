@@ -928,9 +928,16 @@ export class Navigation {
         if (typeof orientationChange !== 'undefined' &&
             orientationChange === OrientationMode.Portrait) {
             Builder.hide(PagePosition.Right);
-            return;
         }
-        if (TextMode.level !== 3) {
+        if (TextMode.level === 2) {
+            const startLeft = requests.some((val) => val.position === PagePosition.Left);
+            if (startLeft)
+                Builder.start(PagePosition.Left);
+            else
+                Builder.hide(PagePosition.Left);
+            Builder.hide(PagePosition.Right);
+        }
+        else if (TextMode.level !== 3) {
             const startLeft = requests.some((val) => val.position === PagePosition.Left);
             const startRight = requests.some((val) => val.position === PagePosition.Right);
             if (startLeft)
