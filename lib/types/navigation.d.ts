@@ -1023,11 +1023,12 @@ export class Navigation {
         };
     }
     static shortcut(event) {
-        if (event.target !== null &&
-            (event.target.nodeName ===
-                'INPUT' ||
-                event.target.nodeName ===
-                    'TEXTAREA'))
+        const origin = event.composedPath()[0];
+        if (typeof origin !== 'undefined' &&
+            (origin.tagName === 'INPUT' ||
+                origin.tagName === 'TEXTAREA' ||
+                origin.tagName === 'SELECT' ||
+                origin.isContentEditable))
             return;
         let code;
         if (typeof event.key !== 'undefined')
