@@ -1028,7 +1028,10 @@ export class Navigation {
             (origin.tagName === 'INPUT' ||
                 origin.tagName === 'TEXTAREA' ||
                 origin.tagName === 'SELECT' ||
-                origin.isContentEditable))
+                origin.tagName === 'BUTTON' ||
+                origin.isContentEditable ||
+                origin.getAttribute('role') === 'button' ||
+                origin.tagName.includes('-')))
             return;
         let code;
         if (typeof event.key !== 'undefined')
