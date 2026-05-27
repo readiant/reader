@@ -408,7 +408,14 @@ export class Readiant {
             this.options.concurrencyLimit > 0
             ? this.options.concurrencyLimit
             : 6;
-        await this.fetchFilesWithConcurrencyLimit(index.files, index.imageInfo, concurrencyLimit, this.abortController.signal);
+        const backgroundFiles = index.files.filter((file) => file.startsWith('audio/') ||
+            file.includes('/audio/') ||
+            file.startsWith('textContent/') ||
+            file.includes('/textContent/'));
+        const priorityFiles = backgroundFiles.length > 0
+            ? index.files.filter((file) => !backgroundFiles.includes(file))
+            : index.files;
+        await this.fetchFilesWithConcurrencyLimit(priorityFiles, index.imageInfo, concurrencyLimit, this.abortController.signal);
         if (this.abortController.signal.aborted)
             return;
         if (index.type === DocumentType.ePub)
@@ -434,6 +441,11 @@ export class Readiant {
                 spread: index.spread,
                 translations: {},
                 type: ServerActionType.PDFDocumentInfo,
+            });
+        if (backgroundFiles.length > 0)
+            this.fetchFilesWithConcurrencyLimit(backgroundFiles, index.imageInfo, concurrencyLimit, this.abortController.signal).catch((e) => {
+                if (!(e instanceof DOMException && e.name === 'AbortError'))
+                    Readiant.errorHandler(e);
             });
     }
     async fetchFilesWithConcurrencyLimit(files, imageInfo, limit, signal) {

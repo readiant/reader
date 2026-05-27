@@ -255,7 +255,9 @@ export class Builder {
             this.layers === null ||
             this.viewport === null)
             return;
-        if (this.animationDisabled || Navigation.currentPage === 1) {
+        if (this.animationDisabled ||
+            (Navigation.currentPage === 1 &&
+                Navigation.currentPages.length >= this.previouslyShownPages)) {
             this.layer(PagePosition.Left);
             return;
         }
@@ -272,12 +274,8 @@ export class Builder {
                 this.viewport.style.removeProperty('transform');
             }
         }
-        this.animationPages = Navigation.animationPages;
         this.isAnimating = true;
         const myEpoch = ++this.animationEpoch;
-        const toFirst = Math.min(...Navigation.pages) === Navigation.currentPage - 1;
-        const isLast = Math.max(...Navigation.pages) === Navigation.currentPage;
-        const translateX = parseFloat(this.animationLeft.style.width) / 2;
         const computedStyle = Readiant.windowContext.getComputedStyle(this.animationLeft);
         if (computedStyle.animationName !== 'none') {
             this.animationLeft.classList.remove(CLASS_ACTIVE);
@@ -331,13 +329,38 @@ export class Builder {
             }
             this.layer(PagePosition.Left);
         };
-        this.layers.style.perspective = '250vh';
-        if (toFirst || isLast) {
-            this.layers.style.transition = 'transform 0.9s ease-in-out';
-            this.viewport.style.transition = 'transform 0.9s ease-in-out';
-            this.layers.style.transform = `translateX(-${String(translateX)}px)`;
-            this.viewport.style.transform = `translateX(-${String(translateX)}px)`;
+        const isLast = Navigation.currentPage === Math.max(...Navigation.pages);
+        if (isLast) {
+            const leftW = parseFloat(this.animationLeft.style.width) || 0;
+            const rightW = parseFloat(this.animationRight?.style.width ?? '0') || 0;
+            const sourceAnim = leftW > 0 ? this.animationLeft : this.animationRight;
+            const sourceW = leftW > 0 ? leftW : rightW;
+            if (sourceAnim !== null && sourceW > 0) {
+                const halfWidth = sourceW / 2;
+                if (leftW === 0) {
+                    this.animationLeft.style.left = sourceAnim.style.left;
+                    this.animationLeft.style.width = `${String(sourceW)}px`;
+                    this.animationLeft.style.height = sourceAnim.style.height;
+                    this.animationLeft.style.top = sourceAnim.style.top;
+                }
+                this.layers.style.transition = 'transform 0.9s ease-in-out';
+                this.viewport.style.transition = 'transform 0.9s ease-in-out';
+                this.layers.style.transform = `translateX(-${String(halfWidth)}px)`;
+                this.viewport.style.transform = `translateX(-${String(halfWidth)}px)`;
+            }
         }
+        const isFirstPage = Navigation.animationPages.some((p) => p.page === Math.min(...Navigation.pages) &&
+            p.position === PagePosition.Left);
+        if (isFirstPage) {
+            const halfWidth = (parseFloat(this.animationLeft.style.width) || 0) / 2;
+            if (halfWidth > 0) {
+                this.layers.style.transition = 'transform 0.9s ease-in-out';
+                this.viewport.style.transition = 'transform 0.9s ease-in-out';
+                this.layers.style.transform = `translateX(-${String(halfWidth)}px)`;
+                this.viewport.style.transform = `translateX(-${String(halfWidth)}px)`;
+            }
+        }
+        this.layers.style.perspective = '250vh';
         this.animationLeft.classList.add(CLASS_ACTIVE);
         this.leftLayer?.classList.add(CLASS_ANIMATE_LEFT);
         this.rightLayer?.classList.add(CLASS_ANIMATE_LEFT);
@@ -367,15 +390,8 @@ export class Builder {
                 this.viewport.style.removeProperty('transform');
             }
         }
-        this.animationPages = Navigation.animationPages;
         this.isAnimating = true;
         const myEpoch = ++this.animationEpoch;
-        const orientation = this.computeOrientation();
-        const isFirst = Math.min(...Navigation.pages) === Navigation.currentPage;
-        const toLast = Math.max(...Navigation.pages) ===
-            Navigation.currentPage +
-                (orientation === OrientationMode.Landscape ? 2 : 1);
-        const translateX = parseFloat(this.animationRight.style.width) / 2;
         const computedStyle = Readiant.windowContext.getComputedStyle(this.animationRight);
         if (computedStyle.animationName !== 'none') {
             this.animationRight.classList.remove(CLASS_ACTIVE);
@@ -429,13 +445,39 @@ export class Builder {
             }
             this.layer(PagePosition.Right);
         };
-        this.layers.style.perspective = '250vh';
-        if (isFirst || toLast) {
-            this.layers.style.transition = 'transform 0.9s ease-in-out';
-            this.viewport.style.transition = 'transform 0.9s ease-in-out';
-            this.layers.style.transform = `translateX(${String(translateX)}px)`;
-            this.viewport.style.transform = `translateX(${String(translateX)}px)`;
+        const isFirst = Math.min(...Navigation.pages) === Navigation.currentPage;
+        if (isFirst) {
+            const leftW = parseFloat(this.animationLeft?.style.width ?? '0') || 0;
+            const rightW = parseFloat(this.animationRight.style.width) || 0;
+            const sourceAnim = leftW > 0 ? this.animationLeft : this.animationRight;
+            const sourceW = leftW > 0 ? leftW : rightW;
+            if (sourceAnim !== null && sourceW > 0) {
+                const halfWidth = sourceW / 2;
+                if (rightW === 0 && this.animationLeft !== null) {
+                    this.animationRight.style.left = this.animationLeft.style.left;
+                    this.animationRight.style.width = `${String(sourceW)}px`;
+                    this.animationRight.style.height = this.animationLeft.style.height;
+                    this.animationRight.style.top = this.animationLeft.style.top;
+                }
+                this.layers.style.transition = 'transform 0.9s ease-in-out';
+                this.viewport.style.transition = 'transform 0.9s ease-in-out';
+                this.layers.style.transform = `translateX(${String(halfWidth)}px)`;
+                this.viewport.style.transform = `translateX(${String(halfWidth)}px)`;
+            }
         }
+        const isGoingToLastPage = Navigation.animationPages.some((p) => p.page === Math.max(...Navigation.pages) &&
+            p.position === PagePosition.Right);
+        if (isGoingToLastPage) {
+            const leftW = parseFloat(this.animationLeft?.style.width ?? '0') || 0;
+            const halfWidth = leftW / 2;
+            if (halfWidth > 0) {
+                this.layers.style.transition = 'transform 0.9s ease-in-out';
+                this.viewport.style.transition = 'transform 0.9s ease-in-out';
+                this.layers.style.transform = `translateX(${String(halfWidth)}px)`;
+                this.viewport.style.transform = `translateX(${String(halfWidth)}px)`;
+            }
+        }
+        this.layers.style.perspective = '250vh';
         this.animationRight.classList.add(CLASS_ACTIVE);
         this.leftLayer?.classList.add(CLASS_ANIMATE_RIGHT);
         this.rightLayer?.classList.add(CLASS_ANIMATE_RIGHT);
@@ -1178,11 +1220,6 @@ export class Builder {
             if (href !== null)
                 image.setAttributeNS(NAMESPACE_XLINK, 'href', href.replace(new RegExp('_(0.5|[0-9]).', 'gi'), `_${size}.`));
         }
-    }
-    static isAnimationPage(page) {
-        if (this.animationPages.some((current) => current.page === page))
-            return this.animationPages.find((cur) => cur.page === page)?.position;
-        return undefined;
     }
     static get isFirstPageOfSection() {
         if (this.layout === Layout.PrePaginated)
@@ -1939,11 +1976,17 @@ export class Builder {
         }
     }
     static async svg(pageNumber, side) {
-        if (typeof this.isAnimationPage(pageNumber) !== 'undefined')
-            await this.waitForAnimation(side === PagePosition.Left ? this.animationRight : this.animationLeft);
         const { blueprint, elements, rotation, viewBox } = Storage.getPage(pageNumber);
         const page = this.getPage(side);
         await this.waitForElements(elements);
+        if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
+            return;
+        const thisSideAnimation = side === PagePosition.Left ? this.animationLeft : this.animationRight;
+        const isCovered = this.isAnimating &&
+            thisSideAnimation?.classList.contains(CLASS_ACTIVE) === true;
+        const isSpreadChange = Navigation.currentPages.length !== this.previouslyShownPages;
+        if (!isCovered || isSpreadChange)
+            await this.waitForAnimation(thisSideAnimation);
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
             return;
         this.hide(side);
@@ -1952,15 +1995,11 @@ export class Builder {
         else
             this.clear(this.rightTextLayer);
         page.innerHTML = blueprint;
-        if (TextMode.level !== 3) {
-            if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
-                return;
-            this.show(page);
-            await this.waitForNextFrame();
-            if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
-                return;
-        }
         this.pageSizeSVG({ rotation, side, viewBox });
+        if (TextMode.level !== 3) {
+            this.show(page);
+            this.layer(side);
+        }
         this.notify(pageNumber, side);
     }
     static textElement(textElement, content, index, viewBox, ignore) {
@@ -2745,7 +2784,23 @@ export class Builder {
                     attributeFilter: ['class'],
                 });
             });
-        return Promise.resolve();
+        const activeElement = this.animationLeft?.classList.contains(CLASS_ACTIVE) === true
+            ? this.animationLeft
+            : this.animationRight?.classList.contains(CLASS_ACTIVE) === true
+                ? this.animationRight
+                : null;
+        if (activeElement === null)
+            return Promise.resolve();
+        return new Promise((resolve) => {
+            new MutationObserver((_records, observer) => {
+                if (!activeElement.classList.contains(CLASS_ACTIVE)) {
+                    observer.disconnect();
+                    resolve();
+                }
+            }).observe(activeElement, {
+                attributeFilter: ['class'],
+            });
+        });
     }
     static waitForElements(elements) {
         elements = elements.map((element) => `#${element.replace('.', '\\.')}`);
@@ -2847,7 +2902,6 @@ Builder.activeLetterSpacing = _a.ORIGINAL_LETTERSPACING;
 Builder.activeLineHeight = _a.ORIGINAL_LINEHEIGHT;
 Builder.activeWordSpacing = _a.ORIGINAL_WORDSPACING;
 Builder.animationDisabled = false;
-Builder.animationPages = [];
 Builder.cachedElements = new Set();
 Builder.cachedLinks = new Map();
 Builder.currentSentenceIndex = 0;
