@@ -187,6 +187,7 @@ class ReadiantElement extends HTMLElement {
         }
     }
     disconnectedCallback() {
+        this.pauseAudio();
         if (ReadiantElement.instance === this)
             ReadiantElement.instance = null;
         if (this.shadowRoot) {
@@ -274,6 +275,12 @@ class ReadiantElement extends HTMLElement {
     async toggleFullscreen() {
         this.setContext();
         await Fullscreen.toggle();
+    }
+    pauseAudio() {
+        this.setContext();
+        Audio.pause().catch((e) => {
+            throw e;
+        });
     }
     print() {
         this.setContext();

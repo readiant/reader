@@ -522,6 +522,9 @@ viewer.setTheme('dark'); // 'light' | 'sepia' | 'dark'
 // Feature control
 await viewer.toggleFullscreen();
 viewer.print();
+
+// Audio control
+viewer.pauseAudio(); // pause audio playback
 ```
 
 ### Events
