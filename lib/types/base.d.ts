@@ -296,8 +296,14 @@ class ReadiantElement extends HTMLElement {
     }
 }
 ReadiantElement.instance = null;
-if (!customElements.get(customElementTag))
-    customElements.define(customElementTag, ReadiantElement);
-else
-    console.warn(`Custom element "${customElementTag}" already defined. Registration skipped.`);
+if (!customElements.get(customElementTag)) {
+    try {
+        customElements.define(customElementTag, ReadiantElement);
+    }
+    catch (e) {
+        if (!(e instanceof DOMException))
+            throw e;
+        // Already registered by a concurrent bundle — safe to ignore.
+    }
+}
 export { ReadiantElement };
