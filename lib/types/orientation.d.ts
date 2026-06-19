@@ -22,7 +22,7 @@ export class Orientation {
                 event.preventDefault();
                 this.change(event);
             });
-        if (!Storage.data.hover && (Storage.data.pointer || Storage.data.touch)) {
+        if (!Storage.data.hover) {
             const orientationChange = Readiant.windowContext.matchMedia('(orientation: portrait)');
             orientationChange.addEventListener('change', () => {
                 if ((orientationChange.matches &&

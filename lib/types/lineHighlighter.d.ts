@@ -1,7 +1,6 @@
 import { Builder } from './builder.js';
 import { CLASS_BLOCK_ACTIVE, CLASS_BUTTON_ACTIVE, CLASS_DISABLED, CLASS_HIDDEN, CLASS_ROUND_BUTTON_ACTIVE, } from './consts.js';
 import { Readiant } from './readiant.js';
-import { Storage } from './storage.js';
 export class LineHighlighter {
     static get bottom() {
         return Readiant.root.querySelector('.rdnt__line-highlighter--bottom');
@@ -53,18 +52,9 @@ export class LineHighlighter {
                 event.preventDefault();
                 this.changeColor(event);
             });
-        if (Storage.data.pointer)
-            Readiant.root.addEventListener('pointermove', (event) => {
-                this.position(event);
-            });
-        else if (Storage.data.touch)
-            Readiant.root.addEventListener('touchmove', (event) => {
-                this.position(event);
-            });
-        else
-            Readiant.root.addEventListener('mousemove', (event) => {
-                this.position(event);
-            });
+        Readiant.root.addEventListener('pointermove', (event) => {
+            this.position(event);
+        });
     }
     static changeColor(event) {
         const input = event.currentTarget;
@@ -98,9 +88,7 @@ export class LineHighlighter {
             this.center === null ||
             this.bottom === null)
             return;
-        const clientY = 'changedTouches' in event
-            ? event.changedTouches[0].clientY
-            : event.clientY;
+        const { clientY } = event;
         const rootRect = Readiant.documentBody.getBoundingClientRect();
         const y = clientY - rootRect.top + Readiant.documentBody.scrollTop;
         this.top.style.height = `${String(y - this.width / 2)}px`;
