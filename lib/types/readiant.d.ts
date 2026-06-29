@@ -549,7 +549,7 @@ export class Readiant {
         Readiant.type = ContentType.HTML;
         Builder.register();
         Builder.setDirection(directionFromString(direction));
-        Builder.setStylesheet(document, this.fonts, this.stylesheetText);
+        await Builder.setStylesheet(document, this.fonts, this.stylesheetText);
         Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
         await this.register({}, chapters, translations);
     }
@@ -559,7 +559,7 @@ export class Readiant {
         Readiant.type = ContentType.SVG;
         Builder.register();
         Builder.setDirection(rtl ? Direction.Rtl : Direction.Ltr);
-        Builder.setStylesheet(document, this.fonts, this.stylesheetText);
+        await Builder.setStylesheet(document, this.fonts, this.stylesheetText);
         Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
         await this.register(availableAudio, chapters, translations);
     }
