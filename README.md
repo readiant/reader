@@ -841,6 +841,8 @@ readiant-reader {
 |----------|---------|-------------|
 | `--readiant-button-height` | `52px` | Height of toolbar buttons |
 | `--readiant-button-width` | `auto` | Width of toolbar buttons |
+| `--readiant-button-icon-height` | `1.2rem` | Height of toolbar button icons |
+| `--readiant-button-icon-width` | `1.2rem` | Width of toolbar button icons |
 | `--readiant-button-padding` | `4px 12px 0` | Padding inside buttons |
 | `--readiant-button-border-top` | `0` | Top border |
 | `--readiant-button-border-right` | `0` | Right border |
