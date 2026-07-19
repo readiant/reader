@@ -789,6 +789,8 @@ readiant-reader {
 | `--readiant-component-width` | `100%` | Component width |
 | `--readiant-component-height` | `100%` | Component height |
 | `--readiant-font-family` | `roboto, sans-serif` | Base font family |
+| `--readiant-primary-color` | `#5ba1d2` | Primary accent color |
+| `--readiant-border-color` | `rgba(94, 111, 219, 20%)` | Default border color |
 
 #### Default Theme
 
@@ -860,7 +862,9 @@ readiant-reader {
 | `--readiant-menu-bottom` | `auto` | Distance from bottom |
 | `--readiant-menu-left` | `0` | Distance from left |
 | `--readiant-menu-right` | `auto` | Distance from right |
+| `--readiant-menu-buttons-display` | `flex` | Display property for buttons container |
 | `--readiant-menu-buttons-width` | `auto` | Width of the buttons container |
+| `--readiant-menu-buttons-grid-template-columns` | `none` | Grid template columns for buttons layout |
 | `--readiant-menu-buttons-justify` | `flex-end` | `justify-content` for the buttons row |
 
 #### Progress Bar
@@ -890,6 +894,15 @@ readiant-reader {
 |----------|---------|-------------|
 | `--readiant-viewport-margin` | `calc(56px + 2rem) 2rem 2rem` | Margin around the document viewport. Top accounts for the menu bar height. |
 
+#### Highlighting
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--readiant-highlight-background-color` | `rgb(255, 255, 0, 25%)` | Background color for highlighted text |
+| `--readiant-highlight-word-background-color` | `rgb(0, 0, 255, 25%)` | Background color for highlighted words |
+| `--readiant-highlight-syntax-background-color` | `rgb(255, 165, 0, 25%)` | Background color for syntax highlighting |
+| `--readiant-highlight-syntax-word-background-color` | `rgb(128, 0, 128, 25%)` | Background color for highlighted syntax words |
+
 #### Element Visibility
 
 Set any of these to `none` to hide the element, or `inline-block`/`block`/`flex` to show it.
@@ -902,6 +915,7 @@ Set any of these to `none` to hide the element, or `inline-block`/`block`/`flex`
 | `--readiant-audio-progress-top-display` | `inline-block` | Audio progress bar (top variant) |
 | `--readiant-bottom-bar-display` | `flex` | Bottom bar |
 | `--readiant-bottom-bar-settings-button-display` | `inline-block` | Bottom bar settings button |
+| `--readiant-bottom-bar-settings-button-bar-display` | `inline-block` | Bottom bar settings button bar |
 | `--readiant-chapters-button-display` | `inline-block` | Chapters toolbar button |
 | `--readiant-first-page-display` | `inline-block` | First page button |
 | `--readiant-fullscreen-toggle-display` | `inline-block` | Fullscreen toggle button |

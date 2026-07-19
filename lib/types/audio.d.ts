@@ -524,7 +524,9 @@ export class Audio {
     static async play(force = false) {
         if (typeof this.element === 'undefined')
             this.element = Readiant.documentContext.createElement('audio');
-        const position = Navigation.currentPages.find((currentPage) => currentPage.page === Navigation.currentPage);
+        let position = Navigation.currentPages.find((currentPage) => currentPage.page === Navigation.currentPage);
+        if (typeof position === 'undefined' && Navigation.currentPages.length > 0)
+            position = Navigation.currentPages[0];
         if (typeof position === 'undefined')
             return;
         const startSide = position.position;
