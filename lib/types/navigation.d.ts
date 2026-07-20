@@ -45,6 +45,17 @@ export class Navigation {
     static isOfflinePageCached(page) {
         return this.offlinePagesCached.has(page);
     }
+    static addFetchingPages(pages) {
+        for (const page of pages)
+            this.fetchingPages.add(page);
+    }
+    static removeFetchingPages(pages) {
+        for (const page of pages)
+            this.fetchingPages.delete(page);
+    }
+    static isPageAvailable(page) {
+        return this.offlinePagesCached.has(page) || this.fetchingPages.has(page);
+    }
     static isOffsetPage(page) {
         return page + this.pageOffset <= 0;
     }
@@ -380,7 +391,7 @@ export class Navigation {
         all.sort((a, b) => Math.abs(this.currentPage - a) - Math.abs(this.currentPage - b));
         const pages = all.slice(0, this.cacheSize);
         const isPageCached = isOffline
-            ? (page) => Navigation.isOfflinePageCached(page)
+            ? (page) => this.isPageAvailable(page)
             : (page) => Storage.hasPage(page);
         this.cachedPages = new Set(pages.filter((page) => isPageCached(page)));
         this.missingPages = new Set(pages.filter((page) => !isPageCached(page)));
@@ -388,12 +399,18 @@ export class Navigation {
             const pagesToFetch = typeof exclude === 'undefined'
                 ? [...this.missingPages]
                 : [...this.missingPages].filter((page) => !exclude.includes(page));
-            if (typeof this.offlineLazyLoader !== 'undefined' && isOffline)
+            if (isOffline &&
+                typeof this.offlineLazyLoader !== 'undefined' &&
+                pagesToFetch.length > 0) {
+                this.addFetchingPages(pagesToFetch);
                 this.offlineLazyLoader(pagesToFetch).catch((e) => {
+                    this.removeFetchingPages(pagesToFetch);
                     throw e;
                 });
-            else
+            }
+            else if (!isOffline) {
                 this.requestPages(pagesToFetch);
+            }
         }
         const epoch = this.renderEpoch;
         const pagesToRender = [...this.animationPages, ...this.currentPages];
@@ -507,6 +524,9 @@ export class Navigation {
     }
     static setOfflineLazyLoader(loader) {
         this.offlineLazyLoader = loader;
+    }
+    static markPagesAsFetched(pages) {
+        this.removeFetchingPages(pages);
     }
     static gotoPage(page, type = PageChangeType.Other) {
         if (Readiant.type === ContentType.HTML)
@@ -1165,6 +1185,7 @@ Navigation.cachedPages = new Set();
 Navigation.maxPage = 0;
 Navigation.missingPages = new Set();
 Navigation.renderEpoch = 0;
+Navigation.fetchingPages = new Set();
 Navigation.offlinePagesCached = new Set();
 Navigation.handlers = new Set();
 Navigation.textHandlers = new Map();

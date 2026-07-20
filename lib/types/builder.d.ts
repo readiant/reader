@@ -2630,7 +2630,10 @@ export class Builder {
                         ? this.normalize(wordSyntax[wordIndex].value)
                         : '';
             }
-            if (sentence.trim() === '') {
+            const rawDataWord = String(word.getAttribute('data-word'));
+            let normalizedWord = this.normalize(rawDataWord, false);
+            const isPurePunctuation = normalizedWord === '';
+            if (sentence.trim() === '' && !isPurePunctuation) {
                 sentenceIndex++;
                 if (sentenceIndex >= sentences.length)
                     break;
@@ -2652,8 +2655,6 @@ export class Builder {
                     .filter((word) => word.trim() !== '');
                 sentenceWordsIndex = 0;
             }
-            const rawDataWord = String(word.getAttribute('data-word'));
-            let normalizedWord = this.normalize(rawDataWord, false);
             const rawToken = normalizedWord;
             normalizedWord = this.reconstructWord(normalizedWord, sentence);
             if (normalizedWord.length > sentence.trim().length) {
@@ -2701,7 +2702,6 @@ export class Builder {
             }
             word.setAttribute('data-s', String(sentenceIndex));
             word.setAttribute('data-w', String(sentenceWordsIndex));
-            const isPurePunctuation = normalizedWord === '';
             if (!isPurePunctuation) {
                 const normalizedWordIndex = sentence.indexOf(normalizedWord);
                 if (normalizedWordIndex > -1) {
