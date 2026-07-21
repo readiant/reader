@@ -238,6 +238,7 @@ export class Readiant {
     constructor(root) {
         this.accepted = {
             audioHighlightingLevel: AcceptedTypes.Number,
+            audioTimeout: AcceptedTypes.Number,
             colorBlindFilter: AcceptedTypes.String,
             concurrencyLimit: AcceptedTypes.Number,
             countdownLevel: AcceptedTypes.Number,
@@ -766,6 +767,8 @@ export class Readiant {
             await Audio.register(availableAudio);
             if (typeof this.options.audioHighlightingLevel !== 'undefined')
                 Audio.setLineHighlighterType(this.options.audioHighlightingLevel);
+            if (typeof this.options.audioTimeout !== 'undefined')
+                Audio.audioTimeout = this.options.audioTimeout;
             if (typeof this.options.countdownLevel !== 'undefined')
                 Audio.countdownType(this.options.countdownLevel);
             if (typeof this.options.playbackRate !== 'undefined')
