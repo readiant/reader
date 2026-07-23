@@ -65,6 +65,12 @@ export class Storage {
     static hasChapter(chapter) {
         return this.cache.has(`${this.CHAPTER_KEY}${String(chapter)}`);
     }
+    static hasElements(ids) {
+        return ids.every((id) => this.cache.has(`${this.ELEMENT_KEY}${id}`));
+    }
+    static hasOfflinePage(page) {
+        return this.hasElements([...this.getBlueprints([page])]);
+    }
     static hasPage(page) {
         return this.cache.has(`${this.PAGE_KEY}${String(page)}`);
     }

@@ -445,8 +445,6 @@ export class Readiant {
         }
         this.deferredOfflineFiles = deferredFiles;
         this.indexImageInfo = index.imageInfo;
-        for (let p = pageStart; p <= pageEnd; p++)
-            Navigation.offlinePagesCached.add(p);
         await this.fetchFilesWithConcurrencyLimit(priorityFiles, index.imageInfo, concurrencyLimit, this.abortController.signal);
         if (this.abortController.signal.aborted)
             return;
@@ -573,19 +571,6 @@ export class Readiant {
         const match = /(\d+)(?:\.\w+)?$/.exec(file);
         return match ? Number(match[1]) : undefined;
     }
-    async requestOfflinePageContent(files, imageInfo, concurrencyLimit, pagesRequested) {
-        try {
-            await this.fetchFilesWithConcurrencyLimit(files, imageInfo, concurrencyLimit, this.abortController.signal);
-            for (const pageNum of pagesRequested)
-                Navigation.offlinePagesCached.add(pageNum);
-            Navigation.preparePages(Navigation.currentPages);
-            Navigation.generateCache();
-        }
-        catch (error) {
-            console.error('[Readiant] Lazy loader error:', error);
-            throw error;
-        }
-    }
     filterPageFiles(allFiles, pageNumbers) {
         const filtered = [];
         const pageSet = new Set(pageNumbers);
@@ -607,21 +592,14 @@ export class Readiant {
         await Builder.setStylesheet(document, this.fonts, this.stylesheetText);
         if (isOffline && this.deferredOfflineFiles.length > 0) {
             const lazyLoader = async (pages) => {
-                try {
-                    await this.requestOfflinePageContent(this.filterPageFiles(this.deferredOfflineFiles, pages), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
-                        this.options.concurrencyLimit > 0
-                        ? this.options.concurrencyLimit
-                        : 6, pages);
-                    Navigation.markPagesAsFetched(pages);
-                }
-                catch (error) {
-                    console.error('[Readiant] ePub lazy loader failed:', error);
-                    throw error;
-                }
+                await this.fetchFilesWithConcurrencyLimit(this.filterPageFiles(this.deferredOfflineFiles, pages), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
+                    this.options.concurrencyLimit > 0
+                    ? this.options.concurrencyLimit
+                    : 6, this.abortController.signal);
             };
-            Navigation.setOfflineLazyLoader(lazyLoader);
+            Navigation.setLazyLoader(lazyLoader);
         }
-        Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
+        await Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
         await this.register({}, chapters, translations);
     }
     async connectPDF({ availableAudio, chapters, document, inverted, offset, pages, rtl, spread, translations, }) {
@@ -633,22 +611,15 @@ export class Readiant {
         await this.fontAssetsPromise;
         await Builder.setStylesheet(document, this.fonts, this.stylesheetText);
         if (isOffline && this.deferredOfflineFiles.length > 0) {
-            const lazyLoader = async (pageList) => {
-                try {
-                    await this.requestOfflinePageContent(this.filterPageFiles(this.deferredOfflineFiles, pageList), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
-                        this.options.concurrencyLimit > 0
-                        ? this.options.concurrencyLimit
-                        : 6, pageList);
-                    Navigation.markPagesAsFetched(pageList);
-                }
-                catch (error) {
-                    console.error('[Readiant] PDF lazy loader failed:', error);
-                    throw error;
-                }
+            const lazyLoader = async (pages) => {
+                await this.fetchFilesWithConcurrencyLimit(this.filterPageFiles(this.deferredOfflineFiles, pages), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
+                    this.options.concurrencyLimit > 0
+                    ? this.options.concurrencyLimit
+                    : 6, this.abortController.signal);
             };
-            Navigation.setOfflineLazyLoader(lazyLoader);
+            Navigation.setLazyLoader(lazyLoader);
         }
-        Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
+        await Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
         await this.register(availableAudio, chapters, translations);
     }
     async register(availableAudio, documentChapters, translations) {

@@ -42,20 +42,6 @@ export class Navigation {
     static get previousButton() {
         return Readiant.root.querySelector('.rdnt__navigation--prev');
     }
-    static isOfflinePageCached(page) {
-        return this.offlinePagesCached.has(page);
-    }
-    static addFetchingPages(pages) {
-        for (const page of pages)
-            this.fetchingPages.add(page);
-    }
-    static removeFetchingPages(pages) {
-        for (const page of pages)
-            this.fetchingPages.delete(page);
-    }
-    static isPageAvailable(page) {
-        return this.offlinePagesCached.has(page) || this.fetchingPages.has(page);
-    }
     static isOffsetPage(page) {
         return page + this.pageOffset <= 0;
     }
@@ -71,7 +57,7 @@ export class Navigation {
     static get numPages() {
         return Math.max(...this.pages);
     }
-    static register(page, pages, pageCounts, indexes, direction, offset, spread) {
+    static async register(page, pages, pageCounts, indexes, direction, offset, spread) {
         this.handlers.clear();
         this.textHandlers.clear();
         this.cachedPages = new Set();
@@ -85,7 +71,7 @@ export class Navigation {
         if (Readiant.type === ContentType.HTML)
             this.registerHTML(page, pageCounts, indexes, direction);
         else
-            this.registerSVG(page, pages, pageCounts, direction, offset, spread);
+            await this.registerSVG(page, pages, pageCounts, direction, offset, spread);
         this.firstButton?.addEventListener('click', (event) => {
             event.preventDefault();
             if (Readiant.type === ContentType.SVG)
@@ -174,7 +160,7 @@ export class Navigation {
             });
         });
     }
-    static registerSVG(page, pages, pageCounts, direction, offset, spread) {
+    static async registerSVG(page, pages, pageCounts, direction, offset, spread) {
         const key = pages.indexOf(page);
         const inverse = [...pages].reverse();
         this.direction = direction;
@@ -209,7 +195,7 @@ export class Navigation {
         if (this.currentPages.length === 2)
             this.currentPage = this.currentPages[0].page;
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
-        this.initialPages(this.currentPages);
+        await this.initialPages(this.currentPages);
         this.logInitialPage(this.currentPage);
         const max = this.numPages;
         if (max !== this.pages.length)
@@ -385,33 +371,20 @@ export class Navigation {
         this.previousLog = log;
         eventLogger(log);
     }
-    static generateCache(exclude) {
+    static async generateCache(exclude) {
         const all = [...this.pages];
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
         all.sort((a, b) => Math.abs(this.currentPage - a) - Math.abs(this.currentPage - b));
         const pages = all.slice(0, this.cacheSize);
         const isPageCached = isOffline
-            ? (page) => this.isPageAvailable(page)
+            ? (page) => Storage.hasOfflinePage(page)
             : (page) => Storage.hasPage(page);
         this.cachedPages = new Set(pages.filter((page) => isPageCached(page)));
         this.missingPages = new Set(pages.filter((page) => !isPageCached(page)));
-        if (this.missingPages.size > 0) {
-            const pagesToFetch = typeof exclude === 'undefined'
+        if (this.missingPages.size > 0)
+            await this.requestPages(typeof exclude === 'undefined'
                 ? [...this.missingPages]
-                : [...this.missingPages].filter((page) => !exclude.includes(page));
-            if (isOffline &&
-                typeof this.offlineLazyLoader !== 'undefined' &&
-                pagesToFetch.length > 0) {
-                this.addFetchingPages(pagesToFetch);
-                this.offlineLazyLoader(pagesToFetch).catch((e) => {
-                    this.removeFetchingPages(pagesToFetch);
-                    throw e;
-                });
-            }
-            else if (!isOffline) {
-                this.requestPages(pagesToFetch);
-            }
-        }
+                : [...this.missingPages].filter((page) => !exclude.includes(page)));
         const epoch = this.renderEpoch;
         const pagesToRender = [...this.animationPages, ...this.currentPages];
         for (const page of pagesToRender) {
@@ -521,12 +494,6 @@ export class Navigation {
             }
             this.gotoPageSVG(page, PageChangeType.Other);
         }
-    }
-    static setOfflineLazyLoader(loader) {
-        this.offlineLazyLoader = loader;
-    }
-    static markPagesAsFetched(pages) {
-        this.removeFetchingPages(pages);
     }
     static gotoPage(page, type = PageChangeType.Other) {
         if (Readiant.type === ContentType.HTML)
@@ -675,7 +642,9 @@ export class Navigation {
                 this.renderEpoch++;
                 this.logPageChange(type);
                 this.notify(this.currentPage, previousPage);
-                this.preparePages(this.currentPages);
+                this.preparePages(this.currentPages).catch((e) => {
+                    throw e;
+                });
             }
         }
         if (this.numPages === this.pages.length) {
@@ -721,7 +690,7 @@ export class Navigation {
             throw e;
         });
     }
-    static initialPages(requests) {
+    static async initialPages(requests) {
         if (TextMode.level !== 3) {
             if (requests.some((val) => val.position === PagePosition.Left))
                 Builder.start(PagePosition.Left);
@@ -733,8 +702,8 @@ export class Navigation {
                 Builder.hide(PagePosition.Right);
         }
         const pages = requests.map((request) => request.page);
-        this.requestPages(pages);
-        this.generateCache(pages);
+        await this.requestPages(pages);
+        await this.generateCache(pages);
         for (const request of requests) {
             if (Storage.hasPage(request.page)) {
                 Builder.svg(request.page, request.position).catch((e) => {
@@ -962,7 +931,7 @@ export class Navigation {
         if (typeof currentPage !== 'undefined')
             this.notifyText(currentPage);
     }
-    static preparePages(requests, orientationChange) {
+    static async preparePages(requests, orientationChange) {
         if (typeof orientationChange !== 'undefined' &&
             orientationChange === OrientationMode.Portrait) {
             Builder.hide(PagePosition.Right);
@@ -998,7 +967,7 @@ export class Navigation {
                     throw e;
                 });
         }
-        this.generateCache();
+        await this.generateCache();
     }
     static previousPage() {
         const navigationTime = new Date().getTime();
@@ -1034,7 +1003,11 @@ export class Navigation {
             Builder.animateLeft();
         this.gotoPage(page, PageChangeType.Previous);
     }
-    static requestPages(pages) {
+    static async requestPages(pages) {
+        if (isOffline && typeof this.lazyLoader !== 'undefined') {
+            await this.lazyLoader(pages);
+            return;
+        }
         Stream.send({
             type: ClientActionType.BlueprintRequest,
             pages,
@@ -1061,6 +1034,9 @@ export class Navigation {
             type: NavigationActionType.Href,
             id: href.split('#')[1],
         };
+    }
+    static setLazyLoader(loader) {
+        this.lazyLoader = loader;
     }
     static shortcut(event) {
         const origin = event.composedPath()[0];
@@ -1185,8 +1161,6 @@ Navigation.cachedPages = new Set();
 Navigation.maxPage = 0;
 Navigation.missingPages = new Set();
 Navigation.renderEpoch = 0;
-Navigation.fetchingPages = new Set();
-Navigation.offlinePagesCached = new Set();
 Navigation.handlers = new Set();
 Navigation.textHandlers = new Map();
 Navigation.animationPages = [

@@ -150,7 +150,9 @@ export class Orientation {
         if (Navigation.hasRegistered) {
             Navigation.currentPage = Navigation.currentPages[0].page;
             Navigation.currentPages = Navigation.generatePagesToRender();
-            Navigation.preparePages(Navigation.currentPages, Orientation.mode);
+            Navigation.preparePages(Navigation.currentPages, Orientation.mode).catch((e) => {
+                throw e;
+            });
         }
         Builder.resize();
     }
