@@ -82,7 +82,7 @@ document.body.appendChild(viewer);
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `audio-highlighting-level` | number | `0` | Audio highlighting intensity |
-| `audio-timeout` | number | `50` | Delay in milliseconds after audio ends before countdown/navigation timer starts |
+| `audio-timeout` | number | `500` | Delay in milliseconds before audio starts playing and after audio ends before countdown/navigation timer starts |
 | `countdown-level` | number | `0` | Audio countdown settings |
 | `playback-rate` | number | `1.0` | Audio playback speed |
 | `read-stop-level` | number | `0` | Audio read stop behavior |

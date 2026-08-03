@@ -783,15 +783,15 @@ export class Builder {
         }
         const characterWidth = Math.ceil(textElement.style.width / textElement.content.length);
         const yTolerance = Math.ceil(textElement.style.height / 2);
+        const elementBounds = this.getTransformedBounds(textElement.style.width, textElement.style.height, textElement.transform);
         const potentialMatches = candidates
             .filter((c) => {
+            const candidateBounds = this.getTransformedBounds(Math.ceil(characterWidth * c.content.length), textElement.style.height, c.transform);
             const xTolerance = Math.min(100, Math.max(20, c.content.length * 2));
-            const xInBounds = c.transform[4] <= textElement.transform[4] + xTolerance &&
-                c.transform[4] + Math.ceil(characterWidth * c.content.length) >=
-                    textElement.transform[4] - xTolerance;
-            const yInBounds = c.transform[5] <= textElement.transform[5] + yTolerance &&
-                c.transform[5] + Math.ceil(textElement.style.height) >=
-                    textElement.transform[5] - yTolerance;
+            const xInBounds = candidateBounds.minX <= elementBounds.maxX + xTolerance &&
+                candidateBounds.maxX >= elementBounds.minX - xTolerance;
+            const yInBounds = candidateBounds.minY <= elementBounds.maxY + yTolerance &&
+                candidateBounds.maxY >= elementBounds.minY - yTolerance;
             return xInBounds && yInBounds;
         })
             .filter((c) => {
@@ -809,12 +809,20 @@ export class Builder {
             return passes;
         })
             .sort((a, b) => {
-            const dy = Math.abs(textElement.transform[5] - a.transform[5]) -
-                Math.abs(textElement.transform[5] - b.transform[5]);
+            const aBounds = this.getTransformedBounds(Math.ceil(characterWidth * a.content.length), textElement.style.height, a.transform);
+            const bBounds = this.getTransformedBounds(Math.ceil(characterWidth * b.content.length), textElement.style.height, b.transform);
+            const aCenterY = (aBounds.minY + aBounds.maxY) / 2;
+            const bCenterY = (bBounds.minY + bBounds.maxY) / 2;
+            const elementCenterY = (elementBounds.minY + elementBounds.maxY) / 2;
+            const dy = Math.abs(elementCenterY - aCenterY) -
+                Math.abs(elementCenterY - bCenterY);
             if (dy !== 0)
                 return dy;
-            return (Math.abs(textElement.transform[4] - a.transform[4]) -
-                Math.abs(textElement.transform[4] - b.transform[4]));
+            const aCenterX = (aBounds.minX + aBounds.maxX) / 2;
+            const bCenterX = (bBounds.minX + bBounds.maxX) / 2;
+            const elementCenterX = (elementBounds.minX + elementBounds.maxX) / 2;
+            return (Math.abs(elementCenterX - aCenterX) -
+                Math.abs(elementCenterX - bCenterX));
         });
         if (potentialMatches.length === 0)
             return [];
@@ -876,6 +884,27 @@ export class Builder {
         if (matches.length === 0)
             matches.push(potentialMatches[0]);
         return matches;
+    }
+    static getTransformedBounds(width, height, transform) {
+        const a = transform[0];
+        const b = transform[1];
+        const c = transform[2];
+        const d = transform[3];
+        const e = transform[4];
+        const f = transform[5];
+        const x1 = e;
+        const y1 = f;
+        const x2 = a * width + e;
+        const y2 = b * width + f;
+        const x3 = c * height + e;
+        const y3 = d * height + f;
+        const x4 = a * width + c * height + e;
+        const y4 = b * width + d * height + f;
+        const minX = Math.min(x1, x2, x3, x4);
+        const maxX = Math.max(x1, x2, x3, x4);
+        const minY = Math.min(y1, y2, y3, y4);
+        const maxY = Math.max(y1, y2, y3, y4);
+        return { minX, maxX, minY, maxY };
     }
     static setDirection(direction) {
         const htmlPage = Readiant.root.querySelector('.rdnt__html-page');
@@ -2042,7 +2071,27 @@ export class Builder {
         div.style.top = `${(100 - (textElement.style.y / viewBox[3]) * 100).toFixed(2)}%`;
         div.style.width = `${((textElement.style.width / viewBox[2]) * 100).toFixed(2)}%`;
         const [ta, tb, tc, td] = textElement.transform;
-        div.style.transform = `matrix(${ta !== 0 ? `${String(ta)}%` : '0'},${tb !== 0 ? `${String(tb)}%` : '0'},${tc !== 0 ? `${String(tc)}%` : '0'},${td !== 0 ? `${String(td)}%` : '0'},0,0)`;
+        const childMatrix = [ta, tb, tc, td, 0, 0];
+        const counteractParent = [1, 0, 0, -1, 0, 0];
+        const resultMatrix = this.transform(childMatrix, counteractParent);
+        const scaleX = Math.sqrt(resultMatrix[0] ** 2 + resultMatrix[2] ** 2);
+        const scaleY = Math.sqrt(resultMatrix[1] ** 2 + resultMatrix[3] ** 2);
+        const normalizedMatrix = [
+            resultMatrix[0] / scaleX,
+            resultMatrix[1] / -scaleY,
+            resultMatrix[2] / scaleX,
+            resultMatrix[3] / -scaleY,
+            0,
+            0,
+        ];
+        const isIdentity = normalizedMatrix[0] === 1 &&
+            normalizedMatrix[1] === 0 &&
+            normalizedMatrix[2] === 0 &&
+            normalizedMatrix[3] === -1 &&
+            normalizedMatrix[4] === 0 &&
+            normalizedMatrix[5] === 0;
+        if (!isIdentity)
+            div.style.transform = `matrix(${normalizedMatrix.join(',')})`;
         let wordIdx = 0;
         let offset = 0;
         let previousWidth = 0;
