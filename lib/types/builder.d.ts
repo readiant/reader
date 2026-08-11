@@ -969,7 +969,10 @@ export class Builder {
         if (allFontFaceRules.length > 0) {
             const fontStyleElement = Readiant.documentContext.createElement('style');
             fontStyleElement.textContent = allFontFaceRules.join('\n');
-            Readiant.documentContext.head.appendChild(fontStyleElement);
+            Readiant.root.appendChild(fontStyleElement);
+            const fontStyleElementDoc = Readiant.documentContext.createElement('style');
+            fontStyleElementDoc.textContent = allFontFaceRules.join('\n');
+            Readiant.documentContext.head.appendChild(fontStyleElementDoc);
         }
         if (typeof stylesheetText === 'undefined') {
             const link = Readiant.documentContext.createElement('link');
@@ -1017,12 +1020,13 @@ export class Builder {
                 const width = ctm ? bbox.width * Math.abs(ctm.a) : bbox.width;
                 const height = ctm ? bbox.height * Math.abs(ctm.d) : bbox.height;
                 const textContent = String(exist.getAttribute('data-content'));
+                const normalizedTextContent = this.normalizeEllipsis(textContent);
                 textElements = [
                     ...textElements,
                     {
                         content: this.direction === Direction.Rtl
-                            ? textContent.split('').reverse().join('')
-                            : textContent,
+                            ? normalizedTextContent.split('').reverse().join('')
+                            : normalizedTextContent,
                         displayLength: exist.textContent?.length ?? textContent.length,
                         style: {
                             x,
@@ -1412,6 +1416,11 @@ export class Builder {
             .toLowerCase()
             .trim();
         return out;
+    }
+    static normalizeEllipsis(string) {
+        if (typeof string === 'undefined')
+            return '';
+        return string.replace(/…/gu, '...');
     }
     static escapeHTML(value) {
         if (typeof value === 'undefined' || value === null)
@@ -2270,9 +2279,8 @@ export class Builder {
                             }
                             remaining = '';
                         }
-                        else {
+                        else
                             remaining = '';
-                        }
                     }
                     else
                         remaining = '';

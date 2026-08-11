@@ -842,6 +842,9 @@ export class Audio {
             : Navigation.currentPages.find((currentPage) => currentPage.position === side);
         if (typeof position === 'undefined')
             return;
+        const maxPage = Math.max(...Navigation.pages);
+        if (position.page > maxPage)
+            return;
         if (Navigation.currentPage !== position.page)
             Navigation.currentPage = position.page;
         if (!this.availableAudio[this.provider].includes(Navigation.currentPage)) {
@@ -907,6 +910,9 @@ export class Audio {
         if (Orientation.mode === OrientationMode.Landscape) {
             const index = Navigation.pages.indexOf(Navigation.currentPage);
             const nextPage = Navigation.pages[index + 1];
+            if (typeof nextPage === 'undefined' ||
+                nextPage > Math.max(...Navigation.pages))
+                return;
             const nextPageOnSpread = Navigation.currentPages.find((cp) => cp.page === nextPage);
             if (typeof nextPageOnSpread !== 'undefined') {
                 Bar.empty();

@@ -75,7 +75,7 @@ export class Navigation {
         this.firstButton?.addEventListener('click', (event) => {
             event.preventDefault();
             if (Readiant.type === ContentType.SVG)
-                this.gotoPage(this.pages[0], PageChangeType.Other);
+                this.gotoFirstPageSVG();
             else
                 this.gotoPageDirectly(1);
         });
@@ -249,9 +249,17 @@ export class Navigation {
         return undefined;
     }
     static isAtLastPage() {
-        return Readiant.type === ContentType.SVG
-            ? this.numPages === this.currentPage
-            : false;
+        if (Readiant.type !== ContentType.SVG)
+            return false;
+        if (this.numPages === this.currentPage)
+            return true;
+        if (Orientation.mode === OrientationMode.Landscape &&
+            this.currentPages.length === 2) {
+            const maxPage = this.numPages;
+            const hasLastPage = this.currentPages.some((p) => p.page === maxPage);
+            return hasLastPage;
+        }
+        return false;
     }
     static isInRangeHTML(pages) {
         const minPage = this.pageCounts[0].pages[0];
@@ -546,6 +554,33 @@ export class Navigation {
         }
         this.gotoPage(page, PageChangeType.Other);
     }
+    static gotoFirstPageSVG() {
+        let firstPage = this.pages[0];
+        if (!this.isInRangeSVG(firstPage)) {
+            const validPage = this.pages.find((page) => this.isInRangeSVG(page));
+            if (typeof validPage === 'undefined') {
+                Readiant.errorHandler(new Error('No valid pages available for reset'));
+                return;
+            }
+            firstPage = validPage;
+        }
+        const previousPage = this.currentPage;
+        this.currentPage = firstPage;
+        this.currentPages = this.generatePagesToRender();
+        if (this.currentPages.length === 0) {
+            this.currentPage = previousPage;
+            Readiant.errorHandler(new Error(`Cannot render first page ${String(firstPage)} at current orientation`));
+            return;
+        }
+        this.renderEpoch++;
+        this.timestamp = new Date();
+        this.logPageChange(PageChangeType.Other);
+        this.notify(this.currentPage, previousPage);
+        this.preparePages(this.currentPages).catch((e) => {
+            throw e;
+        });
+        this.updatePageNumberDisplay();
+    }
     static gotoPageHTML(page, type) {
         this.previousAction = undefined;
         const previousPage = this.globalPage;
@@ -647,30 +682,7 @@ export class Navigation {
                 });
             }
         }
-        if (this.numPages === this.pages.length) {
-            const nonOffsetPages = this.currentPages.filter((p) => !this.isOffsetPage(p.page));
-            if (nonOffsetPages.length === 0 ||
-                nonOffsetPages[0].page + this.pageOffset <= 1) {
-                this.pageNumber?.classList.add(CLASS_HIDDEN);
-                this.pageNumberCurrent?.classList.add(CLASS_HIDDEN);
-                for (const el of this.pageNumberTotal)
-                    el.classList.add(CLASS_HIDDEN);
-            }
-            else {
-                this.pageNumber?.classList.remove(CLASS_HIDDEN);
-                this.pageNumberCurrent?.classList.remove(CLASS_HIDDEN);
-                for (const el of this.pageNumberTotal) {
-                    el.classList.remove(CLASS_HIDDEN);
-                }
-                if (this.pageNumberCurrent !== null)
-                    this.pageNumberCurrent.innerHTML =
-                        nonOffsetPages.length === 1
-                            ? String(nonOffsetPages[0].page + this.pageOffset)
-                            : `${String(nonOffsetPages[0].page + this.pageOffset)} ${this.and} ${String(nonOffsetPages[nonOffsetPages.length - 1].page + this.pageOffset)}`;
-                if (this.pageNumberInput !== null)
-                    this.pageNumberInput.value = String(nonOffsetPages[0].page + this.pageOffset);
-            }
-        }
+        this.updatePageNumberDisplay();
     }
     static gotoSearchResult(chapterIndex, query) {
         Stream.send({ type: ClientActionType.ChapterRequest, chapterIndex });
@@ -1154,6 +1166,32 @@ export class Navigation {
         const element = Readiant.documentContext.createElement('span');
         element.innerHTML = string;
         return element.innerText;
+    }
+    static updatePageNumberDisplay() {
+        if (this.numPages === this.pages.length) {
+            const nonOffsetPages = this.currentPages.filter((p) => !this.isOffsetPage(p.page));
+            if (nonOffsetPages.length === 0 ||
+                nonOffsetPages[0].page + this.pageOffset <= 1) {
+                this.pageNumber?.classList.add(CLASS_HIDDEN);
+                this.pageNumberCurrent?.classList.add(CLASS_HIDDEN);
+                for (const el of this.pageNumberTotal)
+                    el.classList.add(CLASS_HIDDEN);
+            }
+            else {
+                this.pageNumber?.classList.remove(CLASS_HIDDEN);
+                this.pageNumberCurrent?.classList.remove(CLASS_HIDDEN);
+                for (const el of this.pageNumberTotal) {
+                    el.classList.remove(CLASS_HIDDEN);
+                }
+                if (this.pageNumberCurrent !== null)
+                    this.pageNumberCurrent.innerHTML =
+                        nonOffsetPages.length === 1
+                            ? String(nonOffsetPages[0].page + this.pageOffset)
+                            : `${String(nonOffsetPages[0].page + this.pageOffset)} ${this.and} ${String(nonOffsetPages[nonOffsetPages.length - 1].page + this.pageOffset)}`;
+                if (this.pageNumberInput !== null)
+                    this.pageNumberInput.value = String(nonOffsetPages[0].page + this.pageOffset);
+            }
+        }
     }
 }
 Navigation.TOUCH_THRESHOLD = 50;
