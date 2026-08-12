@@ -278,7 +278,6 @@ export class Audio {
                 await this.start(0, currentPage.position);
             }
         });
-        this.fetchSpeechMarks();
         Readiant.documentElementContext.addEventListener('keydown', (event) => {
             this.shortcut(event);
         });
@@ -298,7 +297,9 @@ export class Audio {
         if (syntax.length > 0)
             Builder.textSentences(syntax
                 .filter((s) => s.type === SpeechMarkType.Sentence)
-                .map((s) => s.value), position, syntax.map((s, index) => ({ ...s, index })));
+                .map((s) => s.value), position, syntax.map((s, index) => ({ ...s, index }))).catch((e) => {
+                throw e;
+            });
         Builder.schedulePlainText();
     }
     static countdownType(event) {

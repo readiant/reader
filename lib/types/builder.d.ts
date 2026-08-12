@@ -145,8 +145,13 @@ export class Builder {
                     const textContent = Storage.getText(page);
                     this.textLayer(elements, textContent, side, viewBox);
                     if (textContent.sentences.length > 0)
-                        this.textSentences(textContent.sentences, side);
-                    Audio.fetchSpeechMarks();
+                        this.textSentences(textContent.sentences, side)
+                            .then(() => {
+                            Audio.fetchSpeechMarks();
+                        })
+                            .catch((e) => {
+                            throw e;
+                        });
                     if (typeof this.highlightOnLoad !== 'undefined' &&
                         textContent.sentences.length > 0) {
                         if (this.highlightOnLoad.first)
@@ -166,8 +171,13 @@ export class Builder {
                         const textContent = Storage.getText(page);
                         this.textLayer(elements, textContent, side, viewBox);
                         if (textContent.sentences.length > 0)
-                            this.textSentences(textContent.sentences, side);
-                        Audio.fetchSpeechMarks();
+                            this.textSentences(textContent.sentences, side)
+                                .then(() => {
+                                Audio.fetchSpeechMarks();
+                            })
+                                .catch((e) => {
+                                throw e;
+                            });
                         if (typeof this.highlightOnLoad !== 'undefined' &&
                             textContent.sentences.length > 0) {
                             if (this.highlightOnLoad.first)
@@ -754,11 +764,15 @@ export class Builder {
         const normalizedElement = isWhitespace
             ? ''
             : this.normalize(textElement.content);
+        const elementX = textElement.transform[4];
+        const elementY = textElement.transform[5];
         const candidates = textContent.content.map((c, index) => ({
             content: c.content,
             ignore: c.ignore,
             index,
             original: c.originalText ?? c.content,
+            x: c.transform[4],
+            y: c.transform[5],
             transform: c.transform,
         }));
         if (!isWhitespace) {
@@ -766,54 +780,26 @@ export class Builder {
             if (exact.length === 1)
                 return exact;
         }
-        const characterWidth = Math.ceil(textElement.style.width / textElement.content.length);
-        const yTolerance = Math.ceil(textElement.style.height / 2);
-        const elementBounds = this.getTransformedBounds(textElement.style.width, textElement.style.height, textElement.transform);
+        const yTolerance = Math.round(textElement.style.height / 2) + 10;
+        const xTolerance = Math.round(textElement.style.width / 2) + 10;
         const potentialMatches = candidates
-            .filter((c) => {
-            const candidateBounds = this.getTransformedBounds(Math.ceil(characterWidth * c.content.length), textElement.style.height, c.transform);
-            const xTolerance = Math.min(100, Math.max(20, c.content.length * 2));
-            const xInBounds = candidateBounds.minX <= elementBounds.maxX + xTolerance &&
-                candidateBounds.maxX >= elementBounds.minX - xTolerance;
-            const yInBounds = candidateBounds.minY <= elementBounds.maxY + yTolerance &&
-                candidateBounds.maxY >= elementBounds.minY - yTolerance;
-            return xInBounds && yInBounds;
-        })
+            .filter((c) => Math.abs(elementY - c.y) <= yTolerance &&
+            Math.abs(elementX - c.x) <= xTolerance)
             .filter((c) => {
             if (isWhitespace)
                 return true;
             const normOrig = this.normalize(c.original);
-            if (normOrig.length === 0)
-                return normalizedElement.length === 0;
-            if (normalizedElement.length === 0)
-                return c.original.includes(textElement.content);
-            const passes = normOrig.includes(normalizedElement) ||
+            if ((normOrig.length === 0) !== (normalizedElement.length === 0))
+                return false;
+            return (normOrig.includes(normalizedElement) ||
                 normalizedElement.includes(normOrig) ||
                 this.isSubsequence(normalizedElement, normOrig) ||
-                this.isSubsequence(normOrig, normalizedElement);
-            return passes;
+                this.isSubsequence(normOrig, normalizedElement));
         })
             .sort((a, b) => {
-            const aBounds = this.getTransformedBounds(Math.ceil(characterWidth * a.content.length), textElement.style.height, a.transform);
-            const bBounds = this.getTransformedBounds(Math.ceil(characterWidth * b.content.length), textElement.style.height, b.transform);
-            const aYOffsetWithinBounds = a.transform[5] >= elementBounds.minY &&
-                a.transform[5] <= elementBounds.maxY;
-            const bYOffsetWithinBounds = b.transform[5] >= elementBounds.minY &&
-                b.transform[5] <= elementBounds.maxY;
-            if (aYOffsetWithinBounds !== bYOffsetWithinBounds)
-                return aYOffsetWithinBounds ? -1 : 1;
-            const aCenterY = (aBounds.minY + aBounds.maxY) / 2;
-            const bCenterY = (bBounds.minY + bBounds.maxY) / 2;
-            const elementCenterY = (elementBounds.minY + elementBounds.maxY) / 2;
-            const dy = Math.abs(elementCenterY - aCenterY) -
-                Math.abs(elementCenterY - bCenterY);
-            if (dy !== 0)
-                return dy;
-            const aCenterX = (aBounds.minX + aBounds.maxX) / 2;
-            const bCenterX = (bBounds.minX + bBounds.maxX) / 2;
-            const elementCenterX = (elementBounds.minX + elementBounds.maxX) / 2;
-            return (Math.abs(elementCenterX - aCenterX) -
-                Math.abs(elementCenterX - bCenterX));
+            const aDist = Math.sqrt(Math.pow(elementX - a.x, 2) + Math.pow(elementY - a.y, 2));
+            const bDist = Math.sqrt(Math.pow(elementX - b.x, 2) + Math.pow(elementY - b.y, 2));
+            return aDist - bDist;
         });
         if (potentialMatches.length === 0)
             return [];
@@ -829,20 +815,19 @@ export class Builder {
                 let shouldMatch = false;
                 if (remaining === normOrig ||
                     remaining.startsWith(normOrig) ||
-                    remaining.endsWith(normOrig)) {
+                    remaining.endsWith(normOrig))
                     shouldMatch = true;
-                }
-                else if (remaining.includes(normOrig) ||
-                    normOrig.includes(remaining)) {
+                else if (remaining.includes(normOrig) || normOrig.includes(remaining)) {
                     const ratio = Math.min(normOrig.length / remaining.length, remaining.length / normOrig.length);
                     const betterExists = potentialMatches.slice(mi + 1).some((later) => {
                         if (processed.has(later.index))
                             return false;
                         const laterOrig = this.normalize(later.original);
                         const laterRatio = Math.min(laterOrig.length / remaining.length, remaining.length / laterOrig.length);
-                        return laterRatio > ratio || remaining === laterOrig;
+                        return (laterRatio > ratio + this.PRECISION_EPSILON ||
+                            remaining === laterOrig);
                     });
-                    shouldMatch = ratio > 0.7 && !betterExists;
+                    shouldMatch = ratio > 0.65 - this.PRECISION_EPSILON && !betterExists;
                 }
                 else if (this.isSubsequence(remaining, normOrig) ||
                     this.isSubsequence(normOrig, remaining)) {
@@ -852,9 +837,10 @@ export class Builder {
                             return false;
                         const laterOrig = this.normalize(later.original);
                         const laterRatio = Math.min(laterOrig.length / remaining.length, remaining.length / laterOrig.length);
-                        return laterRatio > ratio || remaining === laterOrig;
+                        return (laterRatio > ratio + this.PRECISION_EPSILON ||
+                            remaining === laterOrig);
                     });
-                    shouldMatch = ratio > 0.7 && !betterExists;
+                    shouldMatch = ratio > 0.65 - this.PRECISION_EPSILON && !betterExists;
                 }
                 if (shouldMatch) {
                     matches.push(match);
@@ -875,27 +861,6 @@ export class Builder {
         if (matches.length === 0)
             matches.push(potentialMatches[0]);
         return matches;
-    }
-    static getTransformedBounds(width, height, transform) {
-        const a = transform[0];
-        const b = transform[1];
-        const c = transform[2];
-        const d = transform[3];
-        const e = transform[4];
-        const f = transform[5];
-        const x1 = e;
-        const y1 = f;
-        const x2 = a * width + e;
-        const y2 = b * width + f;
-        const x3 = c * height + e;
-        const y3 = d * height + f;
-        const x4 = a * width + c * height + e;
-        const y4 = b * width + d * height + f;
-        const minX = Math.min(x1, x2, x3, x4);
-        const maxX = Math.max(x1, x2, x3, x4);
-        const minY = Math.min(y1, y2, y3, y4);
-        const maxY = Math.max(y1, y2, y3, y4);
-        return { minX, maxX, minY, maxY };
     }
     static setDirection(direction) {
         const htmlPage = Readiant.root.querySelector('.rdnt__html-page');
@@ -948,10 +913,13 @@ export class Builder {
                     if (typeof fontUrls.woff === 'string')
                         sources.push(`url("${fontUrls.woff}") format('woff')`);
                     if (sources.length > 0)
-                        return match.replace(/src\s*:\s*[^;}]+;?/, `src: ${sources.join(', ')};`);
+                        return match
+                            .replace(/src\s*:\s*[^;}]+;?/, `src: ${sources.join(', ')};`)
+                            .replace(familyRegex, `font-family: "${id}-${fontFamily}"`);
                 }
                 return match;
             });
+            cssText = cssText.replace(/(font\s*:\s*\d+(?:px|em|rem|pt)?\s+)(['"]?)([^'",;]+)\2(\s*,)/g, `$1$2${id}-$3$2$4`);
             let match;
             const fontFacePattern = /@font-face\s*\{[^}]+\}/g;
             while ((match = fontFacePattern.exec(cssText)) !== null)
@@ -967,9 +935,6 @@ export class Builder {
             }
         }
         if (allFontFaceRules.length > 0) {
-            const fontStyleElement = Readiant.documentContext.createElement('style');
-            fontStyleElement.textContent = allFontFaceRules.join('\n');
-            Readiant.root.appendChild(fontStyleElement);
             const fontStyleElementDoc = Readiant.documentContext.createElement('style');
             fontStyleElementDoc.textContent = allFontFaceRules.join('\n');
             Readiant.documentContext.head.appendChild(fontStyleElementDoc);
@@ -2654,13 +2619,16 @@ export class Builder {
         }
         return ti === token.length && result.includes(' ') ? result.trim() : token;
     }
-    static textSentences(sentences, side, syntax) {
+    static async textSentences(sentences, side, syntax) {
         const currentPage = Navigation.currentPages.find((page) => page.position === side);
         if (typeof currentPage === 'undefined')
             return;
-        const wordSyntax = typeof syntax !== 'undefined'
+        const hasSyntax = typeof syntax !== 'undefined';
+        const wordSyntax = hasSyntax
             ? syntax.filter((s) => s.type === SpeechMarkType.Word)
             : [];
+        if (hasSyntax)
+            return;
         sentences = sentences.filter((sentence) => sentence.trim() !== '');
         let rest = '';
         let sentenceIndex = 0;
@@ -2671,20 +2639,19 @@ export class Builder {
             .filter((word) => word.trim() !== '')
             .map((word) => word.toLowerCase());
         let wordIndex = 0;
-        let syntaxWord = typeof syntax !== 'undefined' &&
-            typeof wordSyntax[wordIndex] !== 'undefined'
+        let syntaxWord = hasSyntax && typeof wordSyntax[wordIndex] !== 'undefined'
             ? this.normalize(wordSyntax[wordIndex].value, false)
             : '';
         let syntaxMissStreak = 0;
         const sentenceLeftovers = new Map();
         const words = [
             ...(side === PagePosition.Left
-                ? this.leftTextLayer.querySelectorAll(`:not(.${CLASS_HIGHLIGHT_IGNORE}) > .${CLASS_HIGHLIGHT_WORD}`)
-                : this.rightTextLayer.querySelectorAll(`:not(.${CLASS_HIGHLIGHT_IGNORE}) > .${CLASS_HIGHLIGHT_WORD}`)),
+                ? this.leftTextLayer.querySelectorAll(`:not(.${CLASS_HIGHLIGHT_IGNORE}) > .${CLASS_HIGHLIGHT_WORD}:not([data-time])`)
+                : this.rightTextLayer.querySelectorAll(`:not(.${CLASS_HIGHLIGHT_IGNORE}) > .${CLASS_HIGHLIGHT_WORD}:not([data-time])`)),
         ].sort((a, b) => Number(a.parentElement.getAttribute('data-i')) -
             Number(b.parentElement.getAttribute('data-i')));
         for (let word of words) {
-            if (typeof syntax !== 'undefined' && syntaxWord.trim() === '') {
+            if (hasSyntax && syntaxWord.trim() === '') {
                 wordIndex++;
                 syntaxMissStreak = 0;
                 syntaxWord =
@@ -2731,7 +2698,7 @@ export class Builder {
                 syntaxWord = syntaxWord.substring(syntaxWordIndex + normalizedWord.length);
                 syntaxMissStreak = 0;
             }
-            else if (typeof syntax !== 'undefined') {
+            else if (hasSyntax) {
                 let lookahead = wordIndex + 1;
                 let lookaheadFound = false;
                 while (lookahead <= wordIndex + 10 && lookahead < wordSyntax.length) {
@@ -2762,16 +2729,25 @@ export class Builder {
                 word.replaceWith(cloned);
                 word = cloned;
             }
-            word.setAttribute('data-s', String(sentenceIndex));
-            word.setAttribute('data-w', String(sentenceWordsIndex));
-            if (!isPurePunctuation) {
+            if (isPurePunctuation) {
+                if (sentenceIndex < sentences.length &&
+                    sentences[sentenceIndex].includes(rawDataWord)) {
+                    word.setAttribute('data-s', String(sentenceIndex));
+                    word.setAttribute('data-w', String(sentenceWordsIndex));
+                }
+            }
+            else {
+                word.setAttribute('data-s', String(sentenceIndex));
+                word.setAttribute('data-w', String(sentenceWordsIndex));
                 const normalizedWordIndex = sentence.indexOf(normalizedWord);
                 if (normalizedWordIndex > -1) {
                     sentence = sentence.substring(normalizedWordIndex + normalizedWord.length);
                 }
                 else {
                     let found = false;
-                    for (const [leftoverSi, leftover] of sentenceLeftovers) {
+                    const firstLeftoverEntry = [...sentenceLeftovers.entries()][0];
+                    if (typeof firstLeftoverEntry !== 'undefined') {
+                        const [leftoverSi, leftover] = firstLeftoverEntry;
                         const leftoverWord = this.reconstructWord(rawToken, leftover.remaining);
                         const leftoverIdx = leftover.remaining.indexOf(leftoverWord);
                         if (leftoverIdx > -1) {
@@ -2790,8 +2766,10 @@ export class Builder {
                                     leftover.nextWordIndex++;
                                 }
                             }
+                            if (leftover.remaining.trim() === '') {
+                                sentenceLeftovers.delete(leftoverSi);
+                            }
                             found = true;
-                            break;
                         }
                     }
                     if (!found && normalizedWord.length > 0) {
@@ -2834,7 +2812,7 @@ export class Builder {
                     }
                 }
             }
-            if (typeof syntax !== 'undefined') {
+            if (hasSyntax) {
                 let time;
                 if (typeof wordSyntax[wordIndex] !== 'undefined') {
                     time = wordSyntax[wordIndex].time;
@@ -2879,10 +2857,11 @@ export class Builder {
                 this.stopHighlighting(side);
             });
         }
-        this.elementsOnPage.set(currentPage.page, {
-            sentences: sentences.length,
-            words: words.length,
-        });
+        if (!this.elementsOnPage.has(currentPage.page))
+            this.elementsOnPage.set(currentPage.page, {
+                sentences: sentences.length,
+                words: words.length,
+            });
     }
     static transform(m1, m2) {
         if (!(Array.isArray(m1) &&
@@ -3029,12 +3008,14 @@ Builder.ORIGINAL_LETTERSPACING = 'rdnt__letter-spacing--3';
 Builder.ORIGINAL_LINEHEIGHT = 'rdnt__html-page--line-height--2';
 Builder.ORIGINAL_WORDSPACING = 'rdnt__word-spacing--3';
 Builder.PORTRAIT_WIDTH = 768;
+Builder.PRECISION_EPSILON = 0.1;
 Builder.activeFont = _a.ORIGINAL_FONT;
 Builder.activeFontSize = _a.ORIGINAL_FONTSIZE;
 Builder.activeLetterSpacing = _a.ORIGINAL_LETTERSPACING;
 Builder.activeLineHeight = _a.ORIGINAL_LINEHEIGHT;
 Builder.activeWordSpacing = _a.ORIGINAL_WORDSPACING;
 Builder.animationDisabled = false;
+Builder.animationEpoch = 0;
 Builder.cachedElements = new Set();
 Builder.cachedLinks = new Map();
 Builder.currentSentenceIndex = 0;
@@ -3044,12 +3025,11 @@ Builder.direction = Direction.Ltr;
 Builder.forcingPortrait = false;
 Builder.hasFontChanged = false;
 Builder.isAnimating = false;
-Builder.animationEpoch = 0;
-Builder.previouslyShownPages = 0;
-Builder.htmlOffset = 0;
-Builder.wantedElements = new Set();
-Builder.plainTextLinesObserver = null;
 Builder.isFontsReady = false;
+Builder.htmlOffset = 0;
+Builder.plainTextLinesObserver = null;
+Builder.previouslyShownPages = 0;
+Builder.wantedElements = new Set();
 Builder.elementsOnPage = new Map();
 Builder.handlers = new Set();
 Builder.onPlainTextRendered = null;
