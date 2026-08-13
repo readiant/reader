@@ -253,8 +253,7 @@ export class Navigation {
             return false;
         if (this.numPages === this.currentPage)
             return true;
-        if (Orientation.mode === OrientationMode.Landscape &&
-            this.currentPages.length === 2) {
+        if (Orientation.mode === OrientationMode.Landscape) {
             const maxPage = this.numPages;
             const hasLastPage = this.currentPages.some((p) => p.page === maxPage);
             return hasLastPage;
@@ -824,6 +823,8 @@ export class Navigation {
             : Builder.currentPage + 2, PageChangeType.Next);
     }
     static nextPageSVG() {
+        if (this.isAtLastPage())
+            return;
         let page = this.currentPage;
         const index = this.pages.indexOf(page);
         if (Orientation.mode === OrientationMode.Portrait) {

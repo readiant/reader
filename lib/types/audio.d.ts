@@ -906,24 +906,24 @@ export class Audio {
         }, 1000);
     }
     static startTimerAfterAudio(seconds = 3) {
-        if (Navigation.isAtLastPage())
-            return;
         if (Orientation.mode === OrientationMode.Landscape) {
             const index = Navigation.pages.indexOf(Navigation.currentPage);
             const nextPage = Navigation.pages[index + 1];
-            if (typeof nextPage === 'undefined' ||
-                nextPage > Math.max(...Navigation.pages))
-                return;
-            const nextPageOnSpread = Navigation.currentPages.find((cp) => cp.page === nextPage);
-            if (typeof nextPageOnSpread !== 'undefined') {
-                Bar.empty();
-                this.stopTimer();
-                this.start(0, nextPageOnSpread.position).catch((e) => {
-                    throw e;
-                });
-                return;
+            if (typeof nextPage !== 'undefined' &&
+                nextPage <= Math.max(...Navigation.pages)) {
+                const nextPageOnSpread = Navigation.currentPages.find((cp) => cp.page === nextPage);
+                if (typeof nextPageOnSpread !== 'undefined') {
+                    Bar.empty();
+                    this.stopTimer();
+                    this.start(0, nextPageOnSpread.position).catch((e) => {
+                        throw e;
+                    });
+                    return;
+                }
             }
         }
+        if (Navigation.isAtLastPage())
+            return;
         if (this.timerType === 2) {
             Navigation.nextPage();
             return;
