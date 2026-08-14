@@ -103,6 +103,7 @@ export class Audio {
     }
     static async register(availableAudio) {
         this.providers.clear();
+        this.playback.clear();
         this.provider = undefined;
         this.element = undefined;
         this.playingPage = 0;
@@ -572,6 +573,7 @@ export class Audio {
         });
     }
     static remove() {
+        this.playback.clear();
         if (this.startButton !== null)
             this.startButton.remove();
         if (this.stopButton !== null)

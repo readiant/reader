@@ -39,6 +39,7 @@ export class Readiant {
     }
     static removeInstance(root) {
         this.instances.delete(root);
+        Storage.clear();
     }
     static get documentBody() {
         return Readiant.root instanceof ShadowRoot
@@ -330,6 +331,9 @@ export class Readiant {
     }
     async connect() {
         this.options = { ...this.options, ...this.parse() };
+        Storage.clear();
+        if (typeof this.options.id !== 'undefined')
+            Storage.data.code = this.options.id;
         if (this.options.singlePage === true) {
             Readiant.documentBody.classList.add(CLASS_PREVIEW);
             this.options.orientation = OrientationMode.Portrait;

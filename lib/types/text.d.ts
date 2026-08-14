@@ -30,6 +30,8 @@ export class Text {
         return Readiant.root.querySelector('.rdnt__translation-list');
     }
     static resetState() {
+        this.cache.clear();
+        this.pendingSentences.clear();
         this.barLoadingText = null;
         this.language = 'nl';
         this.languages = {};

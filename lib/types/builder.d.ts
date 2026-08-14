@@ -123,6 +123,7 @@ export class Builder {
     static register() {
         this.isFontsReady = false;
         this.registeredFontFamilies = new Set();
+        this.styles = undefined;
         this.cachedElements = new Set();
         this.wantedElements = new Set();
         this.handlers.clear();
