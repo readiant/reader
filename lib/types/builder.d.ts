@@ -110,10 +110,8 @@ export class Builder {
         try {
             if (typeof document.fonts !== 'undefined') {
                 await document.fonts.ready;
-                const fontLoads = Array.from(document.fonts).map((font) => font.load().catch((e) => {
-                    throw e;
-                }));
-                await Promise.all(fontLoads);
+                const readerFonts = Array.from(document.fonts).filter((font) => this.registeredFontFamilies.has(font.family.replace(/["']/g, '').trim()));
+                await Promise.allSettled(readerFonts.map((font) => font.load()));
                 this.isFontsReady = true;
             }
         }
@@ -123,6 +121,8 @@ export class Builder {
         }
     }
     static register() {
+        this.isFontsReady = false;
+        this.registeredFontFamilies = new Set();
         this.cachedElements = new Set();
         this.wantedElements = new Set();
         this.handlers.clear();
@@ -891,6 +891,7 @@ export class Builder {
                 if (typeof fontUrls.woff === 'string')
                     sources.push(`url("${fontUrls.woff}") format('woff')`);
                 if (sources.length > 0) {
+                    this.registeredFontFamilies.add(fontFamily);
                     allFontFaceRules.push(`@font-face {
               font-display: block;
               font-family: "${fontFamily}";
@@ -917,15 +918,17 @@ export class Builder {
                         sources.push(`url("${fontUrls.woff2}") format('woff2')`);
                     if (typeof fontUrls.woff === 'string')
                         sources.push(`url("${fontUrls.woff}") format('woff')`);
-                    if (sources.length > 0)
+                    if (sources.length > 0) {
+                        this.registeredFontFamilies.add(`${id}-${fontFamily}`);
                         return match
                             .replace(/font-display\s*:\s*[^;}]+;?/g, '')
                             .replace(/src\s*:\s*[^;}]+;?/, `font-display: block; src: ${sources.join(', ')};`)
                             .replace(familyRegex, `font-family: "${id}-${fontFamily}"`);
+                    }
                 }
                 return match;
             });
-            cssText = cssText.replace(/(font\s*:\s*\d+(?:px|em|rem|pt)?\s+)(['"]?)([^'",;]+)\2(\s*,)/g, `$1$2${id}-$3$2$4`);
+            cssText = cssText.replace(/(font\s*:\s*\d+(?:px|em|rem|pt)?\s+)(['"]?)([^'",;]+)\2(\s*,)/g, `$1"${id}-$3"$4`);
             let match;
             const fontFacePattern = /@font-face\s*\{[^}]+\}/g;
             while ((match = fontFacePattern.exec(cssText)) !== null)
@@ -3221,6 +3224,7 @@ Builder.forcingPortrait = false;
 Builder.hasFontChanged = false;
 Builder.isAnimating = false;
 Builder.isFontsReady = false;
+Builder.registeredFontFamilies = new Set();
 Builder.htmlOffset = 0;
 Builder.plainTextLinesObserver = null;
 Builder.previouslyShownPages = 0;
