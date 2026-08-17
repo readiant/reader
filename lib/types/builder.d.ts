@@ -882,10 +882,16 @@ export class Builder {
         }
         this.direction = direction;
     }
-    static async setStylesheet(id, fonts, stylesheetText) {
+    static async setStylesheet(id, fontAssets, fonts, stylesheetText) {
         const allFontFaceRules = [];
-        if (Object.keys(fonts).length > 0) {
-            for (const [fontFamily, fontUrls] of Object.entries(fonts)) {
+        const documentFonts = typeof document.fonts !== 'undefined'
+            ? Array.from(document.fonts).map((font) => font.family.replace(/["']/g, '').trim())
+            : [];
+        if (Object.keys(fontAssets).length > 0) {
+            for (const [fontFamily, fontUrls] of Object.entries(fontAssets)) {
+                if (this.registeredFontFamilies.has(fontFamily) ||
+                    documentFonts.some((font) => font === fontFamily))
+                    continue;
                 const sources = [];
                 if (typeof fontUrls.woff2 === 'string')
                     sources.push(`url("${fontUrls.woff2}") format('woff2')`);
