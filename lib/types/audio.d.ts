@@ -29,14 +29,11 @@ export class Audio {
     static get lineHighlighterCurrent() {
         return Readiant.root.querySelector('.rdnt__current-selection--audio-line-highlighter');
     }
-    static get muteButton() {
-        return Readiant.root.querySelector('.rdnt__mute-button');
+    static get pauseButton() {
+        return Readiant.root.querySelector('.rdnt__pause');
     }
-    static get pauseButtons() {
-        return Readiant.root.querySelectorAll('.rdnt__pause');
-    }
-    static get playButtons() {
-        return Readiant.root.querySelectorAll('.rdnt__play');
+    static get playButton() {
+        return Readiant.root.querySelector('.rdnt__play');
     }
     static get playbackRateMinus() {
         return Readiant.root.querySelector('.rdnt__playback-rate--minus');
@@ -53,17 +50,14 @@ export class Audio {
     static get playbackRateSettings() {
         return Readiant.root.querySelector('.rdnt__playback-rate-settings');
     }
-    static get playbackRateToggle() {
-        return Readiant.root.querySelector('.rdnt__playback-rate-toggle');
+    static get playbackRateTopSettings() {
+        return Readiant.root.querySelector('.rdnt__menu__buttons-audio');
     }
-    static get progressElements() {
-        return Readiant.root.querySelectorAll('.rdnt__audio-progress, .rdnt__audio-progress-top');
-    }
-    static get progressCaret() {
-        return Readiant.root.querySelectorAll('.rdnt__audio-progress-caret, .rdnt__audio-progress-top-caret');
+    static get progressElement() {
+        return Readiant.root.querySelector('.rdnt__audio-progress');
     }
     static get progressValue() {
-        return Readiant.root.querySelectorAll('.rdnt__audio-progress-value, .rdnt__audio-progress-top-value');
+        return Readiant.root.querySelector('.rdnt__audio-progress-value');
     }
     static get providersList() {
         return Readiant.root.querySelector('.rdnt__providers-list');
@@ -89,9 +83,6 @@ export class Audio {
     static get subtitlesFontSizeSettings() {
         return Readiant.root.querySelector('.rdnt__subtitles-font-size-settings');
     }
-    static get unmuteButton() {
-        return Readiant.root.querySelector('.rdnt__unmute-button');
-    }
     static get voice() {
         return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-voice'));
     }
@@ -102,16 +93,6 @@ export class Audio {
         return typeof this.element === 'undefined' ? false : !this.element.paused;
     }
     static async register(availableAudio) {
-        this.providers.clear();
-        this.playback.clear();
-        this.provider = undefined;
-        this.element = undefined;
-        this.playingPage = 0;
-        this.runningTimer = false;
-        this.playbackRate = 1;
-        this.lineHighlighter = 1;
-        this.timerType = 1;
-        this.subtitles = 1;
         if (Object.keys(availableAudio).length === 0) {
             this.remove();
             return;
@@ -122,9 +103,9 @@ export class Audio {
         this.availableAudio = availableAudio;
         this.startButton?.classList.remove(CLASS_HIDDEN);
         this.countdownSettings?.classList.remove(CLASS_HIDDEN);
-        for (const playButton of this.playButtons)
-            playButton.classList.remove(CLASS_HIDDEN);
+        this.playButton?.classList.remove(CLASS_HIDDEN);
         this.playbackRateSettings?.classList.remove(CLASS_HIDDEN);
+        this.progressElement?.classList.remove(CLASS_HIDDEN);
         for (const provider of Object.keys(this.availableAudio))
             this.providers.add(provider);
         [...this.providers]
@@ -159,27 +140,17 @@ export class Audio {
             lineHighlighterButton.addEventListener('click', (event) => {
                 this.setLineHighlighterType(event);
             });
-        for (const pauseButton of this.pauseButtons)
-            pauseButton.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.pause().catch((e) => {
-                    throw e;
-                });
-            });
-        for (const playButton of this.playButtons)
-            playButton.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.play().catch((e) => {
-                    throw e;
-                });
-            });
-        this.muteButton?.addEventListener('click', (event) => {
+        this.pauseButton?.addEventListener('click', (event) => {
             event.preventDefault();
-            this.mute();
+            this.pause().catch((e) => {
+                throw e;
+            });
         });
-        this.unmuteButton?.addEventListener('click', (event) => {
+        this.playButton?.addEventListener('click', (event) => {
             event.preventDefault();
-            this.unmute();
+            this.play().catch((e) => {
+                throw e;
+            });
         });
         this.playbackRateMinus?.addEventListener('click', (event) => {
             event.preventDefault();
@@ -189,33 +160,13 @@ export class Audio {
             event.preventDefault();
             this.setPlaybackRate(this.playbackRate + 0.1);
         });
-        this.playbackRateToggle?.addEventListener('click', (event) => {
-            event.preventDefault();
-            const button = event.currentTarget;
-            if (this.playbackRate < 1) {
-                this.setPlaybackRate(1);
-                button.innerHTML = 'x2';
-            }
-            else if (this.playbackRate === 1) {
-                this.setPlaybackRate(1.2);
-                button.innerHTML = 'x3';
-            }
-            else {
-                this.setPlaybackRate(0.8);
-                button.innerHTML = 'x1';
-            }
-        });
         for (const playbackRateInput of this.playbackRateInputs)
             playbackRateInput.addEventListener('change', (event) => {
                 this.onPlaybackRateChange(event).catch((e) => {
                     throw e;
                 });
             });
-        for (const progressElement of this.progressElements) {
-            progressElement.classList.remove(CLASS_HIDDEN);
-            if (!progressElement.classList.contains('rdnt__audio-progress-top'))
-                progressElement.addEventListener('click', (event) => this.seek(event));
-        }
+        this.progressElement?.addEventListener('click', (event) => this.seek(event));
         this.startButton?.addEventListener('click', (event) => {
             event.preventDefault();
             this.play(true).catch((e) => {
@@ -249,14 +200,6 @@ export class Audio {
                 span.innerText = `${this.voice} ${String(index)}`;
                 label.appendChild(input);
                 label.appendChild(span);
-                label.setAttribute('tabindex', '0');
-                label.setAttribute('role', 'button');
-                label.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        label.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                    }
-                });
                 label.addEventListener('click', async (event) => {
                     event.preventDefault();
                     await this.switchAudio(provider);
@@ -269,7 +212,6 @@ export class Audio {
         Navigation.addHandler(async (page) => {
             const shouldAutoPlay = this.playingState === AudioPlayingState.Playing;
             Bar.empty();
-            Builder.stopHighlightingSyntax();
             this.stopTimer();
             this.stopCurrentAudio();
             if (shouldAutoPlay) {
@@ -279,7 +221,8 @@ export class Audio {
                 await this.start(0, currentPage.position);
             }
         });
-        Readiant.documentElementContext.addEventListener('keydown', (event) => {
+        this.fetchSpeechMarks();
+        Readiant.windowContext.addEventListener('keydown', (event) => {
             this.shortcut(event);
         });
     }
@@ -335,12 +278,9 @@ export class Audio {
             this.countdownCurrent.textContent = title;
         for (const countdownButton of this.countdownButtons) {
             countdownButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            countdownButton.setAttribute('aria-pressed', 'false');
             const currentcountdownType = countdownButton.getAttribute('data-countdown');
-            if (Number(currentcountdownType) === value) {
+            if (Number(currentcountdownType) === value)
                 countdownButton.classList.add(CLASS_BLOCK_ACTIVE);
-                countdownButton.setAttribute('aria-pressed', 'true');
-            }
         }
         eventLogger({
             type: LogType.ChangeCountdown,
@@ -375,14 +315,6 @@ export class Audio {
             }
         }
     }
-    static mute() {
-        if (typeof this.element === 'undefined')
-            return;
-        this.element.muted = true;
-        this.muteButton?.classList.add(CLASS_HIDDEN);
-        this.unmuteButton?.classList.remove(CLASS_HIDDEN);
-        this.unmuteButton?.focus();
-    }
     static async onAudio(data) {
         if (typeof data.transfer !== 'undefined') {
             const file = new Blob(Stream.transfers[data.transfer].chunks);
@@ -409,23 +341,16 @@ export class Audio {
             const element = this.element;
             element.currentTime = time;
             element.onended = () => {
-                this.pendingAudioTimeout = Readiant.windowContext.setTimeout(() => {
-                    this.pendingAudioTimeout = undefined;
-                    this.startTimerAfterAudio();
-                }, this.audioTimeout);
+                this.startTimerForNextPage();
             };
             element.onplaying = () => {
                 this.onProgress();
             };
             element.playbackRate = this.playbackRate;
-            Readiant.windowContext.setTimeout(async () => {
-                await element.play();
-            }, this.audioTimeout);
+            await element.play();
         }, 10);
-        for (const progressValue of this.progressValue)
-            progressValue.style.width = `${String(Math.min(Math.max(0, time / this.element.duration), 1) * 100)}%`;
-        for (const progressCaret of this.progressCaret)
-            progressCaret.style.left = `${String(Math.min(Math.max(0, time / this.element.duration), 1) * 100)}%`;
+        if (this.progressValue !== null)
+            this.progressValue.style.width = `${String(Math.min(Math.max(0, time / this.element.duration), 1) * 100)}%`;
     }
     static async onPlaybackRateChange(event) {
         const input = event.currentTarget;
@@ -457,10 +382,8 @@ export class Audio {
         const percentage = currentTime / this.element.duration;
         if (percentage > highest)
             this.playback.set(Navigation.currentPage, percentage);
-        for (const progressValue of this.progressValue)
-            progressValue.style.width = `${String(percentage * 100)}%`;
-        for (const progressCaret of this.progressCaret)
-            progressCaret.style.left = `${String(percentage * 100)}%`;
+        if (this.progressValue !== null)
+            this.progressValue.style.width = `${String(percentage * 100)}%`;
         this.show(this.provider, playbackTime);
         if (Bar.readStop === 2 &&
             typeof this.endSentenceTime !== 'undefined' &&
@@ -514,18 +437,16 @@ export class Audio {
             return;
         this.element.pause();
         this.playingState = AudioPlayingState.Paused;
-        for (const pauseButton of this.pauseButtons)
-            if (!pauseButton.classList.contains(CLASS_HIDDEN))
-                pauseButton.classList.add(CLASS_HIDDEN);
-        for (const playButton of this.playButtons)
-            if (playButton.classList.contains(CLASS_HIDDEN))
-                playButton.classList.remove(CLASS_HIDDEN);
+        if (this.pauseButton !== null &&
+            !this.pauseButton.classList.contains(CLASS_HIDDEN)) {
+            this.pauseButton.classList.add(CLASS_HIDDEN);
+            this.playButton?.classList.remove(CLASS_HIDDEN);
+        }
         if (this.stopButton !== null &&
             !this.stopButton.classList.contains(CLASS_HIDDEN)) {
             this.stopButton.classList.add(CLASS_HIDDEN);
             this.startButton?.classList.remove(CLASS_HIDDEN);
         }
-        this.stopTimer();
         eventLogger({
             type: LogType.AudioPause,
         });
@@ -533,9 +454,7 @@ export class Audio {
     static async play(force = false) {
         if (typeof this.element === 'undefined')
             this.element = Readiant.documentContext.createElement('audio');
-        let position = Navigation.currentPages.find((currentPage) => currentPage.page === Navigation.currentPage);
-        if (typeof position === 'undefined' && Navigation.currentPages.length > 0)
-            position = Navigation.currentPages[0];
+        const position = Navigation.currentPages.find((currentPage) => currentPage.page === Navigation.currentPage);
         if (typeof position === 'undefined')
             return;
         const startSide = position.position;
@@ -562,41 +481,37 @@ export class Audio {
         if (this.stopButton !== null &&
             this.stopButton.classList.contains(CLASS_HIDDEN))
             this.stopButton.classList.remove(CLASS_HIDDEN);
-        for (const pauseButton of this.pauseButtons)
-            if (pauseButton.classList.contains(CLASS_HIDDEN))
-                pauseButton.classList.remove(CLASS_HIDDEN);
-        for (const playButton of this.playButtons)
-            if (!playButton.classList.contains(CLASS_HIDDEN))
-                playButton.classList.add(CLASS_HIDDEN);
+        if (this.playButton !== null &&
+            !this.playButton.classList.contains(CLASS_HIDDEN)) {
+            this.playButton.classList.add(CLASS_HIDDEN);
+            this.pauseButton?.classList.remove(CLASS_HIDDEN);
+        }
         eventLogger({
             type: LogType.AudioPlay,
         });
     }
     static remove() {
-        this.playback.clear();
+        if (this.settingsButtons !== null)
+            for (const settingsButton of this.settingsButtons)
+                settingsButton.remove();
         if (this.startButton !== null)
             this.startButton.remove();
         if (this.stopButton !== null)
             this.stopButton.remove();
         if (this.countdownSettings !== null)
             this.countdownSettings.remove();
-        if (this.muteButton !== null)
-            this.muteButton.remove();
-        for (const pauseButton of this.pauseButtons)
-            pauseButton.remove();
-        for (const playButton of this.playButtons)
-            playButton.remove();
+        if (this.pauseButton !== null)
+            this.pauseButton.remove();
+        if (this.playButton !== null)
+            this.playButton.remove();
         if (this.playbackRateSettings !== null)
             this.playbackRateSettings.remove();
-        if (this.playbackRateToggle !== null)
-            this.playbackRateToggle.remove();
-        if (this.progressElements !== null)
-            for (const progressElement of this.progressElements)
-                progressElement.remove();
+        if (this.playbackRateTopSettings !== null)
+            this.playbackRateTopSettings.remove();
+        if (this.progressElement !== null)
+            this.progressElement.remove();
         if (this.providersSettings !== null)
             this.providersSettings.remove();
-        if (this.unmuteButton !== null)
-            this.unmuteButton.remove();
     }
     static resetEndSentenceTime() {
         this.endSentenceTime = undefined;
@@ -641,10 +556,11 @@ export class Audio {
             const element = Readiant.root.querySelector(`[data-audio-line-highlighter="${String(event)}"]`);
             if (element !== null) {
                 element.click();
-                return;
+                title = String(element.getAttribute('data-title'));
             }
+            else
+                title = '';
             value = event;
-            title = '';
         }
         else {
             const input = event.currentTarget;
@@ -660,12 +576,9 @@ export class Audio {
             this.lineHighlighterCurrent.textContent = title;
         for (const lineHighlighterButton of this.lineHighlighterButtons) {
             lineHighlighterButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            lineHighlighterButton.setAttribute('aria-pressed', 'false');
             const currentLineHighlighterType = lineHighlighterButton.getAttribute('data-audio-line-highlighter');
-            if (Number(currentLineHighlighterType) === value) {
+            if (Number(currentLineHighlighterType) === value)
                 lineHighlighterButton.classList.add(CLASS_BLOCK_ACTIVE);
-                lineHighlighterButton.setAttribute('aria-pressed', 'true');
-            }
         }
         eventLogger({
             type: LogType.ChangeAudioHighlighting,
@@ -678,16 +591,10 @@ export class Audio {
         if (playbackRate > 1.6)
             playbackRate = 1.6;
         this.playbackRate = playbackRate;
-        if (typeof this.element !== 'undefined')
-            this.element.playbackRate = this.playbackRate;
         for (const playbackRateInput of this.playbackRateInputs)
             playbackRateInput.value = String(playbackRate);
         if (this.playbackRateCurrent !== null)
             this.playbackRateCurrent.textContent = `${String(this.playbackRate * 100)}%`;
-        eventLogger({
-            type: LogType.ChangePlaybackRate,
-            playbackRate: this.playbackRate,
-        });
     }
     static setStartTime(page, time) {
         time = time / 1000;
@@ -757,12 +664,9 @@ export class Audio {
             this.subtitlesCurrent.textContent = title;
         for (const subtitlesButton of this.subtitlesButtons) {
             subtitlesButton.classList.remove(CLASS_BLOCK_ACTIVE);
-            subtitlesButton.setAttribute('aria-pressed', 'false');
             const currentSubtitlesType = subtitlesButton.getAttribute('data-subtitles');
-            if (Number(currentSubtitlesType) === value) {
+            if (Number(currentSubtitlesType) === value)
                 subtitlesButton.classList.add(CLASS_BLOCK_ACTIVE);
-                subtitlesButton.setAttribute('aria-pressed', 'true');
-            }
         }
         eventLogger({
             type: LogType.ChangeSubtitle,
@@ -770,15 +674,9 @@ export class Audio {
         });
     }
     static shortcut(event) {
-        const origin = event.composedPath()[0];
-        if (typeof origin !== 'undefined' &&
-            (origin.tagName === 'INPUT' ||
-                origin.tagName === 'TEXTAREA' ||
-                origin.tagName === 'SELECT' ||
-                origin.tagName === 'BUTTON' ||
-                origin.isContentEditable ||
-                origin.getAttribute('role') === 'button' ||
-                origin.tagName.includes('-')))
+        const focus = Readiant.root.activeElement;
+        if (focus !== null &&
+            (focus.tagName === 'BUTTON' || focus.tagName === 'INPUT'))
             return;
         let code;
         if (typeof event.key !== 'undefined')
@@ -845,13 +743,10 @@ export class Audio {
             : Navigation.currentPages.find((currentPage) => currentPage.position === side);
         if (typeof position === 'undefined')
             return;
-        const maxPage = Math.max(...Navigation.pages);
-        if (position.page > maxPage)
-            return;
         if (Navigation.currentPage !== position.page)
             Navigation.currentPage = position.page;
         if (!this.availableAudio[this.provider].includes(Navigation.currentPage)) {
-            this.startTimerAfterAudio();
+            this.startTimerForNextPage();
             return;
         }
         if (!Storage.hasAudio(`${this.provider}__${String(Navigation.currentPage)}`)) {
@@ -860,17 +755,9 @@ export class Audio {
         }
         const audio = Storage.getAudio(`${this.provider}__${String(Navigation.currentPage)}`);
         if (audio.length === 0) {
-            this.pendingAudioTimeout = Readiant.windowContext.setTimeout(() => {
-                this.pendingAudioTimeout = undefined;
-                this.startTimerAfterAudio();
-            }, this.audioTimeout);
+            this.startTimerForNextPage();
             return;
         }
-        this.loadAudioAndPlay(audio, time);
-    }
-    static loadAudioAndPlay(audio, time) {
-        if (typeof this.element === 'undefined')
-            return;
         const src = window.URL.createObjectURL(new Blob([audio.buffer], {
             type: 'audio/mpeg',
         }));
@@ -879,81 +766,38 @@ export class Audio {
         this.element.oncanplaythrough = () => this.onCanPlayThrough(time);
         this.element.load();
     }
-    static startTimerBeforeAudio(onComplete, seconds = 3) {
-        if (typeof this.element !== 'undefined')
-            this.element.pause();
-        this.runningTimer = true;
-        Readiant.windowContext.setTimeout(() => {
-            if (!this.runningTimer)
-                return;
-            if (seconds <= 0) {
-                if (this.countdownElement !== null)
-                    this.countdownElement.classList.add(CLASS_HIDDEN);
-                this.stopTimer();
-                if (typeof onComplete !== 'undefined')
-                    onComplete();
-                else if (typeof this.element !== 'undefined') {
-                    this.element.play().catch((e) => {
-                        throw e;
-                    });
-                }
-            }
+    static startTimerForNextPage(seconds = 3) {
+        if (!Navigation.isAtLastPage()) {
+            if (Navigation.currentPage % 2 === 0 &&
+                Orientation.mode === OrientationMode.Landscape)
+                Navigation.nextPage();
             else {
-                if (this.countdownElement !== null) {
-                    this.countdownElement.classList.remove(CLASS_HIDDEN);
-                    this.countdownElement.innerHTML = String(seconds);
-                }
-                this.startTimerBeforeAudio(onComplete, seconds - 1);
-            }
-        }, 1000);
-    }
-    static startTimerAfterAudio(seconds = 3) {
-        if (Orientation.mode === OrientationMode.Landscape) {
-            const index = Navigation.pages.indexOf(Navigation.currentPage);
-            const nextPage = Navigation.pages[index + 1];
-            if (typeof nextPage !== 'undefined' &&
-                nextPage <= Math.max(...Navigation.pages)) {
-                const nextPageOnSpread = Navigation.currentPages.find((cp) => cp.page === nextPage);
-                if (typeof nextPageOnSpread !== 'undefined') {
-                    Bar.empty();
-                    this.stopTimer();
-                    this.start(0, nextPageOnSpread.position).catch((e) => {
-                        throw e;
-                    });
+                if (this.timerType === 3)
                     return;
+                if (this.timerType === 1) {
+                    this.runningTimer = true;
+                    Readiant.windowContext.setTimeout(() => {
+                        if (!this.runningTimer)
+                            return;
+                        if (seconds <= 0) {
+                            if (this.countdownElement !== null)
+                                this.countdownElement.classList.add(CLASS_HIDDEN);
+                            this.stopTimer();
+                            Navigation.nextPage();
+                        }
+                        else {
+                            if (this.countdownElement !== null) {
+                                this.countdownElement.classList.remove(CLASS_HIDDEN);
+                                this.countdownElement.innerHTML = String(seconds);
+                            }
+                            this.startTimerForNextPage(seconds - 1);
+                        }
+                    }, 1000);
                 }
-            }
-        }
-        if (Navigation.isAtLastPage())
-            return;
-        if (this.timerType === 2) {
-            Navigation.nextPage();
-            return;
-        }
-        if (this.timerType === 3)
-            return;
-        if (this.timerType === 1) {
-            this.runningTimer = true;
-            Readiant.windowContext.setTimeout(() => {
-                if (!this.runningTimer)
-                    return;
-                if (seconds <= 0) {
-                    if (this.countdownElement !== null)
-                        this.countdownElement.classList.add(CLASS_HIDDEN);
-                    this.stopTimer();
+                else
                     Navigation.nextPage();
-                }
-                else {
-                    if (this.countdownElement !== null) {
-                        this.countdownElement.classList.remove(CLASS_HIDDEN);
-                        this.countdownElement.innerHTML = String(seconds);
-                    }
-                    this.startTimerAfterAudio(seconds - 1);
-                }
-            }, 1000);
+            }
         }
-        else
-            Navigation.nextPage();
     }
     static async stop() {
         this.stopCurrentAudio();
@@ -965,12 +809,11 @@ export class Audio {
         if (this.stopButton !== null &&
             !this.stopButton.classList.contains(CLASS_HIDDEN))
             this.stopButton.classList.add(CLASS_HIDDEN);
-        for (const pauseButton of this.pauseButtons)
-            if (!pauseButton.classList.contains(CLASS_HIDDEN))
-                pauseButton.classList.add(CLASS_HIDDEN);
-        for (const playButton of this.playButtons)
-            if (playButton.classList.contains(CLASS_HIDDEN))
-                playButton.classList.remove(CLASS_HIDDEN);
+        if (this.pauseButton !== null &&
+            !this.pauseButton.classList.contains(CLASS_HIDDEN)) {
+            this.pauseButton.classList.add(CLASS_HIDDEN);
+            this.playButton?.classList.remove(CLASS_HIDDEN);
+        }
         Bar.empty();
         Builder.stopHighlightingSyntax();
     }
@@ -986,36 +829,21 @@ export class Audio {
         this.element.onplaying = () => { };
         this.element.pause();
         this.element.currentTime = 0;
-        for (const progressValue of this.progressValue)
-            progressValue.style.width = `0`;
-        for (const progressCaret of this.progressCaret)
-            progressCaret.style.left = `0`;
+        if (this.progressValue !== null)
+            this.progressValue.style.width = `0`;
     }
     static stopTimer() {
         this.runningTimer = false;
-        if (typeof this.pendingAudioTimeout !== 'undefined') {
-            Readiant.windowContext.clearTimeout(this.pendingAudioTimeout);
-            this.pendingAudioTimeout = undefined;
-        }
         this.countdownElement?.classList.add(CLASS_HIDDEN);
     }
     static async switchAudio(provider) {
         if (this.playingState === AudioPlayingState.Playing)
             await this.pause();
         this.stopCurrentAudio();
-        this.stopTimer();
         this.provider = provider;
         this.fetchSpeechMarks();
         if (this.playingState === AudioPlayingState.Playing)
             await this.play();
-    }
-    static unmute() {
-        if (typeof this.element === 'undefined')
-            return;
-        this.element.muted = false;
-        this.unmuteButton?.classList.add(CLASS_HIDDEN);
-        this.muteButton?.classList.remove(CLASS_HIDDEN);
-        this.muteButton?.focus();
     }
     static update(syntax, playbackTime, side) {
         if (typeof syntax === 'undefined')
@@ -1097,7 +925,6 @@ Audio.playbackRate = 1;
 Audio.playingPage = 0;
 Audio.runningTimer = false;
 Audio.subtitles = 1;
-Audio.audioTimeout = 500;
 Audio.playback = new Map();
 Audio.playingState = AudioPlayingState.Initial;
 Audio.timerType = 1;

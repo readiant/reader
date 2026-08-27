@@ -7,10 +7,10 @@ import { ReadiantElement } from './base.js';
 import { Builder } from './builder.js';
 import { Chapters } from './chapters.js';
 import { Colorblind } from './colorblind.js';
-import { CLASS_BUTTON_ACTIVE, CLASS_HIDDEN, CLASS_NAVIGATION_NEXT_ACTIVE, CLASS_PREVIEW, AcceptedTypes, AudioPlayingState, Container, ContentType, Direction, Fn, OrientationMode, PagePosition, } from './consts.js';
+import { CLASS_BUTTON_ACTIVE, CLASS_HIDDEN, CLASS_NAVIGATION_NEXT_ACTIVE, CLASS_PREVIEW, AcceptedTypes, Container, ContentType, Direction, Fn, OrientationMode, PagePosition, } from './consts.js';
 import { connectionInfo, orientation, webP } from './detection.js';
-import { isOffline, ENV_VALUE } from './env.js';
-import { eventLogger, notifyComponent } from './eventLogger.js';
+import { isOffline } from './env.js';
+import { eventLogger } from './eventLogger.js';
 import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
 import { ImageQuality } from './imageQuality.js';
@@ -39,7 +39,6 @@ export class Readiant {
     }
     static removeInstance(root) {
         this.instances.delete(root);
-        Storage.clear();
     }
     static get documentBody() {
         return Readiant.root instanceof ShadowRoot
@@ -82,7 +81,6 @@ export class Readiant {
                 Container.ScreenSettings,
                 Container.Search,
                 Container.Settings,
-                Container.TranslationSettings,
             ];
         for (const container of containers) {
             const element = Readiant.root.querySelector(`.${container}`);
@@ -101,16 +99,6 @@ export class Readiant {
     }
     static closeOnEscape(event) {
         if (event.key === 'Escape') {
-            const origin = event.composedPath()[0];
-            if (typeof origin !== 'undefined' &&
-                (origin.tagName === 'INPUT' ||
-                    origin.tagName === 'TEXTAREA' ||
-                    origin.tagName === 'SELECT' ||
-                    origin.tagName === 'BUTTON' ||
-                    origin.isContentEditable ||
-                    origin.getAttribute('role') === 'button' ||
-                    origin.tagName.includes('-')))
-                return;
             Readiant.close();
         }
     }
@@ -120,7 +108,6 @@ export class Readiant {
             Container.BarSettings,
             Container.Chapters,
             Container.ScreenSettings,
-            Container.TranslationSettings,
             Container.Search,
             Container.Settings,
             'rdnt__bottom-bar-settings-button',
@@ -133,8 +120,6 @@ export class Readiant {
         Readiant.close();
     }
     static errorHandler(message) {
-        if (message instanceof DOMException && message.name === 'AbortError')
-            return;
         if (ReadiantElement.instance) {
             console.error('[Readiant Error]', message);
             ReadiantElement.dispatchEvent('error', {
@@ -179,8 +164,7 @@ export class Readiant {
         }
     }
     static toggle(container) {
-        const buttons = Readiant.root.querySelectorAll(`.${container}-button`);
-        const button = buttons[0];
+        const button = Readiant.root.querySelector(`.${container}-button`);
         const element = Readiant.root.querySelector(`.${container}`);
         const nextButton = Readiant.root.querySelector('.rdnt__navigation--next');
         if (element.classList.contains(CLASS_HIDDEN))
@@ -188,23 +172,12 @@ export class Readiant {
         element.classList.toggle(CLASS_HIDDEN);
         nextButton.classList.toggle(CLASS_NAVIGATION_NEXT_ACTIVE);
         if (element.classList.contains(CLASS_HIDDEN)) {
-            button?.classList.remove(CLASS_BUTTON_ACTIVE);
-            for (const btn of buttons) {
-                btn.setAttribute('aria-expanded', 'false');
-                const openLabel = btn.dataset.labelOpen;
-                if (typeof openLabel !== 'undefined')
-                    btn.setAttribute('aria-label', openLabel);
-            }
-            button?.focus();
+            button.classList.remove(CLASS_BUTTON_ACTIVE);
+            button.setAttribute('aria-expanded', 'false');
         }
         else {
-            button?.classList.add(CLASS_BUTTON_ACTIVE);
-            for (const btn of buttons) {
-                btn.setAttribute('aria-expanded', 'true');
-                const closeLabel = btn.dataset.labelClose;
-                if (typeof closeLabel !== 'undefined')
-                    btn.setAttribute('aria-label', closeLabel);
-            }
+            button.classList.add(CLASS_BUTTON_ACTIVE);
+            button.setAttribute('aria-expanded', 'true');
         }
         if (!element.classList.contains(CLASS_HIDDEN)) {
             const rootNode = Readiant.root.getRootNode();
@@ -216,31 +189,18 @@ export class Readiant {
                 rootNode.host.addEventListener('click', this.closeOnClick);
                 rootNode.host.addEventListener('keydown', this.closeOnEscape);
             }
-            const firstFocusable = element.querySelector('[tabindex="0"], input:not([type="hidden"])');
-            if (firstFocusable !== null)
-                firstFocusable.focus({ preventScroll: true });
+            const firstMenuItem = element.querySelector('[role="menuitem"]');
+            if (firstMenuItem !== null)
+                firstMenuItem.focus({ preventScroll: true });
         }
     }
     static toggleMenu() {
         this.menuButtons?.classList.toggle(CLASS_HIDDEN);
         this.pageNumber?.classList.toggle(CLASS_HIDDEN);
-        const moreButton = Readiant.root.querySelector('.rdnt__more');
-        if (moreButton !== null)
-            moreButton.setAttribute('aria-expanded', this.menuButtons?.classList.contains(CLASS_HIDDEN) === true
-                ? 'false'
-                : 'true');
-    }
-    abort() {
-        Readiant.removeInstance(Readiant.root);
-        this.abortController.abort();
-    }
-    getInitializationPromise() {
-        return this.initializationPromise ?? Promise.resolve();
     }
     constructor(root) {
         this.accepted = {
             audioHighlightingLevel: AcceptedTypes.Number,
-            audioTimeout: AcceptedTypes.Number,
             colorBlindFilter: AcceptedTypes.String,
             concurrencyLimit: AcceptedTypes.Number,
             countdownLevel: AcceptedTypes.Number,
@@ -251,7 +211,6 @@ export class Readiant {
             imageQualityLevel: AcceptedTypes.Number,
             letterSpacing: AcceptedTypes.Number,
             lineHeight: AcceptedTypes.Number,
-            lineHighlighterWidth: AcceptedTypes.Number,
             locale: AcceptedTypes.String,
             localeTranslations: AcceptedTypes.String,
             orientation: AcceptedTypes.String,
@@ -260,8 +219,6 @@ export class Readiant {
             readStopLevel: AcceptedTypes.Number,
             screenModeLevel: AcceptedTypes.Number,
             singlePage: AcceptedTypes.Boolean,
-            simplified: AcceptedTypes.Boolean,
-            translate: AcceptedTypes.Boolean,
             subtitleFontSize: AcceptedTypes.Number,
             subtitleLevel: AcceptedTypes.Number,
             textModeLevel: AcceptedTypes.Number,
@@ -276,11 +233,7 @@ export class Readiant {
             orientation,
             page: 1,
         };
-        this.abortController = new AbortController();
-        this.initializationPromise = null;
         this.connected = false;
-        this.deferredBlueprints = new Map();
-        this.deferredOfflineFiles = [];
         this.fontAssets = {};
         this.fontAssetsPromise = null;
         this.fonts = {};
@@ -299,26 +252,24 @@ export class Readiant {
         this.audioButton = Readiant.root.querySelector('.rdnt__start');
         this.closeScreenSettingsButton = Readiant.root.querySelector('.rdnt__close-screen-settings');
         this.closeSettingsButton = Readiant.root.querySelector('.rdnt__close-settings');
-        this.closeTranslationSettingsButton = Readiant.root.querySelector('.rdnt__close-translation-settings');
         this.moreButton = Readiant.root.querySelector('.rdnt__more');
         this.printButton = Readiant.root.querySelector('.rdnt__print-button');
         this.screenSettingsButton = Readiant.root.querySelector('.rdnt__screen-settings-button');
         this.settingsButton = Readiant.root.querySelector('.rdnt__settings-button');
-        this.translationSettingsButton = Readiant.root.querySelector('.rdnt__translation-settings-button');
         this.toggleButtons = Readiant.root.querySelectorAll('.rdnt__block-toggle');
         if (isOffline) {
-            this.initializationPromise = this.connect().catch((e) => {
+            this.connect().catch((e) => {
                 Readiant.errorHandler(e);
             });
         }
         else {
-            if (ENV_VALUE !== 'LOCAL' && window.self === window.top)
+            if (process.env.ENV !== 'LOCAL' && window.self === window.top)
                 Readiant.errorHandler(new Error('Only supports embedded documents.'));
             else {
                 if (typeof Storage.data.code === 'undefined')
                     Readiant.errorHandler(new Error('Missing parameter UUID'));
                 else {
-                    this.initializationPromise = this.connect()
+                    this.connect()
                         .then(() => {
                         Readiant.windowContext.addEventListener('message', (event) => this.parentMessageHandler(event));
                     })
@@ -331,9 +282,6 @@ export class Readiant {
     }
     async connect() {
         this.options = { ...this.options, ...this.parse() };
-        Storage.clear();
-        if (typeof this.options.id !== 'undefined')
-            Storage.data.code = this.options.id;
         if (this.options.singlePage === true) {
             Readiant.documentBody.classList.add(CLASS_PREVIEW);
             this.options.orientation = OrientationMode.Portrait;
@@ -389,10 +337,7 @@ export class Readiant {
             headers: {
                 Accept: 'application/json, audio/mpeg, image/*, */*',
             },
-            signal: this.abortController.signal,
         });
-        if (this.abortController.signal.aborted)
-            return;
         if (!response.ok) {
             Readiant.errorHandler(new Error(`Failed to load document: ${String(response.status)} ${response.statusText}`));
             return;
@@ -402,57 +347,23 @@ export class Readiant {
             index = (await response.json());
         }
         catch (error) {
-            if (this.abortController.signal.aborted)
-                return;
             Readiant.errorHandler(new Error(`Invalid document format: ${error instanceof Error ? error.message : String(error)}`));
             return;
         }
-        if (this.abortController.signal.aborted)
-            return;
-        const concurrencyLimit = typeof this.options.concurrencyLimit === 'number' &&
-            this.options.concurrencyLimit > 0
-            ? this.options.concurrencyLimit
-            : 6;
-        const cacheWindowSize = this.options.orientation === OrientationMode.Portrait ? 4 : 8;
-        const startPage = this.options.page || 1;
-        const halfWindow = Math.floor((cacheWindowSize - 1) / 2);
-        const pageStart = Math.max(1, startPage - halfWindow);
-        const pageEnd = pageStart + cacheWindowSize - 1;
-        const priorityFiles = [];
-        const deferredFiles = [];
-        const extractPageNumber = (file) => {
-            const match = /(\d+)(?:\.\w+)?$/.exec(file);
-            return match ? Number(match[1]) : undefined;
-        };
-        for (const file of index.files) {
-            const pageNum = extractPageNumber(file);
-            const isPageContent = file.includes('elements/') ||
-                file.includes('audio/') ||
-                file.includes('textContent/');
-            const isImage = file.includes('images/');
-            const isInitial = isPageContent || isImage
-                ? typeof pageNum === 'number' &&
-                    pageNum >= pageStart &&
-                    pageNum <= pageEnd
-                : true;
-            if (isInitial)
-                priorityFiles.push(file);
-            else
-                deferredFiles.push(file);
-        }
         if (typeof index.blueprints !== 'undefined')
-            for (const data of index.blueprints)
-                this.deferredBlueprints.set(data.page, {
+            for (const data of index.blueprints) {
+                Storage.storePage(data.page, {
                     blueprint: Builder.pageGroup(data.blueprint.map((blueprint) => `rdnt.${blueprint}`)),
                     elements: data.blueprint.map((blueprint) => `rdnt.${blueprint}`),
                     rotation: typeof data.rotation !== 'undefined' ? data.rotation : 0,
                     viewBox: data.viewBox,
                 });
-        this.deferredOfflineFiles = deferredFiles;
-        this.indexImageInfo = index.imageInfo;
-        await this.fetchFilesWithConcurrencyLimit(Array.from({ length: pageEnd - pageStart + 1 }, (_, i) => pageStart + i), priorityFiles, index.imageInfo, concurrencyLimit, this.abortController.signal);
-        if (this.abortController.signal.aborted)
-            return;
+            }
+        const concurrencyLimit = typeof this.options.concurrencyLimit === 'number' &&
+            this.options.concurrencyLimit > 0
+            ? this.options.concurrencyLimit
+            : 6;
+        await this.fetchFilesWithConcurrencyLimit(index.files, index.imageInfo, concurrencyLimit);
         if (index.type === DocumentType.ePub)
             await this.connectEPUB({
                 chapters: index.chapters,
@@ -478,17 +389,10 @@ export class Readiant {
                 type: ServerActionType.PDFDocumentInfo,
             });
     }
-    async fetchFilesWithConcurrencyLimit(pages, files, imageInfo, limit, signal) {
+    async fetchFilesWithConcurrencyLimit(files, imageInfo, limit) {
         const queue = [...files];
         const workers = [];
-        for (const page of pages)
-            if (this.deferredBlueprints.has(page)) {
-                const pageData = this.deferredBlueprints.get(page);
-                Storage.storePage(page, pageData);
-            }
         const processFile = async (file) => {
-            if (signal.aborted)
-                return;
             const isFullUrl = file.startsWith('http://') || file.startsWith('https://');
             const fileUrl = isFullUrl ? file : `${String(this.options.url)}${file}`;
             const filePath = isFullUrl ? new URL(file).pathname : file;
@@ -502,7 +406,6 @@ export class Readiant {
                 headers: {
                     Accept: 'application/json, audio/mpeg, image/*, */*',
                 },
-                signal,
             });
             if (filePath.startsWith('audio/') || filePath.includes('/audio/')) {
                 const provider = parts[parts.length - 1];
@@ -512,7 +415,7 @@ export class Readiant {
                 }
                 else if (fileExtension === 'json') {
                     const syntax = (await response.json());
-                    Storage.storeSyntax(`${provider}${fileNameWithoutExtension.replace('speechmark', '')}`, syntax);
+                    Storage.storeSyntax(`${provider}__${fileNameWithoutExtension}`, syntax);
                 }
                 return;
             }
@@ -567,7 +470,7 @@ export class Readiant {
             }
         };
         const worker = async () => {
-            while (queue.length > 0 && !signal.aborted) {
+            while (queue.length > 0) {
                 const file = queue.shift();
                 if (typeof file === 'string')
                     await processFile(file);
@@ -577,22 +480,8 @@ export class Readiant {
             workers.push(worker());
         await Promise.all(workers);
     }
-    static extractPageNumber(file) {
-        const match = /(\d+)(?:\.\w+)?$/.exec(file);
-        return match ? Number(match[1]) : undefined;
-    }
-    filterPageFiles(allFiles, pageNumbers) {
-        const filtered = [];
-        const pageSet = new Set(pageNumbers);
-        for (const file of allFiles) {
-            const pageNum = Readiant.extractPageNumber(file);
-            if (typeof pageNum === 'number' && pageSet.has(pageNum))
-                filtered.push(file);
-        }
-        return filtered;
-    }
     async connectEPUB({ chapters, direction, document, indexes, pageCounts, translations, }) {
-        if (this.connected || this.abortController.signal.aborted)
+        if (this.connected)
             return;
         const directionFromString = (s) => s === 'rtl' ? Direction.Rtl : Direction.Ltr;
         Readiant.type = ContentType.HTML;
@@ -601,22 +490,11 @@ export class Readiant {
         if (this.fontAssetsPromise !== null)
             await this.fontAssetsPromise;
         await Builder.setStylesheet(document, this.fontAssets, this.fonts, this.stylesheetText);
-        let lazyLoader;
-        if (isOffline && this.deferredOfflineFiles.length > 0) {
-            lazyLoader = async (pages) => {
-                await this.fetchFilesWithConcurrencyLimit(pages, this.filterPageFiles(this.deferredOfflineFiles, pages), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
-                    this.options.concurrencyLimit > 0
-                    ? this.options.concurrencyLimit
-                    : 6, this.abortController.signal);
-            };
-        }
         await Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
-        if (typeof lazyLoader !== 'undefined')
-            Navigation.setLazyLoader(lazyLoader);
         await this.register({}, chapters, translations);
     }
     async connectPDF({ availableAudio, chapters, document, inverted, offset, pages, rtl, spread, translations, }) {
-        if (this.connected || this.abortController.signal.aborted)
+        if (this.connected)
             return;
         Readiant.type = ContentType.SVG;
         Builder.register();
@@ -624,40 +502,10 @@ export class Readiant {
         if (this.fontAssetsPromise !== null)
             await this.fontAssetsPromise;
         await Builder.setStylesheet(document, this.fontAssets, this.fonts, this.stylesheetText);
-        let lazyLoader;
-        if (isOffline && this.deferredOfflineFiles.length > 0) {
-            lazyLoader = async (pages) => {
-                await this.fetchFilesWithConcurrencyLimit(pages, this.filterPageFiles(this.deferredOfflineFiles, pages), this.indexImageInfo, typeof this.options.concurrencyLimit === 'number' &&
-                    this.options.concurrencyLimit > 0
-                    ? this.options.concurrencyLimit
-                    : 6, this.abortController.signal);
-            };
-        }
         await Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
-        if (typeof lazyLoader !== 'undefined')
-            Navigation.setLazyLoader(lazyLoader);
         await this.register(availableAudio, chapters, translations);
     }
     async register(availableAudio, documentChapters, translations) {
-        if (this.abortController.signal.aborted)
-            return;
-        Audio.playingState = AudioPlayingState.Initial;
-        Audio.playback = new Map();
-        Bar.readStop = 1;
-        Bar.showing = false;
-        Builder.animationDisabled = false;
-        Builder.isAnimating = false;
-        Builder.animationEpoch = 0;
-        Builder.previouslyShownPages = 0;
-        Builder.hasFontChanged = false;
-        Builder.highlightOnLoad = undefined;
-        Fonts.resetState();
-        LineHighlighter.resetState();
-        ScreenMode.resetState();
-        Text.resetState();
-        TextMode.level = 1;
-        Zoom.level = 2;
-        Zoom.isGrabbing = false;
         this.connected = true;
         this.closeScreenSettingsButton?.addEventListener('click', (event) => {
             event.preventDefault();
@@ -666,10 +514,6 @@ export class Readiant {
         this.closeSettingsButton?.addEventListener('click', (event) => {
             event.preventDefault();
             Readiant.close([Container.Settings]);
-        });
-        this.closeTranslationSettingsButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            Readiant.close([Container.TranslationSettings]);
         });
         this.moreButton?.addEventListener('click', (event) => {
             event.preventDefault();
@@ -688,10 +532,6 @@ export class Readiant {
             event.preventDefault();
             Readiant.toggle(Container.Settings);
         });
-        this.translationSettingsButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            Readiant.toggle(Container.TranslationSettings);
-        });
         Bar.register();
         Colorblind.register();
         Fonts.register();
@@ -703,10 +543,6 @@ export class Readiant {
         TextMode.register();
         if (Readiant.type === ContentType.SVG) {
             Text.register(translations, this.options.localeTranslations);
-            if (this.options.simplified === true)
-                Text.activateSimplified();
-            if (this.options.translate === true)
-                Text.activateTranslate();
             if (typeof this.options.readStopLevel !== 'undefined')
                 Bar.changeReadStop(this.options.readStopLevel);
             if (typeof this.options.textModeLevel !== 'undefined')
@@ -731,8 +567,6 @@ export class Readiant {
             Fonts.letterSpacing(this.options.letterSpacing);
         if (typeof this.options.lineHeight !== 'undefined')
             Fonts.lineHeight(this.options.lineHeight);
-        if (typeof this.options.lineHighlighterWidth !== 'undefined')
-            LineHighlighter.changeWidth(this.options.lineHighlighterWidth);
         if (typeof this.options.screenModeLevel !== 'undefined')
             ScreenMode.change(this.options.screenModeLevel);
         if (typeof this.options.subtitleFontSize !== 'undefined')
@@ -754,8 +588,6 @@ export class Readiant {
             await Audio.register(availableAudio);
             if (typeof this.options.audioHighlightingLevel !== 'undefined')
                 Audio.setLineHighlighterType(this.options.audioHighlightingLevel);
-            if (typeof this.options.audioTimeout !== 'undefined')
-                Audio.audioTimeout = this.options.audioTimeout;
             if (typeof this.options.countdownLevel !== 'undefined')
                 Audio.countdownType(this.options.countdownLevel);
             if (typeof this.options.playbackRate !== 'undefined')
@@ -773,8 +605,8 @@ export class Readiant {
             Search.register();
         else
             Search.remove();
-        if (this.options.disable.includes(Fn.Animations))
-            Builder.disableAnimations();
+        //if (this.options.disable.includes(Fn.Animations))
+        Builder.disableAnimations();
         if (!this.options.disable.includes(Fn.Print) &&
             this.printButton !== null &&
             Readiant.type === ContentType.SVG)
@@ -782,14 +614,15 @@ export class Readiant {
         else
             Print.remove();
         A11y.register();
+        ReadiantElement.dispatchEvent('document-loaded', {
+            documentId: this.options.id,
+            isReady: true,
+        });
         eventLogger({
             type: LogType.Ready,
-            documentId: this.options.id,
         });
     }
     async parentMessageHandler(event) {
-        if (this.abortController.signal.aborted)
-            return;
         if (event.source === window || event.source === null)
             return;
         if (typeof event.data === 'undefined' ||
@@ -801,81 +634,177 @@ export class Readiant {
                 if (!this.options.disable.includes(Fn.Annotations) &&
                     Readiant.type === ContentType.SVG) {
                     Annotations.add(data.annotations);
+                    ReadiantElement.dispatchEvent('annotations-added', {
+                        annotations: data.annotations,
+                        count: data.annotations.length,
+                    });
                 }
                 break;
             case LogType.AudioPlay:
                 await Audio.play();
+                ReadiantElement.dispatchEvent('audio-play', {
+                    isPlaying: true,
+                    action: 'play',
+                });
                 break;
             case LogType.AudioPause:
                 await Audio.pause();
+                ReadiantElement.dispatchEvent('audio-pause', {
+                    isPlaying: false,
+                    action: 'pause',
+                });
                 break;
             case LogType.ChangeAudioHighlighting:
                 Audio.setLineHighlighterType(data.audioHighlightingLevel);
+                ReadiantElement.dispatchEvent('audio-highlighting-changed', {
+                    level: data.audioHighlightingLevel,
+                    audioHighlightingLevel: data.audioHighlightingLevel,
+                });
                 break;
             case LogType.ChangeColorBlindFilter: {
                 const colorBlindFilter = [...EventMapper].find(([_k, v]) => v === data.colorBlindFilter);
-                if (typeof colorBlindFilter !== 'undefined')
+                if (typeof colorBlindFilter !== 'undefined') {
                     Colorblind.change(colorBlindFilter[0]);
+                    ReadiantElement.dispatchEvent('color-blind-filter-changed', {
+                        filter: data.colorBlindFilter,
+                        filterKey: colorBlindFilter[0],
+                    });
+                }
                 break;
             }
-            case LogType.ChangeCountdown:
+            case LogType.ChangeCountdown: {
                 Audio.countdownType(data.countdownLevel);
+                ReadiantElement.dispatchEvent('countdown-changed', {
+                    level: data.countdownLevel,
+                    countdownLevel: data.countdownLevel,
+                });
                 break;
+            }
             case LogType.ChangeFont: {
                 const font = [...EventMapper].find(([_k, v]) => v === data.font);
-                if (typeof font !== 'undefined')
+                if (typeof font !== 'undefined') {
                     Fonts.change(font[0]);
+                    ReadiantElement.dispatchEvent('font-changed', {
+                        font: data.font,
+                        fontKey: font[0],
+                    });
+                }
                 break;
             }
             case LogType.ChangeFontSize:
                 Fonts.fontSize(data.fontSize);
+                ReadiantElement.dispatchEvent('font-size-changed', {
+                    fontSize: data.fontSize,
+                    size: data.fontSize,
+                });
                 break;
             case LogType.ChangeImageQuality:
                 ImageQuality.change(data.imageQualityLevel);
+                ReadiantElement.dispatchEvent('image-quality-changed', {
+                    level: data.imageQualityLevel,
+                    imageQualityLevel: data.imageQualityLevel,
+                });
                 break;
             case LogType.ChangeLetterSpacing:
                 Fonts.letterSpacing(data.letterSpacing);
+                ReadiantElement.dispatchEvent('letter-spacing-changed', {
+                    spacing: data.letterSpacing,
+                    letterSpacing: data.letterSpacing,
+                });
                 break;
             case LogType.ChangeLineHeight:
                 Fonts.lineHeight(data.lineHeight);
+                ReadiantElement.dispatchEvent('line-height-changed', {
+                    height: data.lineHeight,
+                    lineHeight: data.lineHeight,
+                });
                 break;
             case LogType.ChangePlaybackRate:
                 Audio.setPlaybackRate(data.playbackRate);
+                ReadiantElement.dispatchEvent('playback-rate-changed', {
+                    rate: data.playbackRate,
+                    playbackRate: data.playbackRate,
+                });
                 break;
             case LogType.ChangeReadStop:
                 Bar.changeReadStop(data.readStopLevel);
+                ReadiantElement.dispatchEvent('read-stop-changed', {
+                    level: data.readStopLevel,
+                    readStopLevel: data.readStopLevel,
+                });
                 break;
             case LogType.ChangeScreenMode:
                 ScreenMode.change(data.screenModeLevel);
+                ReadiantElement.dispatchEvent('theme-changed', {
+                    theme: data.screenModeLevel,
+                    level: data.screenModeLevel,
+                });
                 break;
             case LogType.ChangeSubtitle:
                 Audio.setSubtitlesType(data.subtitleLevel);
+                ReadiantElement.dispatchEvent('subtitle-changed', {
+                    level: data.subtitleLevel,
+                    subtitleLevel: data.subtitleLevel,
+                });
                 break;
             case LogType.ChangeSubtitleFontSize:
                 Bar.fontSizeSubtitles(data.subtitleFontSize);
+                ReadiantElement.dispatchEvent('subtitle-font-size-changed', {
+                    fontSize: data.subtitleFontSize,
+                    subtitleFontSize: data.subtitleFontSize,
+                });
                 break;
             case LogType.ChangeTextMode:
                 TextMode.change(data.textModeLevel);
+                ReadiantElement.dispatchEvent('text-mode-changed', {
+                    level: data.textModeLevel,
+                    textModeLevel: data.textModeLevel,
+                });
                 break;
             case LogType.ChangeWordSpacing:
                 Fonts.wordSpacing(data.wordSpacing);
+                ReadiantElement.dispatchEvent('word-spacing-changed', {
+                    spacing: data.wordSpacing,
+                    wordSpacing: data.wordSpacing,
+                });
                 break;
             case LogType.ChangeZoomLevel:
                 Zoom.change(data.zoomLevel);
+                ReadiantElement.dispatchEvent('zoom-changed', {
+                    zoom: data.zoomLevel,
+                    level: data.zoomLevel,
+                });
                 break;
             case LogType.GotoPage:
             case LogType.InitialPage:
                 Navigation.gotoPageDirectly(data.pages[0]);
+                ReadiantElement.dispatchEvent('page-changed', {
+                    page: data.pages[0],
+                    currentPage: data.pages[0],
+                    totalPages: Navigation.pages.length,
+                });
                 break;
             case LogType.NextPage:
                 Navigation.onRightPressed();
+                ReadiantElement.dispatchEvent('page-changed', {
+                    page: Navigation.currentPage,
+                    currentPage: Navigation.currentPage,
+                    totalPages: Navigation.pages.length,
+                    direction: 'next',
+                });
                 break;
             case LogType.PreviousPage:
                 Navigation.onLeftPressed();
+                ReadiantElement.dispatchEvent('page-changed', {
+                    page: Navigation.currentPage,
+                    currentPage: Navigation.currentPage,
+                    totalPages: Navigation.pages.length,
+                    direction: 'previous',
+                });
                 break;
             case LogType.ShouldAddAvailableAudio:
                 Audio.add(data.page, data.provider, data.language, data.voiceId);
-                notifyComponent('audio-added', {
+                ReadiantElement.dispatchEvent('audio-added', {
                     page: data.page,
                     provider: data.provider,
                     language: data.language,
@@ -884,25 +813,36 @@ export class Readiant {
                 break;
             case LogType.StartHighlighting:
                 Builder.startHighlighting(PagePosition.Left, data.indices);
-                notifyComponent('highlighting-started', {
+                ReadiantElement.dispatchEvent('highlighting-started', {
+                    position: PagePosition.Left,
                     indices: data.indices,
                 });
                 break;
             case LogType.StopHighlighting:
                 Builder.stopHighlighting();
-                notifyComponent('highlighting-stopped', { action: 'stop' });
+                ReadiantElement.dispatchEvent('highlighting-stopped', {
+                    action: 'stop',
+                });
                 break;
             case LogType.SwitchAudio:
                 await Audio.switchAudio(data.key);
-                notifyComponent('audio-switched', {
+                ReadiantElement.dispatchEvent('audio-switched', {
                     key: data.key,
+                    audioKey: data.key,
                 });
                 break;
             case LogType.ToggleFullscreen:
                 await Fullscreen.toggle();
+                ReadiantElement.dispatchEvent('fullscreen-changed', {
+                    isFullscreen: document.fullscreenElement !== null,
+                });
                 break;
             case LogType.ToggleOrientation:
                 Orientation.toggle();
+                ReadiantElement.dispatchEvent('orientation-changed', {
+                    action: 'toggle',
+                    orientation: 'toggled',
+                });
                 break;
         }
     }
@@ -1003,15 +943,12 @@ export class Readiant {
             toggleButton.classList.remove('rdnt__block-toggle--active');
             if (toggleButton.parentNode !== null &&
                 toggleButton.parentNode.nextElementSibling !==
-                    null) {
+                    null)
                 toggleButton.parentNode
                     .nextElementSibling.classList.remove('rdnt__block-view--active');
-                toggleButton.parentNode.setAttribute('aria-expanded', 'false');
-            }
         }
         toggle.classList.toggle('rdnt__block-toggle--active');
         block.classList.toggle('rdnt__block-view--active');
-        element.setAttribute('aria-expanded', block.classList.contains('rdnt__block-view--active') ? 'true' : 'false');
     }
 }
 Readiant.instances = new Map();

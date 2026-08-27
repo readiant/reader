@@ -750,11 +750,12 @@ export class Builder {
             }
         }
         const matches = this.findAllMatchingContent(textElement, textContent);
-        if (matches.length > 0) {
-            const match = matches[0];
+        for (const match of matches) {
             const existing = textElementsAndContent.get(match.index);
             if (existing) {
-                existing.elements.push(textElement);
+                if (!existing.elements.includes(textElement)) {
+                    existing.elements.push(textElement);
+                }
             }
             else {
                 textElementsAndContent.set(match.index, {
@@ -772,6 +773,8 @@ export class Builder {
             : this.normalize(textElement.content);
         const elementX = textElement.transform[4];
         const elementY = textElement.transform[5];
+        const elementStyleX = textElement.style.x;
+        const elementStyleY = textElement.style.y;
         const candidates = textContent.content.map((c, index) => ({
             content: c.content,
             ignore: c.ignore,
@@ -780,6 +783,7 @@ export class Builder {
             x: c.transform[4],
             y: c.transform[5],
             transform: c.transform,
+            width: c.width,
         }));
         if (!isWhitespace) {
             const exact = candidates.filter((c) => c.content === textElement.content);
@@ -788,9 +792,29 @@ export class Builder {
         }
         const yTolerance = Math.round(textElement.style.height / 2) + 10;
         const xTolerance = Math.round(textElement.style.width / 2) + 10;
-        const potentialMatches = candidates
-            .filter((c) => Math.abs(elementY - c.y) <= yTolerance &&
-            Math.abs(elementX - c.x) <= xTolerance)
+        let sortingX = elementX;
+        let sortingY = elementY;
+        let potentialMatches = candidates.filter((c) => {
+            const verticalMatch = Math.abs(elementY - c.y) <= yTolerance;
+            const horizontalMatch = c.width !== undefined && c.width > 0
+                ? elementX >= Math.min(c.x, c.x + c.width) - 15 &&
+                    elementX <= Math.max(c.x, c.x + c.width) + 15
+                : Math.abs(elementX - c.x) <= xTolerance;
+            return verticalMatch && horizontalMatch;
+        });
+        if (potentialMatches.length === 0) {
+            sortingX = elementStyleX;
+            sortingY = elementStyleY;
+            potentialMatches = candidates.filter((c) => {
+                const verticalMatch = Math.abs(elementStyleY - c.y) <= yTolerance;
+                const horizontalMatch = c.width !== undefined && c.width > 0
+                    ? elementStyleX >= Math.min(c.x, c.x + c.width) - 15 &&
+                        elementStyleX <= Math.max(c.x, c.x + c.width) + 15
+                    : Math.abs(elementStyleX - c.x) <= xTolerance;
+                return verticalMatch && horizontalMatch;
+            });
+        }
+        potentialMatches = potentialMatches
             .filter((c) => {
             if (isWhitespace)
                 return true;
@@ -803,8 +827,8 @@ export class Builder {
                 this.isSubsequence(normOrig, normalizedElement));
         })
             .sort((a, b) => {
-            const aDist = Math.sqrt(Math.pow(elementX - a.x, 2) + Math.pow(elementY - a.y, 2));
-            const bDist = Math.sqrt(Math.pow(elementX - b.x, 2) + Math.pow(elementY - b.y, 2));
+            const aDist = Math.sqrt(Math.pow(sortingX - a.x, 2) + Math.pow(sortingY - a.y, 2));
+            const bDist = Math.sqrt(Math.pow(sortingX - b.x, 2) + Math.pow(sortingY - b.y, 2));
             return aDist - bDist;
         });
         if (potentialMatches.length === 0)
@@ -988,11 +1012,19 @@ export class Builder {
                 ...this.elems.querySelectorAll(`text${element}, ${element} text`),
             ].filter((value, index, self) => index === self.findIndex((t) => value.isEqualNode(t)));
             for (const exist of exists) {
-                const transform = String(exist.getAttribute('transform'))
-                    .replace('matrix(', '')
-                    .replace(')', '')
-                    .split(',')
-                    .map((x) => Number(x));
+                const transformStr = exist.getAttribute('transform');
+                let transform = [1, 0, 0, 1, 0, 0];
+                if (transformStr !== null && transformStr.trim().length > 0) {
+                    const matched = /matrix\s*\(([^)]+)\)/i.exec(transformStr);
+                    const rawValues = matched ? matched[1] : transformStr;
+                    const parsed = rawValues
+                        .split(/[\s,]+/)
+                        .filter((x) => x.trim() !== '')
+                        .map((x) => Number(x));
+                    if (parsed.length === 6 && parsed.every((x) => !isNaN(x))) {
+                        transform = parsed;
+                    }
+                }
                 const bbox = exist.getBBox();
                 const ctm = exist.getCTM();
                 const x = (ctm ? bbox.x * ctm.a + bbox.y * ctm.c + ctm.e : bbox.x) - viewBox[0];
@@ -1000,6 +1032,7 @@ export class Builder {
                     viewBox[1];
                 const width = ctm ? bbox.width * Math.abs(ctm.a) : bbox.width;
                 const height = ctm ? bbox.height * Math.abs(ctm.d) : bbox.height;
+                const ctmScale = ctm ? Math.abs(ctm.a) : Math.abs(transform[0]);
                 const textContent = String(exist.getAttribute('data-content'));
                 const normalizedTextContent = this.normalizeEllipsis(textContent);
                 textElements = [
@@ -1008,6 +1041,7 @@ export class Builder {
                         content: this.direction === Direction.Rtl
                             ? normalizedTextContent.split('').reverse().join('')
                             : normalizedTextContent,
+                        ctmScale,
                         displayLength: exist.textContent?.length ?? textContent.length,
                         style: {
                             x,
@@ -2151,28 +2185,37 @@ export class Builder {
                         content: '',
                         i: cur.originalIdx,
                         startI: cur.originalIdx,
+                        charIdx: cur.charIdx,
+                        startCharIdx: cur.charIdx,
                     });
                 else {
                     const last = acc[acc.length - 1];
-                    if (last.content === '')
+                    if (last.content === '') {
                         last.startI = cur.originalIdx;
+                        last.startCharIdx = cur.charIdx;
+                    }
                     last.content = `${last.content}${part}`.trim();
-                    if (/[\p{L}\p{N}]/u.test(part) || parts.length === 1)
+                    if (/[\p{L}\p{N}]/u.test(part) || parts.length === 1) {
                         last.i = cur.originalIdx;
+                        last.charIdx = cur.charIdx;
+                    }
                 }
             }
             return acc;
-        }, [{ content: '', i: 0, startI: 0 }]);
+        }, [{ content: '', i: 0, startI: 0, charIdx: 0, startCharIdx: 0 }]);
         const nonEmptyWords = wordMapped.filter((m) => m.content !== '');
         let totalContentChars = 0;
         for (const word of nonEmptyWords)
             totalContentChars += word.content.length;
         const ligatures = ['ffi', 'ffl', 'ff', 'fi', 'fl'];
         let ligaturesOffset = 0;
+        const multiplierScale = typeof textElement.ctmScale === 'number'
+            ? textElement.ctmScale
+            : Math.abs(textElement.transform[0]);
         for (let wi = 0; wi < nonEmptyWords.length; wi++) {
             const map = nonEmptyWords[wi];
             const nextMap = nonEmptyWords[wi + 1];
-            const startXValue = textElement.x[map.startI - ligaturesOffset];
+            const startXValue = textElement.x[map.startCharIdx - ligaturesOffset];
             let left = 0;
             if (hasLigatures) {
                 const matched = ligatures.find((lig) => map.content.includes(lig));
@@ -2180,10 +2223,7 @@ export class Builder {
                     ligaturesOffset += matched.length - 1;
             }
             if (typeof startXValue !== 'undefined') {
-                left =
-                    (startXValue / textElement.style.width) *
-                        100 *
-                        Math.abs(textElement.transform[0]);
+                left = (startXValue / textElement.style.width) * 100 * multiplierScale;
             }
             if (isNaN(left))
                 left = 0;
@@ -2194,17 +2234,16 @@ export class Builder {
             else if (wordIdx > 0 && offset > 0)
                 left -= offset;
             const endXIdx = nextMap !== undefined
-                ? nextMap.startI - ligaturesOffset
-                : map.i + (hasSpacesInX ? 1 : 0);
+                ? nextMap.startCharIdx - ligaturesOffset
+                : map.charIdx + 1 - ligaturesOffset;
             let spanWidth = 100 - left;
             const endXValue = textElement.x[endXIdx];
-            if (typeof endXValue !== 'undefined')
+            if (typeof endXValue !== 'undefined') {
                 spanWidth =
-                    (endXValue / textElement.style.width) *
-                        100 *
-                        Math.abs(textElement.transform[0]) -
+                    (endXValue / textElement.style.width) * 100 * multiplierScale -
                         previousWidth -
                         offset;
+            }
             else if (wi === nonEmptyWords.length - 1)
                 spanWidth = 100 - previousWidth - offset;
             else if (totalContentChars > 0 && nonEmptyWords.length > 0) {
@@ -2344,10 +2383,7 @@ export class Builder {
                     if (textElement.x.length === content.length &&
                         textElement.x.length !== textContent.content.length)
                         remaining = '';
-                    content =
-                        this.normalize(returnedContent).trim() === ''
-                            ? ''
-                            : returnedContent;
+                    content = returnedContent;
                     fragment.appendChild(div);
                 }
                 else if (textElementAndContent.ignore !== true) {
@@ -2799,19 +2835,48 @@ export class Builder {
             sentenceWords = sentence.split(' ').filter((w) => w.trim() !== '');
         }
         if (isPurePunctuation) {
-            word.setAttribute('data-s', String(lastAssignedSi));
-            word.setAttribute('data-w', String(lastAssignedWi));
-            const si = String(lastAssignedSi);
-            const wi = String(lastAssignedWi);
+            let finalSi = lastAssignedSi;
+            let finalWi = lastAssignedWi;
+            let finalSentence = sentence;
+            let finalSentenceWords = sentenceWords;
+            let finalSentenceIndex = sentenceIndex;
+            let finalSentenceWordsIndex = sentenceWordsIndex;
+            let finalRest = rest;
+            if (sentence.trim() === '' && sentenceIndex + 1 < sentences.length) {
+                finalSentenceIndex++;
+                finalSentenceWordsIndex = 0;
+                finalSentence = this.normalize(sentences[finalSentenceIndex], false);
+                if (rest.length > 0) {
+                    const trimmedSentence = finalSentence.trimStart();
+                    const restIdx = trimmedSentence.startsWith(rest)
+                        ? finalSentence.length - trimmedSentence.length
+                        : -1;
+                    finalSentence =
+                        restIdx > -1
+                            ? finalSentence.slice(0, restIdx) +
+                                finalSentence.slice(restIdx + rest.length)
+                            : finalSentence;
+                    finalRest = '';
+                }
+                finalSentenceWords = finalSentence
+                    .split(' ')
+                    .filter((w) => w.trim() !== '');
+                finalSi = finalSentenceIndex;
+                finalWi = 0;
+            }
+            word.setAttribute('data-s', String(finalSi));
+            word.setAttribute('data-w', String(finalWi));
+            const si = String(finalSi);
+            const wi = String(finalWi);
             return {
                 state: {
-                    sentence,
-                    sentenceWords,
-                    sentenceIndex,
-                    sentenceWordsIndex,
-                    rest,
-                    lastAssignedSi,
-                    lastAssignedWi,
+                    sentence: finalSentence,
+                    sentenceWords: finalSentenceWords,
+                    sentenceIndex: finalSentenceIndex,
+                    sentenceWordsIndex: finalSentenceWordsIndex,
+                    rest: finalRest,
+                    lastAssignedSi: finalSi,
+                    lastAssignedWi: finalWi,
                 },
                 si,
                 wi,

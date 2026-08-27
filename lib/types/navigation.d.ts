@@ -12,20 +12,11 @@ import { Stream } from './stream.js';
 import { TextMode } from './textMode.js';
 import { ClientActionType, ServerActionType, } from './consts.js';
 export class Navigation {
-    static get and() {
-        return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-and'));
-    }
-    static get firstButton() {
-        return Readiant.root.querySelector('.rdnt__first-page');
-    }
     static get nextButton() {
         return Readiant.root.querySelector('.rdnt__navigation--next');
     }
     static get pageNumber() {
         return Readiant.root.querySelector('.rdnt__page-number');
-    }
-    static get pageNumberCurrent() {
-        return Readiant.root.querySelector('.rdnt__page-number-text__current');
     }
     static get pageNumberInput() {
         return Readiant.root.querySelector('.rdnt__page-number__input');
@@ -37,13 +28,10 @@ export class Navigation {
         return Readiant.root.querySelector('.rdnt__page-number__progress-value');
     }
     static get pageNumberTotal() {
-        return Readiant.root.querySelectorAll('.rdnt__page-number__total, .rdnt__page-number-text__total');
+        return Readiant.root.querySelector('.rdnt__page-number__total');
     }
     static get previousButton() {
         return Readiant.root.querySelector('.rdnt__navigation--prev');
-    }
-    static isOffsetPage(page) {
-        return page + this.pageOffset <= 0;
     }
     static get globalPage() {
         const pageCountIndex = this.pageCounts.findIndex((pageCount) => pageCount.index === this.chapterIndex);
@@ -58,29 +46,10 @@ export class Navigation {
         return Math.max(...this.pages);
     }
     static async register(page, pages, pageCounts, indexes, direction, offset, spread) {
-        this.handlers.clear();
-        this.textHandlers.clear();
-        this.cachedPages = new Set();
-        this.missingPages = new Set();
-        this.lazyLoader = undefined;
-        this.previousLog = undefined;
-        this.renderEpoch = 0;
-        this.hasRegistered = false;
-        this.previousAction = undefined;
-        this.currentPage = 1;
-        this.animationPages = [{ page: 2, position: PagePosition.Right }];
-        this.currentPages = [{ page: 1, position: PagePosition.Right }];
         if (Readiant.type === ContentType.HTML)
             this.registerHTML(page, pageCounts, indexes, direction);
         else
             await this.registerSVG(page, pages, pageCounts, direction, offset, spread);
-        this.firstButton?.addEventListener('click', (event) => {
-            event.preventDefault();
-            if (Readiant.type === ContentType.SVG)
-                this.gotoFirstPageSVG();
-            else
-                this.gotoPageDirectly(1);
-        });
         this.nextButton?.addEventListener('click', (event) => {
             event.preventDefault();
             this.onRightPressed();
@@ -92,23 +61,38 @@ export class Navigation {
             event.preventDefault();
             this.onLeftPressed();
         });
-        if (!Storage.data.hover) {
-            this.nextButton?.classList.add(CLASS_HIDDEN);
-            this.previousButton?.classList.add(CLASS_HIDDEN);
+        if (Storage.data.touch || Storage.data.pointer) {
+            if (!Storage.data.hover) {
+                this.nextButton?.classList.add(CLASS_HIDDEN);
+                this.previousButton?.classList.add(CLASS_HIDDEN);
+            }
+            if (Storage.data.pointer) {
+                Readiant.root.addEventListener('pointerdown', (event) => {
+                    this.touchHandler(TouchHandlerAction.Start, event);
+                }, { passive: true });
+                Readiant.root.addEventListener('pointermove', (event) => {
+                    this.touchHandler(TouchHandlerAction.Move, event);
+                }, { passive: true });
+                Readiant.root.addEventListener('pointerup', (event) => {
+                    this.touchHandler(TouchHandlerAction.End, event);
+                }, { passive: true });
+            }
+            if (Storage.data.touch) {
+                Readiant.root.addEventListener('touchcancel', (event) => {
+                    this.touchHandler(TouchHandlerAction.End, event);
+                }, { passive: true });
+                Readiant.root.addEventListener('touchend', (event) => {
+                    this.touchHandler(TouchHandlerAction.End, event);
+                }, { passive: true });
+                Readiant.root.addEventListener('touchmove', (event) => {
+                    this.touchHandler(TouchHandlerAction.Move, event);
+                }, { passive: true });
+                Readiant.root.addEventListener('touchstart', (event) => {
+                    this.touchHandler(TouchHandlerAction.Start, event);
+                }, { passive: true });
+            }
         }
-        Readiant.root.addEventListener('pointerdown', (event) => {
-            this.touchHandler(TouchHandlerAction.Start, event);
-        }, { passive: true });
-        Readiant.root.addEventListener('pointermove', (event) => {
-            this.touchHandler(TouchHandlerAction.Move, event);
-        }, { passive: true });
-        Readiant.root.addEventListener('pointerup', (event) => {
-            this.touchHandler(TouchHandlerAction.End, event);
-        }, { passive: true });
-        Readiant.root.addEventListener('pointercancel', (event) => {
-            this.touchHandler(TouchHandlerAction.End, event);
-        }, { passive: true });
-        if (Storage.data.hover)
+        else
             Readiant.root.addEventListener('keydown', (event) => {
                 this.shortcut(event);
             });
@@ -151,8 +135,8 @@ export class Navigation {
             chapterIndex: this.chapterIndex,
         });
         this.pageNumberInput?.setAttribute('max', String(this.maxPage));
-        for (const pageNumberTotal of this.pageNumberTotal)
-            pageNumberTotal.innerHTML = `/ ${String(this.maxPage)}`;
+        if (this.pageNumberTotal)
+            this.pageNumberTotal.innerHTML = `/ ${String(this.maxPage)}`;
         this.pageNumberProgress?.classList.remove(CLASS_HIDDEN);
         this.htmlProgress();
         Readiant.windowContext.addEventListener('beforeunload', () => {
@@ -203,25 +187,20 @@ export class Navigation {
         if (max !== this.pages.length)
             this.pageNumber?.classList.add(CLASS_HIDDEN);
         else {
-            for (const pageNumberTotal of this.pageNumberTotal)
-                pageNumberTotal.innerHTML = `/ ${String(max + this.pageOffset)}`;
-            if (this.pageNumberInput !== null)
-                this.pageNumberInput.setAttribute('max', String(max + this.pageOffset));
-            const nonOffsetPages = this.currentPages.filter((p) => !this.isOffsetPage(p.page));
-            if (nonOffsetPages.length === 0 ||
-                nonOffsetPages[0].page + this.pageOffset <= 1) {
-                this.pageNumber?.classList.add(CLASS_HIDDEN);
-                for (const el of this.pageNumberTotal)
-                    el.classList.add(CLASS_HIDDEN);
+            let currentPage = this.currentPage;
+            if (this.direction === Direction.Rtl) {
+                const key = this.pages.indexOf(this.currentPage);
+                const pages = [...this.pages].reverse();
+                currentPage = pages[key];
             }
-            else {
-                if (this.pageNumberCurrent !== null)
-                    this.pageNumberCurrent.innerHTML =
-                        nonOffsetPages.length === 1
-                            ? String(nonOffsetPages[0].page + this.pageOffset)
-                            : `${String(nonOffsetPages[0].page + this.pageOffset)} ${this.and} ${String(nonOffsetPages[nonOffsetPages.length - 1].page + this.pageOffset)}`;
-                if (this.pageNumberInput !== null)
-                    this.pageNumberInput.value = String(nonOffsetPages[0].page + this.pageOffset);
+            if (this.pageNumberTotal !== null)
+                this.pageNumberTotal.innerHTML = `/ ${String(max + this.pageOffset)}`;
+            if (this.pageNumberInput !== null) {
+                this.pageNumberInput.setAttribute('max', String(max + this.pageOffset));
+                this.pageNumberInput.value =
+                    currentPage + this.pageOffset >= 1
+                        ? String(currentPage + this.pageOffset)
+                        : '';
             }
         }
         Readiant.windowContext.addEventListener('beforeunload', () => {
@@ -251,16 +230,9 @@ export class Navigation {
         return undefined;
     }
     static isAtLastPage() {
-        if (Readiant.type !== ContentType.SVG)
-            return false;
-        if (this.numPages === this.currentPage)
-            return true;
-        if (Orientation.mode === OrientationMode.Landscape) {
-            const maxPage = this.numPages;
-            const hasLastPage = this.currentPages.some((p) => p.page === maxPage);
-            return hasLastPage;
-        }
-        return false;
+        return Readiant.type === ContentType.SVG
+            ? this.numPages === this.currentPage
+            : false;
     }
     static isInRangeHTML(pages) {
         const minPage = this.pageCounts[0].pages[0];
@@ -385,21 +357,16 @@ export class Navigation {
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
         all.sort((a, b) => Math.abs(this.currentPage - a) - Math.abs(this.currentPage - b));
         const pages = all.slice(0, this.cacheSize);
-        const isPageCached = isOffline
-            ? (page) => Storage.hasOfflinePage(page)
-            : (page) => Storage.hasPage(page);
-        this.cachedPages = new Set(pages.filter((page) => isPageCached(page)));
-        this.missingPages = new Set(pages.filter((page) => !isPageCached(page)));
+        this.cachedPages = new Set(pages.filter((page) => Storage.hasPage(page)));
+        this.missingPages = new Set(pages.filter((page) => !Storage.hasPage(page)));
         if (this.missingPages.size > 0)
             await this.requestPages(typeof exclude === 'undefined'
                 ? [...this.missingPages]
                 : [...this.missingPages].filter((page) => !exclude.includes(page)));
-        const epoch = this.renderEpoch;
-        const pagesToRender = [...this.animationPages, ...this.currentPages];
-        for (const page of pagesToRender) {
+        for (const page of [...this.animationPages, ...this.currentPages]) {
             if (Storage.hasPage(page.page)) {
                 const { blueprint, viewBox } = Storage.getPage(page.page);
-                Builder.animation(page.position, blueprint, viewBox, typeof this.isAnimationPage(page.page) !== 'undefined', epoch).catch((e) => {
+                Builder.animation(page.position, blueprint, viewBox, typeof this.isAnimationPage(page.page) !== 'undefined').catch((e) => {
                     throw e;
                 });
             }
@@ -545,7 +512,7 @@ export class Navigation {
     }
     static gotoPageDirectlySVG(event) {
         let page = typeof event === 'number'
-            ? event
+            ? event - this.pageOffset
             : Number(event.currentTarget.value) -
                 this.pageOffset;
         if (this.direction === Direction.Rtl) {
@@ -554,33 +521,6 @@ export class Navigation {
             page = this.pages[key];
         }
         this.gotoPage(page, PageChangeType.Other);
-    }
-    static gotoFirstPageSVG() {
-        let firstPage = this.pages[0];
-        if (!this.isInRangeSVG(firstPage)) {
-            const validPage = this.pages.find((page) => this.isInRangeSVG(page));
-            if (typeof validPage === 'undefined') {
-                Readiant.errorHandler(new Error('No valid pages available for reset'));
-                return;
-            }
-            firstPage = validPage;
-        }
-        const previousPage = this.currentPage;
-        this.currentPage = firstPage;
-        this.currentPages = this.generatePagesToRender();
-        if (this.currentPages.length === 0) {
-            this.currentPage = previousPage;
-            Readiant.errorHandler(new Error(`Cannot render first page ${String(firstPage)} at current orientation`));
-            return;
-        }
-        this.renderEpoch++;
-        this.timestamp = new Date();
-        this.logPageChange(PageChangeType.Other);
-        this.notify(this.currentPage, previousPage);
-        this.preparePages(this.currentPages).catch((e) => {
-            throw e;
-        });
-        this.updatePageNumberDisplay();
     }
     static gotoPageHTML(page, type) {
         this.previousAction = undefined;
@@ -665,8 +605,6 @@ export class Navigation {
         const previousPage = this.currentPage;
         if (this.isPageVisible(page)) {
             this.currentPage = page;
-            this.currentPages = this.generatePagesToRender();
-            this.timestamp = new Date();
             this.notify(this.currentPage, previousPage);
         }
         else {
@@ -675,7 +613,6 @@ export class Navigation {
             if (this.currentPages.length === 0)
                 this.currentPage = previousPage;
             else {
-                this.renderEpoch++;
                 this.logPageChange(type);
                 this.notify(this.currentPage, previousPage);
                 this.preparePages(this.currentPages).catch((e) => {
@@ -683,7 +620,18 @@ export class Navigation {
                 });
             }
         }
-        this.updatePageNumberDisplay();
+        let currentPage = this.currentPage;
+        if (this.direction === Direction.Rtl) {
+            const key = this.pages.indexOf(this.currentPage);
+            const pages = [...this.pages].reverse();
+            currentPage = pages[key];
+        }
+        if (this.pageNumberInput !== null) {
+            this.pageNumberInput.value =
+                currentPage + this.pageOffset >= 1
+                    ? String(currentPage + this.pageOffset)
+                    : '';
+        }
     }
     static gotoSearchResult(chapterIndex, query) {
         Stream.send({ type: ClientActionType.ChapterRequest, chapterIndex });
@@ -825,25 +773,21 @@ export class Navigation {
             : Builder.currentPage + 2, PageChangeType.Next);
     }
     static nextPageSVG() {
-        if (this.isAtLastPage())
-            return;
         let page = this.currentPage;
+        const lastPage = this.pages[this.pages.length - 1];
         const index = this.pages.indexOf(page);
-        if (Orientation.mode === OrientationMode.Portrait) {
-            const nextIndex = Math.min(index + 1, this.pages.length - 1);
-            page = this.pages[nextIndex];
-        }
-        else {
-            const offset = this.currentPage % 2 === 0 || this.spread === true ? 2 : 1;
-            const nextIndex = Math.min(index + offset, this.pages.length - 1);
-            page = this.pages[nextIndex];
-        }
-        if (page === this.currentPage)
-            return;
-        if (Orientation.mode !== OrientationMode.Portrait &&
-            !this.isPageVisible(page))
+        if (Audio.playingState === AudioPlayingState.Paused ||
+            Audio.playingState === AudioPlayingState.Playing ||
+            Orientation.mode === OrientationMode.Portrait)
+            page = this.pages[index + 1];
+        else
+            page =
+                this.pages[index + (this.currentPage % 2 === 0 || this.spread === true ? 2 : 1)];
+        if (Orientation.mode !== OrientationMode.Portrait)
             Builder.animateRight();
-        this.gotoPage(page, PageChangeType.Next);
+        page = Math.min(this.numPages, typeof page !== 'undefined' ? page : lastPage);
+        if (page !== this.currentPage)
+            this.gotoPage(page, PageChangeType.Next);
     }
     static notify(newPage, currentPage) {
         for (const handler of this.handlers) {
@@ -865,7 +809,6 @@ export class Navigation {
     static onBlueprint(data) {
         const isActivePage = this.isActivePage(data.pageId);
         const isAnimationPage = this.isAnimationPage(data.pageId);
-        const epoch = this.renderEpoch;
         Storage.storePage(data.pageId, {
             blueprint: Builder.pageGroup(data.payload.blueprint),
             elements: data.payload.blueprint,
@@ -883,12 +826,12 @@ export class Navigation {
             Builder.svg(data.pageId, isActivePage).catch((e) => {
                 throw e;
             });
-            Builder.animation(isActivePage, Builder.pageGroup(data.payload.blueprint), data.payload.viewBox, false, epoch).catch((e) => {
+            Builder.animation(isActivePage, Builder.pageGroup(data.payload.blueprint), data.payload.viewBox, false).catch((e) => {
                 throw e;
             });
         }
         else if (typeof isAnimationPage !== 'undefined')
-            Builder.animation(isAnimationPage, Builder.pageGroup(data.payload.blueprint), data.payload.viewBox, true, epoch).catch((e) => {
+            Builder.animation(isAnimationPage, Builder.pageGroup(data.payload.blueprint), data.payload.viewBox, true).catch((e) => {
                 throw e;
             });
     }
@@ -942,6 +885,12 @@ export class Navigation {
             content: textContent,
             sentences: data.sentences,
         });
+        if (TextMode.level !== 1 &&
+            Orientation.mode === OrientationMode.Portrait &&
+            data.page === this.currentPage)
+            Builder.plainText().catch((e) => {
+                throw e;
+            });
         const currentPage = this.currentPages.find((currentPage) => currentPage.page === data.page);
         if (typeof currentPage !== 'undefined')
             this.notifyText(currentPage);
@@ -950,16 +899,9 @@ export class Navigation {
         if (typeof orientationChange !== 'undefined' &&
             orientationChange === OrientationMode.Portrait) {
             Builder.hide(PagePosition.Right);
+            return;
         }
-        if (TextMode.level === 2) {
-            const startLeft = requests.some((val) => val.position === PagePosition.Left);
-            if (startLeft)
-                Builder.start(PagePosition.Left);
-            else
-                Builder.hide(PagePosition.Left);
-            Builder.hide(PagePosition.Right);
-        }
-        else if (TextMode.level !== 3) {
+        if (TextMode.level !== 3) {
             const startLeft = requests.some((val) => val.position === PagePosition.Left);
             const startRight = requests.some((val) => val.position === PagePosition.Right);
             if (startLeft)
@@ -1000,29 +942,21 @@ export class Navigation {
             : Builder.currentPage - 2, PageChangeType.Previous);
     }
     static previousPageSVG() {
+        const firstPage = Math.min(...this.pages);
         let page = this.currentPage;
         const index = this.pages.indexOf(page);
-        if (Orientation.mode === OrientationMode.Portrait) {
-            const prevIndex = Math.max(index - 1, 0);
-            page = this.pages[prevIndex];
-        }
+        if (Orientation.mode === OrientationMode.Portrait)
+            page = this.pages[index - 1];
         else {
-            const offset = this.currentPage % 2 === 0 || this.spread === true ? 2 : 3;
-            const prevIndex = Math.max(index - offset, 0);
-            page = this.pages[prevIndex];
-        }
-        if (page === this.currentPage)
-            return;
-        if (Orientation.mode !== OrientationMode.Portrait &&
-            !this.isPageVisible(page))
             Builder.animateLeft();
-        this.gotoPage(page, PageChangeType.Previous);
+            page =
+                this.pages[index - (this.currentPage % 2 === 0 || this.spread === true ? 2 : 3)];
+        }
+        page = Math.max(firstPage, typeof page !== 'undefined' ? page : this.pages[0]);
+        if (page !== this.currentPage)
+            this.gotoPage(page, PageChangeType.Previous);
     }
     static async requestPages(pages) {
-        if (isOffline && typeof this.lazyLoader !== 'undefined') {
-            await this.lazyLoader(pages);
-            return;
-        }
         Stream.send({
             type: ClientActionType.BlueprintRequest,
             pages,
@@ -1050,19 +984,12 @@ export class Navigation {
             id: href.split('#')[1],
         };
     }
-    static setLazyLoader(loader) {
-        this.lazyLoader = loader;
-    }
     static shortcut(event) {
-        const origin = event.composedPath()[0];
-        if (typeof origin !== 'undefined' &&
-            (origin.tagName === 'INPUT' ||
-                origin.tagName === 'TEXTAREA' ||
-                origin.tagName === 'SELECT' ||
-                origin.tagName === 'BUTTON' ||
-                origin.isContentEditable ||
-                origin.getAttribute('role') === 'button' ||
-                origin.tagName.includes('-')))
+        if (event.target !== null &&
+            (event.target.nodeName ===
+                'INPUT' ||
+                event.target.nodeName ===
+                    'TEXTAREA'))
             return;
         let code;
         if (typeof event.key !== 'undefined')
@@ -1099,7 +1026,8 @@ export class Navigation {
                 .querySelector('.rdnt__markings')
                 .classList.contains(CLASS_ACTIVE)
             : false;
-        if (event.pointerType === 'mouse' || isAnnotationsActive)
+        if (('pointerType' in event && event.pointerType === 'mouse') ||
+            isAnnotationsActive)
             return;
         switch (action) {
             case TouchHandlerAction.Start:
@@ -1116,19 +1044,33 @@ export class Navigation {
     static touchStart(event) {
         this.touch = {
             active: true,
-            currentX: event.clientX,
-            currentY: event.clientY,
+            currentX: 'changedTouches' in event
+                ? event.changedTouches[0].clientX
+                : event.clientX,
+            currentY: 'changedTouches' in event
+                ? event.changedTouches[0].clientY
+                : event.clientY,
             length: 0,
-            startX: event.clientX,
-            startY: event.clientY,
-            touches: 1,
+            startX: 'changedTouches' in event
+                ? event.changedTouches[0].clientX
+                : event.clientX,
+            startY: 'changedTouches' in event
+                ? event.changedTouches[0].clientY
+                : event.clientY,
+            touches: 'changedTouches' in event ? event.changedTouches.length : 1,
         };
     }
     static touchMove(event) {
         if (typeof this.touch === 'undefined')
             return;
-        this.touch.currentX = event.clientX;
-        this.touch.currentY = event.clientY;
+        this.touch.currentX =
+            'changedTouches' in event
+                ? event.changedTouches[0].clientX
+                : event.clientX;
+        this.touch.currentY =
+            'changedTouches' in event
+                ? event.changedTouches[0].clientY
+                : event.clientY;
         this.touch.length = Math.round(Math.sqrt(Math.pow(this.touch.currentX - this.touch.startX, 2)));
     }
     static touchDirection() {
@@ -1170,38 +1112,11 @@ export class Navigation {
         element.innerHTML = string;
         return element.innerText;
     }
-    static updatePageNumberDisplay() {
-        if (this.numPages === this.pages.length) {
-            const nonOffsetPages = this.currentPages.filter((p) => !this.isOffsetPage(p.page));
-            if (nonOffsetPages.length === 0 ||
-                nonOffsetPages[0].page + this.pageOffset <= 1) {
-                this.pageNumber?.classList.add(CLASS_HIDDEN);
-                this.pageNumberCurrent?.classList.add(CLASS_HIDDEN);
-                for (const el of this.pageNumberTotal)
-                    el.classList.add(CLASS_HIDDEN);
-            }
-            else {
-                this.pageNumber?.classList.remove(CLASS_HIDDEN);
-                this.pageNumberCurrent?.classList.remove(CLASS_HIDDEN);
-                for (const el of this.pageNumberTotal) {
-                    el.classList.remove(CLASS_HIDDEN);
-                }
-                if (this.pageNumberCurrent !== null)
-                    this.pageNumberCurrent.innerHTML =
-                        nonOffsetPages.length === 1
-                            ? String(nonOffsetPages[0].page + this.pageOffset)
-                            : `${String(nonOffsetPages[0].page + this.pageOffset)} ${this.and} ${String(nonOffsetPages[nonOffsetPages.length - 1].page + this.pageOffset)}`;
-                if (this.pageNumberInput !== null)
-                    this.pageNumberInput.value = String(nonOffsetPages[0].page + this.pageOffset);
-            }
-        }
-    }
 }
 Navigation.TOUCH_THRESHOLD = 50;
 Navigation.cachedPages = new Set();
 Navigation.maxPage = 0;
 Navigation.missingPages = new Set();
-Navigation.renderEpoch = 0;
 Navigation.handlers = new Set();
 Navigation.textHandlers = new Map();
 Navigation.animationPages = [
