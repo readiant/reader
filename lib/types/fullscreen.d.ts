@@ -20,6 +20,7 @@ export class Fullscreen {
         return Readiant.root.querySelector('.rdnt__fullscreen-toggle');
     }
     static register() {
+        this.active = false;
         if (!fullscreen)
             return;
         for (const button of this.buttons)
@@ -36,6 +37,10 @@ export class Fullscreen {
             });
         });
         this.toggleButton?.classList.remove(CLASS_HIDDEN);
+        this.toggleButton?.setAttribute('aria-pressed', 'false');
+        const onLabel = this.toggleButton?.dataset.labelOn;
+        if (typeof onLabel !== 'undefined')
+            this.toggleButton?.setAttribute('aria-label', onLabel);
         this.enableIcon?.classList.remove(CLASS_HIDDEN);
         Readiant.root.addEventListener('fullscreenchange', () => this.detect());
     }
@@ -62,8 +67,11 @@ export class Fullscreen {
         }
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-fullscreen') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-fullscreen') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         if (this.current !== null)
             this.current.textContent = title;
@@ -134,6 +142,12 @@ export class Fullscreen {
                 this.request();
         }
         this.active = !this.active;
+        this.toggleButton?.setAttribute('aria-pressed', String(this.active));
+        const label = this.active
+            ? this.toggleButton?.dataset.labelOff
+            : this.toggleButton?.dataset.labelOn;
+        if (typeof label !== 'undefined')
+            this.toggleButton?.setAttribute('aria-label', label);
         if (Readiant.preview) {
             Readiant.documentContext.body.classList.toggle(CLASS_PREVIEW);
         }

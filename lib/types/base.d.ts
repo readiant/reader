@@ -1,10 +1,25 @@
+import { Audio } from './audio.js';
+import { Bar } from './bar.js';
+import { Colorblind } from './colorblind.js';
+import { registerComponentDispatcher } from './eventLogger.js';
+import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
+import { ImageQuality } from './imageQuality.js';
+import { LineHighlighter } from './lineHighlighter.js';
 import { Navigation } from './navigation.js';
+import { Orientation } from './orientation.js';
 import { Readiant } from './readiant.js';
 import { ScreenMode } from './screenMode.js';
+import { TextMode } from './textMode.js';
 import { Zoom } from './zoom.js';
+import { locales } from './localeDefaults.js';
 import { template } from './template.js';
 import { styles } from './styles.js';
+function applyTranslations(tmpl, translations) {
+    const merged = { ...(locales.en ?? {}), ...translations };
+    return tmpl.replace(/\{\{([a-zA-Z][a-zA-Z0-9]*)\}\}/g, (_match, key) => merged[key] ?? '');
+}
+const customElementTag = 'readiant-reader';
 const initializedElements = new WeakSet();
 class ReadiantElement extends HTMLElement {
     static get observedAttributes() {
@@ -17,8 +32,10 @@ class ReadiantElement extends HTMLElement {
             'document-id',
             'font',
             'image-quality-level',
+            'lang',
             'letter-spacing',
             'line-height',
+            'line-highlighter-width',
             'orientation',
             'page',
             'playback-rate',
@@ -27,20 +44,114 @@ class ReadiantElement extends HTMLElement {
             'subtitle-font-size',
             'subtitle-level',
             'text-mode-level',
+            'translations',
             'url',
             'use-signed-urls',
             'word-spacing',
             'zoom-level',
         ];
     }
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name === 'disable' ||
+            name === 'concurrency-limit' ||
+            name === 'use-signed-urls' ||
+            name === 'translations' ||
+            name === 'lang')
+            return;
+        if (name === 'document-id' || name === 'url') {
+            if (this.shadowRoot && newValue !== null) {
+                this.reload().catch((error) => {
+                    console.error('[Readiant] Reload error:', error);
+                });
+            }
+            return;
+        }
+        if (!this.isLoaded || newValue === null)
+            return;
+        this.setContext();
+        switch (name) {
+            case 'audio-highlighting-level':
+                Audio.setLineHighlighterType(Number(newValue));
+                break;
+            case 'color-blind-filter':
+                Colorblind.change(newValue);
+                break;
+            case 'countdown-level':
+                Audio.countdownType(Number(newValue));
+                break;
+            case 'font':
+                Fonts.change(newValue);
+                break;
+            case 'image-quality-level':
+                ImageQuality.change(Number(newValue));
+                break;
+            case 'letter-spacing':
+                Fonts.letterSpacing(Number(newValue));
+                break;
+            case 'line-height':
+                Fonts.lineHeight(Number(newValue));
+                break;
+            case 'line-highlighter-width':
+                LineHighlighter.changeWidth(Number(newValue));
+                break;
+            case 'orientation':
+                Orientation.change(newValue === 'portrait' ? 2 : 1);
+                break;
+            case 'page':
+                Navigation.gotoPageDirectly(Number(newValue));
+                break;
+            case 'playback-rate':
+                Audio.setPlaybackRate(Number(newValue));
+                break;
+            case 'read-stop-level':
+                Bar.changeReadStop(Number(newValue));
+                break;
+            case 'screen-mode-level':
+                ScreenMode.change(Number(newValue));
+                break;
+            case 'subtitle-font-size':
+                Bar.fontSizeSubtitles(Number(newValue));
+                break;
+            case 'subtitle-level':
+                Audio.setSubtitlesType(Number(newValue));
+                break;
+            case 'text-mode-level':
+                TextMode.change(Number(newValue));
+                break;
+            case 'word-spacing':
+                Fonts.wordSpacing(Number(newValue));
+                break;
+            case 'zoom-level':
+                Zoom.change(Number(newValue));
+                break;
+        }
+    }
     connectedCallback() {
         if (initializedElements.has(this))
             return;
         initializedElements.add(this);
         ReadiantElement.instance = this;
+        registerComponentDispatcher((type, detail) => {
+            ReadiantElement.dispatchEvent(type, detail);
+        });
         this.initialize().catch((error) => {
             console.error('[Readiant] Initialization error:', error);
         });
+    }
+    getTemplate() {
+        const lang = this.getAttribute('lang');
+        const translationsAttr = this.getAttribute('translations');
+        const baseLocale = lang !== null ? (locales[lang] ?? locales.en ?? {}) : (locales.en ?? {});
+        let overrides = {};
+        if (translationsAttr !== null) {
+            try {
+                overrides = JSON.parse(translationsAttr);
+            }
+            catch {
+                // invalid JSON — ignore
+            }
+        }
+        return applyTranslations(template, { ...baseLocale, ...overrides });
     }
     async initialize() {
         try {
@@ -51,14 +162,21 @@ class ReadiantElement extends HTMLElement {
                 const sheet = new CSSStyleSheet();
                 await sheet.replace(styles);
                 shadow.adoptedStyleSheets = [sheet];
-                const parsedDoc = new DOMParser().parseFromString(template, 'text/html');
-                shadow.appendChild(parsedDoc.body.firstElementChild ?? parsedDoc.body);
+                const parsedDoc = new DOMParser().parseFromString(this.getTemplate(), 'text/html');
+                const container = parsedDoc.body.firstElementChild ?? parsedDoc.body;
+                const langAttr = this.getAttribute('lang');
+                if (langAttr !== null && container instanceof HTMLElement)
+                    container.setAttribute('lang', langAttr);
+                shadow.appendChild(container);
                 const documentId = this.getAttribute('document-id');
                 const url = this.getAttribute('url');
                 if (documentId !== null || url !== null) {
                     await new Promise((resolve) => window.requestAnimationFrame(resolve));
+                    if (!this.isConnected)
+                        return;
                     const { Readiant } = await import('./readiant.js');
-                    new Readiant(shadow);
+                    const instance = new Readiant(shadow);
+                    await instance.getInitializationPromise();
                 }
             }
             catch (error) {
@@ -71,9 +189,43 @@ class ReadiantElement extends HTMLElement {
         }
     }
     disconnectedCallback() {
-        ReadiantElement.instance = null;
-        if (this.shadowRoot)
+        this.pauseAudio();
+        if (ReadiantElement.instance === this)
+            ReadiantElement.instance = null;
+        if (this.shadowRoot) {
+            Readiant.getInstance(this.shadowRoot)?.abort();
             Readiant.removeInstance(this.shadowRoot);
+        }
+    }
+    async reload() {
+        try {
+            const shadow = this.shadowRoot;
+            if (!shadow)
+                return;
+            Readiant.removeInstance(shadow);
+            while (shadow.firstChild)
+                shadow.removeChild(shadow.firstChild);
+            const sheet = new CSSStyleSheet();
+            await sheet.replace(styles);
+            shadow.adoptedStyleSheets = [sheet];
+            const parsedDoc = new DOMParser().parseFromString(this.getTemplate(), 'text/html');
+            const container = parsedDoc.body.firstElementChild ?? parsedDoc.body;
+            const langAttr = this.getAttribute('lang');
+            if (langAttr !== null && container instanceof HTMLElement)
+                container.setAttribute('lang', langAttr);
+            shadow.appendChild(container);
+            const documentId = this.getAttribute('document-id');
+            const url = this.getAttribute('url');
+            if (documentId !== null || url !== null) {
+                await new Promise((resolve) => window.requestAnimationFrame(resolve));
+                const { Readiant: ReadiantClass } = await import('./readiant.js');
+                const instance = new ReadiantClass(shadow);
+                await instance.getInitializationPromise();
+            }
+        }
+        catch (error) {
+            Readiant.errorHandler(error);
+        }
     }
     setContext() {
         if (this.shadowRoot) {
@@ -127,6 +279,12 @@ class ReadiantElement extends HTMLElement {
         this.setContext();
         await Fullscreen.toggle();
     }
+    pauseAudio() {
+        this.setContext();
+        Audio.pause().catch((e) => {
+            throw e;
+        });
+    }
     print() {
         this.setContext();
         Readiant.windowContext.print();
@@ -140,5 +298,14 @@ class ReadiantElement extends HTMLElement {
     }
 }
 ReadiantElement.instance = null;
-customElements.define('readiant-reader', ReadiantElement);
+if (!customElements.get(customElementTag)) {
+    try {
+        customElements.define(customElementTag, ReadiantElement);
+    }
+    catch (e) {
+        if (!(e instanceof DOMException))
+            throw e;
+        // Already registered by a concurrent bundle — safe to ignore.
+    }
+}
 export { ReadiantElement };

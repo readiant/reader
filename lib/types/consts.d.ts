@@ -76,6 +76,7 @@ export var Container;
     Container["ScreenSettings"] = "rdnt__screen-settings";
     Container["Search"] = "rdnt__search";
     Container["Settings"] = "rdnt__settings";
+    Container["TranslationSettings"] = "rdnt__translation-settings";
 })(Container || (Container = {}));
 export var Fn;
 (function (Fn) {

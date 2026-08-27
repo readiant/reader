@@ -42,8 +42,11 @@ export class ImageQuality {
         }
         for (const button of this.buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-image-quality') === String(value))
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-image-quality') === String(value)) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         let connection;
         switch (value) {

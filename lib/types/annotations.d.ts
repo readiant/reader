@@ -5,7 +5,6 @@ import { LogType } from './log.js';
 import { Navigation } from './navigation.js';
 import { Orientation } from './orientation.js';
 import { Readiant } from './readiant.js';
-import { Storage } from './storage.js';
 import { Zoom } from './zoom.js';
 export class Annotations {
     static isAnnotation(v) {
@@ -115,11 +114,15 @@ export class Annotations {
         this.toggle();
     }
     static register() {
+        this.annotations = {};
+        this.annotationHistory = [];
+        this.editComments = false;
+        this.editMarkings = false;
+        this.isErasing = false;
+        this.showAnnotations = false;
         const endEvent = (event) => {
-            Readiant.windowContext.removeEventListener('mouseup', endEvent);
             Readiant.windowContext.removeEventListener('pointerup', endEvent);
-            Readiant.windowContext.removeEventListener('touchcancel', endEvent);
-            Readiant.windowContext.removeEventListener('touchend', endEvent);
+            Readiant.windowContext.removeEventListener('pointercancel', endEvent);
             this.annotationHandler('end', event);
         };
         this.button?.addEventListener('click', (event) => {
@@ -166,56 +169,24 @@ export class Annotations {
                 this.changeMarkerColor(event);
             });
         this.button?.classList.remove(CLASS_HIDDEN);
-        if (Storage.data.pointer) {
-            this.annotationLeftCanvas?.addEventListener('pointerdown', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('pointerup', endEvent);
-            });
-            this.annotationLeftCanvas?.addEventListener('pointermove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-            this.annotationRightCanvas?.addEventListener('pointerdown', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('pointerup', endEvent);
-            });
-            this.annotationRightCanvas?.addEventListener('pointermove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-        }
-        else if (Storage.data.touch) {
-            this.annotationLeftCanvas?.addEventListener('touchstart', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('touchcancel', endEvent);
-                Readiant.windowContext.addEventListener('touchend', endEvent);
-            }, { passive: true });
-            this.annotationLeftCanvas?.addEventListener('touchmove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-            this.annotationRightCanvas?.addEventListener('touchstart', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('touchcancel', endEvent);
-                Readiant.windowContext.addEventListener('touchend', endEvent);
-            }, { passive: true });
-            this.annotationRightCanvas?.addEventListener('touchmove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-        }
-        else {
-            this.annotationLeftCanvas?.addEventListener('mousedown', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('mouseup', endEvent);
-            });
-            this.annotationLeftCanvas?.addEventListener('mousemove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-            this.annotationRightCanvas?.addEventListener('mousedown', (event) => {
-                this.annotationHandler('start', event);
-                Readiant.windowContext.addEventListener('mouseup', endEvent);
-            });
-            this.annotationRightCanvas?.addEventListener('mousemove', (event) => {
-                this.annotationHandler('move', event);
-            }, { passive: true });
-        }
+        this.annotationLeftCanvas?.addEventListener('pointerdown', (event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            this.annotationHandler('start', event);
+            Readiant.windowContext.addEventListener('pointerup', endEvent);
+            Readiant.windowContext.addEventListener('pointercancel', endEvent);
+        });
+        this.annotationLeftCanvas?.addEventListener('pointermove', (event) => {
+            this.annotationHandler('move', event);
+        }, { passive: true });
+        this.annotationRightCanvas?.addEventListener('pointerdown', (event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            this.annotationHandler('start', event);
+            Readiant.windowContext.addEventListener('pointerup', endEvent);
+            Readiant.windowContext.addEventListener('pointercancel', endEvent);
+        });
+        this.annotationRightCanvas?.addEventListener('pointermove', (event) => {
+            this.annotationHandler('move', event);
+        }, { passive: true });
         this.annotationLeftComments?.addEventListener('click', (event) => {
             event.preventDefault();
             this.commentHandler(event);
@@ -293,12 +264,7 @@ export class Annotations {
     }
     static annotateStart(event) {
         this.markerEvent = [];
-        const clientX = 'changedTouches' in event
-            ? event.changedTouches[0].clientX
-            : event.clientX;
-        const clientY = 'changedTouches' in event
-            ? event.changedTouches[0].clientY
-            : event.clientY;
+        const { clientX, clientY } = event;
         const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__markings--left'));
         const container = isLeft
             ? this.annotationLeftContainer
@@ -314,14 +280,9 @@ export class Annotations {
         this.markerEvent.push(coordinates);
     }
     static annotateMove(event) {
-        if ('buttons' in event && event.buttons !== 1)
+        if (event.buttons !== 1)
             return;
-        const clientX = 'changedTouches' in event
-            ? event.changedTouches[0].clientX
-            : event.clientX;
-        const clientY = 'changedTouches' in event
-            ? event.changedTouches[0].clientY
-            : event.clientY;
+        const { clientX, clientY } = event;
         const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__markings--left'));
         const container = isLeft
             ? this.annotationLeftContainer
@@ -353,12 +314,7 @@ export class Annotations {
     static commentHandler(event) {
         if (!this.editComments || event.currentTarget !== event.target)
             return;
-        const clientX = 'changedTouches' in event
-            ? event.changedTouches[0].clientX
-            : event.clientX;
-        const clientY = 'changedTouches' in event
-            ? event.changedTouches[0].clientY
-            : event.clientY;
+        const { clientX, clientY } = event;
         const isLeft = [...Readiant.root.elementsFromPoint(clientX, clientY)].some((element) => element.classList.contains('rdnt__comments--left'));
         const container = isLeft
             ? this.annotationLeftContainer
@@ -391,8 +347,11 @@ export class Annotations {
         this.color = String(input.getAttribute('data-color'));
         for (const markerSizeButton of this.markerColorButtons) {
             markerSizeButton.classList.remove(CLASS_ROUND_BUTTON_ACTIVE);
-            if (markerSizeButton.getAttribute('data-color') === this.color)
+            markerSizeButton.setAttribute('aria-pressed', 'false');
+            if (markerSizeButton.getAttribute('data-color') === this.color) {
                 markerSizeButton.classList.add(CLASS_ROUND_BUTTON_ACTIVE);
+                markerSizeButton.setAttribute('aria-pressed', 'true');
+            }
         }
     }
     static changeMarkerSize(event) {
@@ -403,6 +362,10 @@ export class Annotations {
         this.annotationLeftComments?.classList.remove(CLASS_ACTIVE);
         this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
         this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+        this.commentButton?.setAttribute('aria-pressed', 'false');
+        const commentOnLabel = this.commentButton?.dataset.labelOn;
+        if (typeof commentOnLabel !== 'undefined')
+            this.commentButton?.setAttribute('aria-label', commentOnLabel);
         this.editComments = false;
     }
     static draw() {
@@ -483,12 +446,29 @@ export class Annotations {
                         event.preventDefault();
                         this.toggleComment(event);
                     });
+                    icon.setAttribute('role', 'button');
+                    icon.setAttribute('tabindex', '0');
+                    icon.setAttribute('aria-label', this.editCommentTooltip);
+                    icon.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            icon.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
+                    });
                     input.addEventListener('blur', (event) => {
                         this.saveComment(event);
                     });
                     remove.addEventListener('click', (event) => {
                         event.preventDefault();
                         this.removeComment(event);
+                    });
+                    remove.setAttribute('role', 'button');
+                    remove.setAttribute('tabindex', '0');
+                    remove.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            remove.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
                     });
                 }
                 i++;
@@ -522,6 +502,14 @@ export class Annotations {
                 const li = Readiant.documentContext.createElement('li');
                 li.setAttribute('class', 'rdnt__comments-list-item');
                 li.innerHTML = `<span class="rdnt__comments-list-item__page">${this.page} ${page}</span><span class="rdnt__sentence--comment">${annotation}</span>`;
+                li.setAttribute('tabindex', '0');
+                li.setAttribute('role', 'button');
+                li.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        Navigation.gotoPage(Number(page));
+                    }
+                });
                 li.addEventListener('click', (event) => {
                     event.preventDefault();
                     Navigation.gotoPage(Number(page));
@@ -535,6 +523,14 @@ export class Annotations {
             li.innerHTML = `<span class="rdnt__markings-list-item__page">${this.page} ${page}</span>${[...annotations]
                 .map((annotation) => `<span class="rdnt__sentence--marking" style="background-color:${annotation}"></span>`)
                 .join()}`;
+            li.setAttribute('tabindex', '0');
+            li.setAttribute('role', 'button');
+            li.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    Navigation.gotoPage(Number(page));
+                }
+            });
             li.addEventListener('click', () => {
                 Navigation.gotoPage(Number(page));
             });
@@ -628,6 +624,12 @@ export class Annotations {
         this.annotationRightContainer?.classList.toggle(CLASS_HIDDEN);
         this.showButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
         this.showAnnotations = !this.showAnnotations;
+        this.showButton?.setAttribute('aria-pressed', String(this.showAnnotations));
+        const showLabel = this.showAnnotations
+            ? this.showButton?.dataset.labelOff
+            : this.showButton?.dataset.labelOn;
+        if (typeof showLabel !== 'undefined')
+            this.showButton?.setAttribute('aria-label', showLabel);
         if (this.current !== null)
             this.current.textContent = this.showAnnotations ? this.on : this.off;
         this.draw();
@@ -661,6 +663,10 @@ export class Annotations {
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
             this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.markerButton?.setAttribute('aria-pressed', 'false');
+            const markerOnLabel1 = this.markerButton?.dataset.labelOn;
+            if (typeof markerOnLabel1 !== 'undefined')
+                this.markerButton?.setAttribute('aria-label', markerOnLabel1);
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -673,6 +679,10 @@ export class Annotations {
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
             this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.eraserButton?.setAttribute('aria-pressed', 'false');
+            const eraserOnLabel1 = this.eraserButton?.dataset.labelOn;
+            if (typeof eraserOnLabel1 !== 'undefined')
+                this.eraserButton?.setAttribute('aria-label', eraserOnLabel1);
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -684,6 +694,12 @@ export class Annotations {
         this.annotationRightComments?.classList.toggle(CLASS_ACTIVE);
         this.editComments = !this.editComments;
         this.commentButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.commentButton?.setAttribute('aria-pressed', String(this.editComments));
+        const commentLabel = this.editComments
+            ? this.commentButton?.dataset.labelOff
+            : this.commentButton?.dataset.labelOn;
+        if (typeof commentLabel !== 'undefined')
+            this.commentButton?.setAttribute('aria-label', commentLabel);
     }
     static toggleEraser() {
         if (!this.showAnnotations)
@@ -693,12 +709,20 @@ export class Annotations {
             this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
             this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.setAttribute('aria-pressed', 'false');
+            const commentOnLabel2 = this.commentButton?.dataset.labelOn;
+            if (typeof commentOnLabel2 !== 'undefined')
+                this.commentButton?.setAttribute('aria-label', commentOnLabel2);
         }
         if (this.editMarkings) {
             this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.editMarkings = false;
             this.markerButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.markerButton?.setAttribute('aria-pressed', 'false');
+            const markerOnLabel2 = this.markerButton?.dataset.labelOn;
+            if (typeof markerOnLabel2 !== 'undefined')
+                this.markerButton?.setAttribute('aria-label', markerOnLabel2);
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -710,6 +734,12 @@ export class Annotations {
         this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.isErasing = !this.isErasing;
         this.eraserButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.eraserButton?.setAttribute('aria-pressed', String(this.isErasing));
+        const eraserLabel = this.isErasing
+            ? this.eraserButton?.dataset.labelOff
+            : this.eraserButton?.dataset.labelOn;
+        if (typeof eraserLabel !== 'undefined')
+            this.eraserButton?.setAttribute('aria-label', eraserLabel);
         if (this.isErasing) {
             if (this.markerSettings !== null &&
                 this.markerSettings.classList.contains(CLASS_HIDDEN))
@@ -735,12 +765,20 @@ export class Annotations {
             this.annotationRightComments?.classList.remove(CLASS_ACTIVE);
             this.editComments = false;
             this.commentButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.commentButton?.setAttribute('aria-pressed', 'false');
+            const commentOnLabel3 = this.commentButton?.dataset.labelOn;
+            if (typeof commentOnLabel3 !== 'undefined')
+                this.commentButton?.setAttribute('aria-label', commentOnLabel3);
         }
         if (this.isErasing) {
             this.annotationLeftCanvas?.classList.remove(CLASS_ACTIVE);
             this.annotationRightCanvas?.classList.remove(CLASS_ACTIVE);
             this.isErasing = false;
             this.eraserButton?.classList.remove(CLASS_BLOCK_ACTIVE);
+            this.eraserButton?.setAttribute('aria-pressed', 'false');
+            const eraserOnLabel3 = this.eraserButton?.dataset.labelOn;
+            if (typeof eraserOnLabel3 !== 'undefined')
+                this.eraserButton?.setAttribute('aria-label', eraserOnLabel3);
             if (this.markerSettings !== null &&
                 !this.markerSettings.classList.contains(CLASS_HIDDEN))
                 this.markerSettings.classList.add(CLASS_HIDDEN);
@@ -752,6 +790,12 @@ export class Annotations {
         this.annotationRightCanvas?.classList.toggle(CLASS_ACTIVE);
         this.editMarkings = !this.editMarkings;
         this.markerButton?.classList.toggle(CLASS_BLOCK_ACTIVE);
+        this.markerButton?.setAttribute('aria-pressed', String(this.editMarkings));
+        const markerLabel = this.editMarkings
+            ? this.markerButton?.dataset.labelOff
+            : this.markerButton?.dataset.labelOn;
+        if (typeof markerLabel !== 'undefined')
+            this.markerButton?.setAttribute('aria-label', markerLabel);
         if (this.editMarkings) {
             if (this.markerSettings !== null &&
                 this.markerSettings.classList.contains(CLASS_HIDDEN))

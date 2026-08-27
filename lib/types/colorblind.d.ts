@@ -10,6 +10,7 @@ export class Colorblind {
         return String(Readiant.root.querySelector('.rdnt__i18n')?.getAttribute('data-none'));
     }
     static register() {
+        this.active = undefined;
         const buttons = Readiant.root.querySelectorAll('.rdnt__colorblind');
         for (const button of buttons)
             button.addEventListener('click', (event) => {
@@ -20,7 +21,7 @@ export class Colorblind {
     static change(event) {
         if (typeof this.active !== 'undefined')
             Readiant.documentBody.classList.remove(this.active);
-        let title = '';
+        let title;
         let value;
         if (typeof event === 'string') {
             const element = Readiant.root.querySelector(`[value="${event}"]`);
@@ -51,8 +52,11 @@ export class Colorblind {
         const buttons = Readiant.root.querySelectorAll('.rdnt__block-button.rdnt__colorblind');
         for (const button of buttons) {
             button.classList.remove(CLASS_BLOCK_ACTIVE);
-            if (button.getAttribute('data-title') === title)
+            button.setAttribute('aria-pressed', 'false');
+            if (button.getAttribute('data-title') === title) {
                 button.classList.add(CLASS_BLOCK_ACTIVE);
+                button.setAttribute('aria-pressed', 'true');
+            }
         }
         if (value !== null)
             Readiant.documentBody.classList.add(value);

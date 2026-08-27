@@ -15,6 +15,7 @@ export class Zoom {
         this.handlers.add(handler);
     }
     static register() {
+        this.handlers.clear();
         this.range?.addEventListener('change', (event) => {
             this.change(event);
         });
@@ -46,23 +47,26 @@ export class Zoom {
         this.scroll().catch((e) => {
             throw e;
         });
-        Builder.layers?.removeEventListener('mousedown', _a.mouseDownHandler);
-        Builder.layers?.addEventListener('mousedown', _a.mouseDownHandler);
-        Builder.layers?.removeEventListener('mousemove', _a.mouseMoveHandler);
-        Builder.layers?.addEventListener('mousemove', _a.mouseMoveHandler);
-        Builder.layers?.removeEventListener('mouseleave', _a.mouseLeaveHandler);
-        Builder.layers?.addEventListener('mouseleave', _a.mouseLeaveHandler);
-        Builder.layers?.removeEventListener('mouseup', _a.mouseUpHandler);
-        Builder.layers?.addEventListener('mouseup', _a.mouseUpHandler);
+        Builder.layers?.removeEventListener('pointerdown', _a.pointerDownHandler);
+        Builder.layers?.addEventListener('pointerdown', _a.pointerDownHandler);
+        Builder.layers?.removeEventListener('pointermove', _a.pointerMoveHandler);
+        Builder.layers?.addEventListener('pointermove', _a.pointerMoveHandler);
+        Builder.layers?.removeEventListener('pointerleave', _a.pointerLeaveHandler);
+        Builder.layers?.addEventListener('pointerleave', _a.pointerLeaveHandler);
+        Builder.layers?.removeEventListener('pointerup', _a.pointerUpHandler);
+        Builder.layers?.addEventListener('pointerup', _a.pointerUpHandler);
+        Builder.layers?.removeEventListener('pointercancel', _a.pointerUpHandler);
+        Builder.layers?.addEventListener('pointercancel', _a.pointerUpHandler);
         eventLogger({
             type: LogType.ChangeZoomLevel,
             zoomLevel: value,
         });
     }
-    static handleMouseDown(event) {
+    static handlePointerDown(event) {
         if (this.level <= 2)
             return;
         event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
         this.isGrabbing = true;
         if (Builder.layers !== null)
             Builder.layers.style.cursor = 'grabbing';
@@ -71,11 +75,7 @@ export class Zoom {
         this.scrollLeft = Readiant.scrollX;
         this.scrollTop = Readiant.scrollY;
     }
-    static handleMouseLeave() {
-        if (this.isGrabbing)
-            this.handleMouseUp();
-    }
-    static handleMouseMove(event) {
+    static handlePointerMove(event) {
         if (this.level <= 2 || !this.isGrabbing)
             return;
         event.preventDefault();
@@ -84,7 +84,7 @@ export class Zoom {
         if (typeof this.animationFrameId === 'undefined')
             this.animationFrameId = Readiant.windowContext.requestAnimationFrame(this.updateScrollPosition.bind(this));
     }
-    static handleMouseUp() {
+    static handlePointerUp() {
         if (this.level <= 2)
             return;
         this.isGrabbing = false;
@@ -139,16 +139,16 @@ Zoom.scrollLeft = 0;
 Zoom.scrollTop = 0;
 Zoom.lastKnownMouseX = 0;
 Zoom.lastKnownMouseY = 0;
-Zoom.mouseDownHandler = (event) => {
-    _a.handleMouseDown(event);
+Zoom.pointerDownHandler = (event) => {
+    _a.handlePointerDown(event);
 };
-Zoom.mouseMoveHandler = (event) => {
-    _a.handleMouseMove(event);
+Zoom.pointerMoveHandler = (event) => {
+    _a.handlePointerMove(event);
 };
-Zoom.mouseLeaveHandler = () => {
-    _a.handleMouseLeave();
+Zoom.pointerLeaveHandler = () => {
+    _a.handlePointerUp();
 };
-Zoom.mouseUpHandler = () => {
-    _a.handleMouseUp();
+Zoom.pointerUpHandler = () => {
+    _a.handlePointerUp();
 };
 Zoom.level = 2;

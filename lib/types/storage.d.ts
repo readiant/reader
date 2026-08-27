@@ -1,8 +1,12 @@
 import { openDB } from 'idb';
 import { NAMESPACE_SVG, } from './consts.js';
-import { hoverEvents, pointerEvents, touchEvents } from './detection.js';
+import { hoverEvents } from './detection.js';
 import { Readiant } from './readiant.js';
 export class Storage {
+    static clear() {
+        this.cache.clear();
+        this.stored.clear();
+    }
     static convertStringToElement(element) {
         const placeholder = Readiant.documentContext.createElementNS(NAMESPACE_SVG, 'svg');
         placeholder.innerHTML = element;
@@ -64,6 +68,14 @@ export class Storage {
     }
     static hasChapter(chapter) {
         return this.cache.has(`${this.CHAPTER_KEY}${String(chapter)}`);
+    }
+    static hasElements(ids) {
+        return ids.length > 0
+            ? ids.every((id) => this.cache.has(`${this.ELEMENT_KEY}${id}`))
+            : false;
+    }
+    static hasOfflinePage(page) {
+        return this.hasElements([...this.getBlueprints([page])]);
     }
     static hasPage(page) {
         return this.cache.has(`${this.PAGE_KEY}${String(page)}`);
@@ -142,11 +154,5 @@ Storage.data = {
     code: window.location.pathname.split('/').pop(),
     get hover() {
         return hoverEvents;
-    },
-    get pointer() {
-        return pointerEvents;
-    },
-    get touch() {
-        return touchEvents();
     },
 };
