@@ -121,6 +121,9 @@ export class Builder {
         }
     }
     static register() {
+        this.animationCleanup?.();
+        this.animationCleanup = undefined;
+        this.isAnimating = false;
         this.isFontsReady = false;
         this.registeredFontFamilies = new Set();
         this.styles = undefined;
@@ -281,244 +284,164 @@ export class Builder {
         this.layer(PagePosition.Left);
         this.layer(PagePosition.Right);
     }
-    static animateLeft() {
-        if (this.animationLeft === null ||
-            this.layers === null ||
-            this.viewport === null)
-            return;
-        if (this.animationDisabled ||
-            (Navigation.currentPage === 1 &&
-                Navigation.currentPages.length >= this.previouslyShownPages)) {
-            this.layer(PagePosition.Left);
-            return;
-        }
-        const wasAnimating = this.isAnimating;
-        this.isAnimating = true;
-        const myEpoch = ++this.animationEpoch;
-        if (wasAnimating && this.animationRight !== null) {
-            const rightComputedStyle = Readiant.windowContext.getComputedStyle(this.animationRight);
-            if (rightComputedStyle.animationName !== 'none') {
-                this.animationRight.classList.remove(CLASS_ACTIVE);
-                this.leftLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-                this.rightLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-        }
-        const computedStyle = Readiant.windowContext.getComputedStyle(this.animationLeft);
-        if (computedStyle.animationName !== 'none') {
-            this.animationLeft.classList.remove(CLASS_ACTIVE);
-            this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_LEFT);
+    static resetAnimation(animation, className) {
+        animation.classList.remove(CLASS_ACTIVE);
+        animation.style.removeProperty('animation-play-state');
+        this.expandingSpread = false;
+        this.expansionTranslation = 0;
+        this.expansionTransitionPending = false;
+        this.leftLayer?.classList.remove(className);
+        this.rightLayer?.classList.remove(className);
+        if (this.layers !== null) {
             this.layers.style.transition = 'none';
             this.layers.style.removeProperty('perspective');
             this.layers.style.removeProperty('transform');
+            void this.layers.offsetWidth;
+            this.layers.style.removeProperty('transition');
+        }
+        if (this.viewport !== null) {
             this.viewport.style.transition = 'none';
             this.viewport.style.removeProperty('transform');
-            this.layer(PagePosition.Left);
+            void this.viewport.offsetWidth;
+            this.viewport.style.removeProperty('transition');
         }
-        const handleAnimationCancel = () => {
+    }
+    static animatePage(side) {
+        const isLeft = side === PagePosition.Left;
+        const animation = isLeft ? this.animationLeft : this.animationRight;
+        const oppositeAnimation = isLeft ? this.animationRight : this.animationLeft;
+        const animationClass = isLeft ? CLASS_ANIMATE_LEFT : CLASS_ANIMATE_RIGHT;
+        const oppositeClass = isLeft ? CLASS_ANIMATE_RIGHT : CLASS_ANIMATE_LEFT;
+        if (animation === null || this.layers === null || this.viewport === null)
+            return;
+        const prefersReducedMotion = Readiant.windowContext.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isBoundary = isLeft
+            ? Navigation.currentPage === Math.min(...Navigation.pages) &&
+                Navigation.currentPages.length >= this.previouslyShownPages
+            : Navigation.currentPage === Math.max(...Navigation.pages);
+        if (this.animationDisabled || prefersReducedMotion || isBoundary) {
+            this.animationCleanup?.();
+            this.animationCleanup = undefined;
+            this.isAnimating = false;
+            this.layer(side);
+            return;
+        }
+        this.animationCleanup?.();
+        this.animationCleanup = undefined;
+        this.isAnimating = true;
+        const myEpoch = ++this.animationEpoch;
+        if (oppositeAnimation?.classList.contains(CLASS_ACTIVE) === true)
+            this.resetAnimation(oppositeAnimation, oppositeClass);
+        if (animation.classList.contains(CLASS_ACTIVE))
+            this.resetAnimation(animation, animationClass);
+        const removeListeners = () => {
+            animation.removeEventListener('animationend', handleAnimationEnd);
+            animation.removeEventListener('animationcancel', handleAnimationCancel);
+        };
+        const finishAnimation = () => {
+            removeListeners();
             if (myEpoch !== this.animationEpoch)
                 return;
-            this.animationLeft?.removeEventListener('animationend', handleAnimationEnd);
-            this.animationLeft?.removeEventListener('animationcancel', handleAnimationCancel);
-            this.animationLeft?.classList.remove(CLASS_ACTIVE);
+            this.animationCleanup = undefined;
             this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-            if (this.layers !== null) {
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-            }
-            if (this.viewport !== null) {
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-            this.layer(PagePosition.Left);
+            this.resetAnimation(animation, animationClass);
+            this.layer(side);
         };
         const handleAnimationEnd = () => {
-            if (myEpoch !== this.animationEpoch)
-                return;
-            this.animationLeft?.removeEventListener('animationend', handleAnimationEnd);
-            this.animationLeft?.removeEventListener('animationcancel', handleAnimationCancel);
-            this.animationLeft?.classList.remove(CLASS_ACTIVE);
-            this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-            if (this.layers !== null) {
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-            }
-            if (this.viewport !== null) {
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-            this.layer(PagePosition.Left);
+            finishAnimation();
         };
-        const isLast = Navigation.currentPage === Math.max(...Navigation.pages);
-        if (isLast && Navigation.currentPages.length === 1) {
-            const leftW = parseFloat(this.animationLeft.style.width) || 0;
-            const rightW = parseFloat(this.animationRight?.style.width ?? '0') || 0;
-            const sourceAnim = leftW > 0 ? this.animationLeft : this.animationRight;
-            const sourceW = leftW > 0 ? leftW : rightW;
-            if (sourceAnim !== null && sourceW > 0) {
-                const halfWidth = sourceW / 2;
-                if (leftW === 0) {
-                    this.animationLeft.style.left = sourceAnim.style.left;
-                    this.animationLeft.style.width = `${String(sourceW)}px`;
-                    this.animationLeft.style.height = sourceAnim.style.height;
-                    this.animationLeft.style.top = sourceAnim.style.top;
-                }
-                this.layers.style.transition = 'transform 0.9s ease-in-out';
-                this.viewport.style.transition = 'transform 0.9s ease-in-out';
-                this.layers.style.transform = `translateX(-${String(halfWidth)}px)`;
-                this.viewport.style.transform = `translateX(-${String(halfWidth)}px)`;
+        const handleAnimationCancel = () => {
+            finishAnimation();
+        };
+        const ownWidth = parseFloat(animation.style.width) || 0;
+        const oppositeWidth = parseFloat(oppositeAnimation?.style.width ?? '0') || 0;
+        const isFirstSinglePage = Navigation.currentPage === Math.min(...Navigation.pages) &&
+            Navigation.currentPages.length === 1;
+        const isLastSinglePage = Navigation.currentPage === Math.max(...Navigation.pages) &&
+            Navigation.currentPages.length === 1;
+        const isSinglePageEdge = isFirstSinglePage || isLastSinglePage;
+        const hasEdgeAnimationPage = Navigation.animationPages.some((page) => page.page ===
+            (isLeft
+                ? Math.min(...Navigation.pages)
+                : Math.max(...Navigation.pages)) && page.position === side);
+        let translation = 0;
+        if (!isSinglePageEdge && hasEdgeAnimationPage) {
+            translation =
+                (isLeft
+                    ? ownWidth
+                    : parseFloat(this.animationLeft?.style.width ?? '0')) / 2;
+        }
+        else if (isSinglePageEdge && ownWidth === 0) {
+            const sourceAnimation = ownWidth > 0 ? animation : oppositeAnimation;
+            const sourceWidth = ownWidth > 0 ? ownWidth : oppositeWidth;
+            if (sourceAnimation !== null && sourceWidth > 0) {
+                animation.style.left = sourceAnimation.style.left;
+                animation.style.width = `${String(sourceWidth)}px`;
+                animation.style.height = sourceAnimation.style.height;
+                animation.style.top = sourceAnimation.style.top;
             }
         }
-        const isFirstPage = Navigation.animationPages.some((p) => p.page === Math.min(...Navigation.pages) &&
-            p.position === PagePosition.Left);
-        if (isFirstPage) {
-            const halfWidth = (parseFloat(this.animationLeft.style.width) || 0) / 2;
-            if (halfWidth > 0) {
-                this.layers.style.transition = 'transform 0.9s ease-in-out';
-                this.viewport.style.transition = 'transform 0.9s ease-in-out';
-                this.layers.style.transform = `translateX(-${String(halfWidth)}px)`;
-                this.viewport.style.transform = `translateX(-${String(halfWidth)}px)`;
-            }
+        if (isSinglePageEdge) {
+            const pageWidth = ownWidth > 0 ? ownWidth : oppositeWidth;
+            this.expansionTranslation =
+                (isFirstSinglePage ? pageWidth : -pageWidth) / 2;
+            animation.style.animationPlayState = 'paused';
+            this.expandingSpread = true;
+            this.expansionTransitionPending = true;
+        }
+        if (translation > 0) {
+            const signedTranslation = isLeft ? -translation : translation;
+            const transition = 'transform var(--readiant-page-flip-duration) var(--readiant-page-flip-easing)';
+            this.layers.style.transition = transition;
+            this.viewport.style.transition = transition;
+            this.layers.style.transform = `translateX(${String(signedTranslation)}px)`;
+            this.viewport.style.transform = `translateX(${String(signedTranslation)}px)`;
         }
         this.layers.style.perspective = '250vh';
-        this.animationLeft.classList.add(CLASS_ACTIVE);
-        this.leftLayer?.classList.add(CLASS_ANIMATE_LEFT);
-        this.rightLayer?.classList.add(CLASS_ANIMATE_LEFT);
-        this.animationLeft.addEventListener('animationend', handleAnimationEnd);
-        this.animationLeft.addEventListener('animationcancel', handleAnimationCancel);
+        animation.classList.add(CLASS_ACTIVE);
+        this.leftLayer?.classList.add(animationClass);
+        this.rightLayer?.classList.add(animationClass);
+        animation.addEventListener('animationend', handleAnimationEnd);
+        animation.addEventListener('animationcancel', handleAnimationCancel);
+        this.animationCleanup = () => {
+            removeListeners();
+            this.resetAnimation(animation, animationClass);
+        };
+    }
+    static startExpansionTransition() {
+        if (!this.expansionTransitionPending ||
+            this.layers === null ||
+            this.viewport === null)
+            return;
+        this.expansionTransitionPending = false;
+        const translation = this.expansionTranslation;
+        this.layers.style.transition = 'none';
+        this.viewport.style.transition = 'none';
+        this.layers.style.removeProperty('transform');
+        this.viewport.style.removeProperty('transform');
+        void this.layers.offsetWidth;
+        const transitionStyle = 'transform var(--readiant-page-flip-duration) var(--readiant-page-flip-easing)';
+        this.layers.style.transition = transitionStyle;
+        this.viewport.style.transition = transitionStyle;
+        this.layers.style.transform = `translateX(${String(translation)}px)`;
+        this.viewport.style.transform = `translateX(${String(translation)}px)`;
+        const animation = this.animationLeft?.classList.contains(CLASS_ACTIVE) === true
+            ? this.animationLeft
+            : this.animationRight?.classList.contains(CLASS_ACTIVE) === true
+                ? this.animationRight
+                : null;
+        animation?.style.removeProperty('animation-play-state');
+    }
+    static animateLeft() {
+        this.animatePage(PagePosition.Left);
     }
     static animateRight() {
-        if (this.animationRight === null ||
-            this.layers === null ||
-            this.viewport === null)
-            return;
-        if (this.animationDisabled ||
-            Math.max(...Navigation.pages) === Navigation.currentPage) {
-            this.layer(PagePosition.Right);
-            return;
-        }
-        const wasAnimating = this.isAnimating;
-        this.isAnimating = true;
-        const myEpoch = ++this.animationEpoch;
-        if (wasAnimating && this.animationLeft !== null) {
-            const leftComputedStyle = Readiant.windowContext.getComputedStyle(this.animationLeft);
-            if (leftComputedStyle.animationName !== 'none') {
-                this.animationLeft.classList.remove(CLASS_ACTIVE);
-                this.leftLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-                this.rightLayer?.classList.remove(CLASS_ANIMATE_LEFT);
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-        }
-        const computedStyle = Readiant.windowContext.getComputedStyle(this.animationRight);
-        if (computedStyle.animationName !== 'none') {
-            this.animationRight.classList.remove(CLASS_ACTIVE);
-            this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            this.layers.style.transition = 'none';
-            this.layers.style.removeProperty('perspective');
-            this.layers.style.removeProperty('transform');
-            this.viewport.style.transition = 'none';
-            this.viewport.style.removeProperty('transform');
-            this.layer(PagePosition.Right);
-        }
-        const handleAnimationCancel = () => {
-            if (myEpoch !== this.animationEpoch)
-                return;
-            this.animationRight?.removeEventListener('animationend', handleAnimationEnd);
-            this.animationRight?.removeEventListener('animationcancel', handleAnimationCancel);
-            this.animationRight?.classList.remove(CLASS_ACTIVE);
-            this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            if (this.layers !== null) {
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-            }
-            if (this.viewport !== null) {
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-            this.layer(PagePosition.Right);
-        };
-        const handleAnimationEnd = () => {
-            if (myEpoch !== this.animationEpoch)
-                return;
-            this.animationRight?.removeEventListener('animationend', handleAnimationEnd);
-            this.animationRight?.removeEventListener('animationcancel', handleAnimationCancel);
-            this.animationRight?.classList.remove(CLASS_ACTIVE);
-            this.isAnimating = false;
-            this.leftLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            this.rightLayer?.classList.remove(CLASS_ANIMATE_RIGHT);
-            if (this.layers !== null) {
-                this.layers.style.transition = 'none';
-                this.layers.style.removeProperty('perspective');
-                this.layers.style.removeProperty('transform');
-            }
-            if (this.viewport !== null) {
-                this.viewport.style.transition = 'none';
-                this.viewport.style.removeProperty('transform');
-            }
-            this.layer(PagePosition.Right);
-        };
-        const isFirst = Math.min(...Navigation.pages) === Navigation.currentPage;
-        if (isFirst && Navigation.currentPages.length === 1) {
-            const leftW = parseFloat(this.animationLeft?.style.width ?? '0') || 0;
-            const rightW = parseFloat(this.animationRight.style.width) || 0;
-            const sourceAnim = leftW > 0 ? this.animationLeft : this.animationRight;
-            const sourceW = leftW > 0 ? leftW : rightW;
-            if (sourceAnim !== null && sourceW > 0) {
-                const halfWidth = sourceW / 2;
-                if (rightW === 0 && this.animationLeft !== null) {
-                    this.animationRight.style.left = this.animationLeft.style.left;
-                    this.animationRight.style.width = `${String(sourceW)}px`;
-                    this.animationRight.style.height = this.animationLeft.style.height;
-                    this.animationRight.style.top = this.animationLeft.style.top;
-                }
-                this.layers.style.transition = 'transform 0.9s ease-in-out';
-                this.viewport.style.transition = 'transform 0.9s ease-in-out';
-                this.layers.style.transform = `translateX(${String(halfWidth)}px)`;
-                this.viewport.style.transform = `translateX(${String(halfWidth)}px)`;
-            }
-        }
-        const isGoingToLastPage = Navigation.animationPages.some((p) => p.page === Math.max(...Navigation.pages) &&
-            p.position === PagePosition.Right);
-        if (isGoingToLastPage) {
-            const leftW = parseFloat(this.animationLeft?.style.width ?? '0') || 0;
-            const halfWidth = leftW / 2;
-            if (halfWidth > 0) {
-                this.layers.style.transition = 'transform 0.9s ease-in-out';
-                this.viewport.style.transition = 'transform 0.9s ease-in-out';
-                this.layers.style.transform = `translateX(${String(halfWidth)}px)`;
-                this.viewport.style.transform = `translateX(${String(halfWidth)}px)`;
-            }
-        }
-        this.layers.style.perspective = '250vh';
-        this.animationRight.classList.add(CLASS_ACTIVE);
-        this.leftLayer?.classList.add(CLASS_ANIMATE_RIGHT);
-        this.rightLayer?.classList.add(CLASS_ANIMATE_RIGHT);
-        this.animationRight.addEventListener('animationend', handleAnimationEnd);
-        this.animationRight.addEventListener('animationcancel', handleAnimationCancel);
+        this.animatePage(PagePosition.Right);
     }
     static async animation(side, blueprint, viewBox, isBack, epoch) {
         await this.waitForAnimation(side === PagePosition.Left ? this.animationLeft : this.animationRight);
+        if (typeof epoch !== 'undefined' && epoch !== Navigation.renderEpoch)
+            return;
         const sideElement = side === PagePosition.Left
             ? isBack
                 ? this.animationLeftBack
@@ -729,6 +652,9 @@ export class Builder {
     }
     static disableAnimations() {
         this.animationDisabled = true;
+        this.animationCleanup?.();
+        this.animationCleanup = undefined;
+        this.isAnimating = false;
     }
     static processTextElementContent(textElement, textContent, textElementsAndContent) {
         const normalizedContent = this.normalize(textElement.content);
@@ -739,6 +665,10 @@ export class Builder {
                 const normalizedOriginal = this.normalize(existing.original);
                 if (!normalizedOriginal.includes(normalizedContent))
                     continue;
+                const normalizedAssigned = existing.elements
+                    .map((element) => this.normalize(element.content))
+                    .join('');
+                const isSequentialContinuation = normalizedOriginal.startsWith(`${normalizedAssigned}${normalizedContent}`);
                 const elementPunctuation = /[^\p{L}\p{N}\s]+$/u.exec(textElement.content)?.[0];
                 const originalPunctuation = /[^\p{L}\p{N}\s]+$/u.exec(existing.original)?.[0];
                 if (typeof elementPunctuation !== 'undefined' &&
@@ -749,10 +679,15 @@ export class Builder {
                     typeof originalPunctuation !== 'undefined' &&
                     elementPunctuation !== originalPunctuation)
                     continue;
-                const ref = existing.elements[0].transform;
-                const dist = Math.abs(textElement.transform[5] - ref[5]) * 2 +
-                    Math.abs(textElement.transform[4] - ref[4]);
-                if (dist < textElement.style.height * 3 && dist < bestDist) {
+                const ref = isSequentialContinuation
+                    ? existing.elements[existing.elements.length - 1].transform
+                    : existing.elements[0].transform;
+                const verticalDist = Math.abs(textElement.transform[5] - ref[5]);
+                const dist = verticalDist * 2 + Math.abs(textElement.transform[4] - ref[4]);
+                const isCloseEnough = isSequentialContinuation
+                    ? verticalDist < textElement.style.height * 3
+                    : dist < textElement.style.height * 3;
+                if (isCloseEnough && dist < bestDist) {
                     bestDist = dist;
                     bestKey = key;
                 }
@@ -1054,7 +989,11 @@ export class Builder {
                 const x = (ctm ? bbox.x * ctm.a + bbox.y * ctm.c + ctm.e : bbox.x) - viewBox[0];
                 const y = Math.abs(ctm ? bbox.x * ctm.b + bbox.y * ctm.d + ctm.f : bbox.y) -
                     viewBox[1];
-                const width = ctm ? bbox.width * Math.abs(ctm.a) : bbox.width;
+                const renderedWidth = ctm ? bbox.width * Math.abs(ctm.a) : bbox.width;
+                const sourceWidth = Number(exist.getAttribute('data-width'));
+                const width = Math.max(renderedWidth, Number.isFinite(sourceWidth)
+                    ? sourceWidth * (ctm ? Math.abs(ctm.a) : 1)
+                    : 0);
                 const height = ctm ? bbox.height * Math.abs(ctm.d) : bbox.height;
                 const ctmScale = ctm ? Math.abs(ctm.a) : Math.abs(transform[0]);
                 const textContent = String(exist.getAttribute('data-content'));
@@ -2130,8 +2069,10 @@ export class Builder {
         const thisSideAnimation = side === PagePosition.Left ? this.animationLeft : this.animationRight;
         const isCovered = this.isAnimating &&
             thisSideAnimation?.classList.contains(CLASS_ACTIVE) === true;
-        const isSpreadChange = Navigation.currentPages.length !== this.previouslyShownPages;
-        if (!isCovered || isSpreadChange)
+        const isExpandingSpread = this.expandingSpread ||
+            Navigation.currentPages.length > this.previouslyShownPages;
+        const isCollapsingSpread = Navigation.currentPages.length < this.previouslyShownPages;
+        if (isCollapsingSpread || (!isCovered && !isExpandingSpread))
             await this.waitForAnimation(thisSideAnimation);
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
             return;
@@ -2142,13 +2083,23 @@ export class Builder {
             this.clear(this.rightTextLayer);
         page.innerHTML = blueprint;
         this.pageSizeSVG({ rotation, side, viewBox });
-        if (TextMode.level !== 3) {
+        const revealAfterAnimation = isExpandingSpread && !isCovered;
+        if (TextMode.level !== 3 && !revealAfterAnimation) {
+            this.show(page);
+            this.layer(side);
+        }
+        if (isCovered)
+            this.startExpansionTransition();
+        if (revealAfterAnimation) {
+            await this.waitForAnimation(thisSideAnimation);
+            if (!Navigation.currentPages.some((current) => current.page === pageNumber && current.position === side))
+                return;
             this.show(page);
             this.layer(side);
         }
         this.notify(pageNumber, side);
     }
-    static textElement(textElement, content, index, viewBox, ignore, nextTextX) {
+    static textElement(textElement, content, index, viewBox, ignore, nextTextX, sourceWidth) {
         const div = Readiant.documentContext.createElement('div');
         div.setAttribute('class', `rdnt__highlight${ignore === true ? ' ' + CLASS_HIGHLIGHT_IGNORE : ''}`);
         div.setAttribute('data-i', String(index));
@@ -2227,6 +2178,21 @@ export class Builder {
                 ? offset + ligature.length - 1
                 : offset;
         }, 0);
+        const positionedLigatureCompression = detectedLigatures.reduce((compression, ligature) => compression + ligature.length - 1, 0);
+        const hasCompletePositionData = textElement.x.length + positionedLigatureCompression >= characters.length;
+        const boundaryWidth = typeof nextTextX === 'number' && nextTextX > textElement.style.x
+            ? nextTextX - textElement.style.x
+            : undefined;
+        const geometryWidth = !hasCompletePositionData &&
+            typeof sourceWidth === 'number' &&
+            sourceWidth > textElement.style.width
+            ? sourceWidth
+            : !hasCompletePositionData &&
+                typeof boundaryWidth === 'number' &&
+                boundaryWidth > textElement.style.width
+                ? boundaryWidth
+                : textElement.style.width;
+        div.style.width = `${((geometryWidth / viewBox[2]) * 100).toFixed(2)}%`;
         let lastCharSkipped = false;
         for (let ci = 0; ci < effectiveLength; ci++) {
             const character = characters[ci];
@@ -2298,9 +2264,15 @@ export class Builder {
             const nextMap = nonEmptyWords[wi + 1];
             const startXIdx = map.startCharIdx - ligatureOffsetAt(map.startCharIdx);
             const startXValue = textElement.x[startXIdx];
-            let left = 0;
-            if (typeof startXValue !== 'undefined') {
-                left = (startXValue / textElement.style.width) * 100 * multiplierScale;
+            let left = hasCompletePositionData
+                ? 0
+                : (nonEmptyWords
+                    .slice(0, wi)
+                    .reduce((length, word) => length + word.content.length, 0) /
+                    totalContentChars) *
+                    100;
+            if (hasCompletePositionData && typeof startXValue !== 'undefined') {
+                left = (startXValue / geometryWidth) * 100 * multiplierScale;
             }
             if (isNaN(left))
                 left = 0;
@@ -2317,11 +2289,12 @@ export class Builder {
             const isTrailingPunctuation = wi === nonEmptyWords.length - 1 && !/[\p{L}\p{N}]/u.test(map.content);
             const hasUnmappedTrailingPunctuation = wi === nonEmptyWords.length - 1 &&
                 /^[^\p{L}\p{N}\s]+$/u.test(textElement.content.slice(map.i + 1));
-            if (isTrailingPunctuation || hasUnmappedTrailingPunctuation)
+            if (!hasCompletePositionData && totalContentChars > 0)
+                spanWidth = (map.content.length / totalContentChars) * 100;
+            else if (isTrailingPunctuation || hasUnmappedTrailingPunctuation)
                 spanWidth = 100 - left;
             else if (typeof endXValue !== 'undefined') {
-                spanWidth =
-                    (endXValue / textElement.style.width) * 100 * multiplierScale - left;
+                spanWidth = (endXValue / geometryWidth) * 100 * multiplierScale - left;
             }
             else if (totalContentChars > 0 && nonEmptyWords.length > 0) {
                 const wordCharCount = map.content.length;
@@ -2379,9 +2352,13 @@ export class Builder {
                     if (previousWord?.tagName.toLowerCase() === 'span') {
                         const previousContent = String(previousWord.getAttribute('data-word'));
                         const combinedContent = `${previousContent}${carriedPunctuation}`;
-                        previousWord.setAttribute('data-word', combinedContent);
-                        previousWord.setAttribute('aria-label', this.wordLabel.replace('%s', combinedContent));
-                        content = '';
+                        const compactCombinedContent = combinedContent.replace(/\s+/gu, '');
+                        const belongsToPreviousWord = textContent.sentences.some((sentence) => sentence.replace(/\s+/gu, '').includes(compactCombinedContent));
+                        if (belongsToPreviousWord) {
+                            previousWord.setAttribute('data-word', combinedContent);
+                            previousWord.setAttribute('aria-label', this.wordLabel.replace('%s', combinedContent));
+                            content = '';
+                        }
                     }
                 }
                 const entryContent = borrowedFromNext > 0
@@ -2393,10 +2370,15 @@ export class Builder {
                     if (textElementAndContent.elements.length === 1) {
                         const normRemaining = this.normalize(remaining);
                         const normElemContent = this.normalize(textElementAndContent.elements[0].content);
-                        const isRelated = normRemaining.includes(normElemContent) ||
-                            normElemContent.includes(normRemaining) ||
-                            this.isSubsequence(normElemContent, normRemaining) ||
-                            this.isSubsequence(normRemaining, normElemContent);
+                        const relatedLengthRatio = Math.min(normRemaining.length, normElemContent.length) /
+                            Math.max(normRemaining.length, normElemContent.length);
+                        const isRelated = normRemaining.length > 0 &&
+                            normElemContent.length > 0 &&
+                            relatedLengthRatio > 0.65 - this.PRECISION_EPSILON &&
+                            (normRemaining.includes(normElemContent) ||
+                                normElemContent.includes(normRemaining) ||
+                                this.isSubsequence(normElemContent, normRemaining) ||
+                                this.isSubsequence(normRemaining, normElemContent));
                         if (isRelated) {
                             if (normRemaining.length >= normElemContent.length) {
                                 content = remaining;
@@ -2422,8 +2404,6 @@ export class Builder {
             for (const textElement of textElementAndContent.elements) {
                 const nextTextElement = visibleTextElements
                     .filter((candidate) => candidate.style.x > textElement.style.x &&
-                    candidate.style.x - textElement.style.x <=
-                        textElement.style.width &&
                     Math.abs(candidate.style.y - textElement.style.y) <=
                         textElement.style.height / 2)
                     .sort((a, b) => a.style.x - b.style.x)[0];
@@ -2460,7 +2440,7 @@ export class Builder {
                         }
                     }
                 }
-                const [returnedContent, div] = this.textElement(textElement, content, textElementAndContent.index, viewBox, textElementAndContent.ignore, nextTextElement?.style.x);
+                const [returnedContent, div] = this.textElement(textElement, content, textElementAndContent.index, viewBox, textElementAndContent.ignore, nextTextElement?.style.x, textElementAndContent.width);
                 if (div.children.length > 0) {
                     const normElem = this.normalize(textElement.content);
                     const normPool = this.normalize(content);
@@ -2489,7 +2469,7 @@ export class Builder {
                     fragment.appendChild(div);
                 }
                 else if (textElementAndContent.ignore !== true) {
-                    const [, retryDiv] = this.textElement(textElement, textElement.content, textElementAndContent.index, viewBox, textElementAndContent.ignore, nextTextElement?.style.x);
+                    const [, retryDiv] = this.textElement(textElement, textElement.content, textElementAndContent.index, viewBox, textElementAndContent.ignore, nextTextElement?.style.x, textElementAndContent.width);
                     if (retryDiv.children.length > 0)
                         fragment.appendChild(retryDiv);
                 }
@@ -2938,6 +2918,32 @@ export class Builder {
         }
         if (isPurePunctuation) {
             const punctuation = String(word.getAttribute('data-word'));
+            const nextSentence = sentences[sentenceIndex + 1];
+            if (punctuation.length > 0 &&
+                sentence.trim() === '' &&
+                typeof nextSentence !== 'undefined' &&
+                nextSentence.trimStart().startsWith(punctuation)) {
+                sentenceIndex++;
+                sentenceWordsIndex = 0;
+                sentence = this.normalize(nextSentence, false);
+                sentenceWords = sentence.split(' ').filter((w) => w.trim() !== '');
+                rest = '';
+                word.setAttribute('data-s', String(sentenceIndex));
+                word.setAttribute('data-w', '0');
+                return {
+                    state: {
+                        sentence,
+                        sentenceWords,
+                        sentenceIndex,
+                        sentenceWordsIndex,
+                        rest,
+                        lastAssignedSi: sentenceIndex,
+                        lastAssignedWi: 0,
+                    },
+                    si: String(sentenceIndex),
+                    wi: '0',
+                };
+            }
             const unresolvedSentence = [...sentenceLeftovers.entries()].find(([si, leftover]) => punctuation.length > 0 &&
                 sentences[si]?.trimEnd().endsWith(punctuation) &&
                 this.normalize(sentences[si], false)
@@ -3428,6 +3434,9 @@ Builder.currentSentenceIndex = 0;
 Builder.currentSide = PagePosition.Left;
 Builder.currentWordIndex = 0;
 Builder.direction = Direction.Ltr;
+Builder.expandingSpread = false;
+Builder.expansionTranslation = 0;
+Builder.expansionTransitionPending = false;
 Builder.forcingPortrait = false;
 Builder.hasFontChanged = false;
 Builder.isAnimating = false;
