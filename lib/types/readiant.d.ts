@@ -610,8 +610,7 @@ export class Readiant {
                     : 6, this.abortController.signal);
             };
         }
-        if (typeof lazyLoader !== 'undefined')
-            Navigation.setLazyLoader(lazyLoader);
+        Navigation.setLazyLoader(lazyLoader);
         await Navigation.register(this.options.page, [], pageCounts, indexes, directionFromString(direction));
         await this.register({}, chapters, translations);
     }
@@ -633,8 +632,7 @@ export class Readiant {
                     : 6, this.abortController.signal);
             };
         }
-        if (typeof lazyLoader !== 'undefined')
-            Navigation.setLazyLoader(lazyLoader);
+        Navigation.setLazyLoader(lazyLoader);
         await Navigation.register(this.options.page, pages, [], [], inverted ? Direction.Rtl : Direction.Ltr, offset, spread);
         await this.register(availableAudio, chapters, translations);
     }

@@ -62,7 +62,6 @@ export class Navigation {
         this.textHandlers.clear();
         this.cachedPages = new Set();
         this.missingPages = new Set();
-        this.lazyLoader = undefined;
         this.previousLog = undefined;
         this.renderEpoch = 0;
         this.hasRegistered = false;
