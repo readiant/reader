@@ -1019,7 +1019,7 @@ export class Navigation {
         this.gotoPage(page, PageChangeType.Previous);
     }
     static async requestPages(pages) {
-        if (isOffline && typeof this.lazyLoader !== 'undefined') {
+        if (typeof this.lazyLoader !== 'undefined') {
             await this.lazyLoader(pages);
             return;
         }

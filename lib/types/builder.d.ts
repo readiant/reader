@@ -296,13 +296,15 @@ export class Builder {
             this.layers.style.transition = 'none';
             this.layers.style.removeProperty('perspective');
             this.layers.style.removeProperty('transform');
-            void this.layers.offsetWidth;
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            this.layers.offsetWidth;
             this.layers.style.removeProperty('transition');
         }
         if (this.viewport !== null) {
             this.viewport.style.transition = 'none';
             this.viewport.style.removeProperty('transform');
-            void this.viewport.offsetWidth;
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            this.viewport.offsetWidth;
             this.viewport.style.removeProperty('transition');
         }
     }
@@ -419,7 +421,8 @@ export class Builder {
         this.viewport.style.transition = 'none';
         this.layers.style.removeProperty('transform');
         this.viewport.style.removeProperty('transform');
-        void this.layers.offsetWidth;
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        this.layers.offsetWidth;
         const transitionStyle = 'transform var(--readiant-page-flip-duration) var(--readiant-page-flip-easing)';
         this.layers.style.transition = transitionStyle;
         this.viewport.style.transition = transitionStyle;
@@ -3376,7 +3379,8 @@ export class Builder {
     static zoom(currentZoom, zoomLevel) {
         if (this.viewport !== null) {
             this.viewport.style.transition = 'none';
-            void this.viewport.offsetWidth;
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            this.viewport.offsetWidth;
         }
         if (Readiant.type === ContentType.HTML)
             this.zoomHTML(currentZoom, zoomLevel);
