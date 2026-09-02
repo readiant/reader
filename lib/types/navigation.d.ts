@@ -58,21 +58,23 @@ export class Navigation {
         return Math.max(...this.pages);
     }
     static async register(page, pages, pageCounts, indexes, direction, offset, spread) {
-        this.handlers.clear();
-        this.textHandlers.clear();
-        this.cachedPages = new Set();
-        this.missingPages = new Set();
-        this.previousLog = undefined;
-        this.renderEpoch = 0;
-        this.hasRegistered = false;
-        this.previousAction = undefined;
-        this.currentPage = 1;
-        this.animationPages = [{ page: 2, position: PagePosition.Right }];
-        this.currentPages = [{ page: 1, position: PagePosition.Right }];
-        if (Readiant.type === ContentType.HTML)
-            this.registerHTML(page, pageCounts, indexes, direction);
-        else
-            await this.registerSVG(page, pages, pageCounts, direction, offset, spread);
+        await (this.registerPromise = this.registerPromise.then(async () => {
+            this.handlers.clear();
+            this.textHandlers.clear();
+            this.cachedPages = new Set();
+            this.missingPages = new Set();
+            this.previousLog = undefined;
+            this.renderEpoch = 0;
+            this.hasRegistered = false;
+            this.previousAction = undefined;
+            this.currentPage = 1;
+            this.animationPages = [{ page: 2, position: PagePosition.Right }];
+            this.currentPages = [{ page: 1, position: PagePosition.Right }];
+            if (Readiant.type === ContentType.HTML)
+                this.registerHTML(page, pageCounts, indexes, direction);
+            else
+                await this.registerSVG(page, pages, pageCounts, direction, offset, spread);
+        }));
         this.firstButton?.addEventListener('click', (event) => {
             event.preventDefault();
             if (Readiant.type === ContentType.SVG)
@@ -1213,3 +1215,4 @@ Navigation.currentPages = [
 ];
 Navigation.direction = Direction.Ltr;
 Navigation.hasRegistered = false;
+Navigation.registerPromise = Promise.resolve();

@@ -39,7 +39,9 @@ export class Readiant {
     }
     static removeInstance(root) {
         this.instances.delete(root);
-        Storage.clear();
+        Storage.clear().catch((e) => {
+            throw e;
+        });
     }
     static get documentBody() {
         return Readiant.root instanceof ShadowRoot
@@ -331,7 +333,7 @@ export class Readiant {
     }
     async connect() {
         this.options = { ...this.options, ...this.parse() };
-        Storage.clear();
+        await Storage.clear();
         if (typeof this.options.id !== 'undefined')
             Storage.data.code = this.options.id;
         if (this.options.singlePage === true) {
@@ -596,7 +598,7 @@ export class Readiant {
             return;
         const directionFromString = (s) => s === 'rtl' ? Direction.Rtl : Direction.Ltr;
         Readiant.type = ContentType.HTML;
-        Builder.register();
+        await Builder.register();
         Builder.setDirection(directionFromString(direction));
         if (this.fontAssetsPromise !== null)
             await this.fontAssetsPromise;
@@ -618,7 +620,7 @@ export class Readiant {
         if (this.connected || this.abortController.signal.aborted)
             return;
         Readiant.type = ContentType.SVG;
-        Builder.register();
+        await Builder.register();
         Builder.setDirection(rtl ? Direction.Rtl : Direction.Ltr);
         if (this.fontAssetsPromise !== null)
             await this.fontAssetsPromise;
@@ -692,13 +694,13 @@ export class Readiant {
         });
         Bar.register();
         Colorblind.register();
-        Fonts.register();
+        await Fonts.register();
         Fullscreen.register();
         ImageQuality.register();
         Issues.register();
         LineHighlighter.register();
-        ScreenMode.register();
-        TextMode.register();
+        await ScreenMode.register();
+        await TextMode.register();
         if (Readiant.type === ContentType.SVG) {
             Text.register(translations, this.options.localeTranslations);
             if (this.options.simplified === true)
@@ -745,7 +747,7 @@ export class Readiant {
         }
         if (!this.options.disable.includes(Fn.Annotations) &&
             Readiant.type === ContentType.SVG)
-            Annotations.register();
+            await Annotations.register();
         else
             Annotations.remove();
         if (this.audioButton !== null && Readiant.type === ContentType.SVG) {
