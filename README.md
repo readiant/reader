@@ -473,17 +473,14 @@ export class AppModule {}
 
 ## Browser Support
 
-- Chrome/Edge 54+
-- Firefox 63+
-- Safari 10.1+
-- iOS Safari 10.3+
-- Android Chrome 54+
+- Chrome/Edge 64+
+- Firefox 69+
+- Safari 13.1+
+- iOS Safari 13.4+
+- Android Chrome 64+
 
-For older browsers, include the Web Components polyfill:
-
-```html
-<script src="https://unpkg.com/@webcomponents/webcomponentsjs@^2/webcomponents-bundle.js"></script>
-```
+The reader requires native Custom Elements, Shadow DOM, and ResizeObserver
+support.
 
 ## API
 

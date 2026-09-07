@@ -1,5 +1,3 @@
-var _a;
-import groupBy from 'lodash/groupBy.js';
 import { Layout, SpeechMarkType, EffectiveConnectionType, } from './consts.js';
 import { A11y } from './a11y.js';
 import { Annotations } from './annotations.js';
@@ -99,6 +97,226 @@ export class Builder {
     static get viewport() {
         return Readiant.root.querySelector('.rdnt__viewport');
     }
+    static get state() {
+        const inst = Readiant.getInstance(Readiant.root);
+        if (!inst) {
+            return undefined;
+        }
+        return inst.builderState;
+    }
+    static get activeFont() {
+        return this.state?.activeFont ?? this.ORIGINAL_FONT;
+    }
+    static set activeFont(val) {
+        if (this.state)
+            this.state.activeFont = val;
+    }
+    static get activeFontSize() {
+        return this.state?.activeFontSize ?? 'rdnt__font-size--8';
+    }
+    static set activeFontSize(val) {
+        if (this.state)
+            this.state.activeFontSize = val;
+    }
+    static get activeLetterSpacing() {
+        return this.state?.activeLetterSpacing ?? 'rdnt__letter-spacing--3';
+    }
+    static set activeLetterSpacing(val) {
+        if (this.state)
+            this.state.activeLetterSpacing = val;
+    }
+    static get activeLineHeight() {
+        return this.state?.activeLineHeight ?? 'rdnt__html-page--line-height--2';
+    }
+    static set activeLineHeight(val) {
+        if (this.state)
+            this.state.activeLineHeight = val;
+    }
+    static get activeWordSpacing() {
+        return this.state?.activeWordSpacing ?? 'rdnt__word-spacing--3';
+    }
+    static set activeWordSpacing(val) {
+        if (this.state)
+            this.state.activeWordSpacing = val;
+    }
+    static get animationDisabled() {
+        return this.state?.animationDisabled ?? false;
+    }
+    static set animationDisabled(val) {
+        if (this.state)
+            this.state.animationDisabled = val;
+    }
+    static get animationEpoch() {
+        return this.state?.animationEpoch ?? 0;
+    }
+    static set animationEpoch(val) {
+        if (this.state)
+            this.state.animationEpoch = val;
+    }
+    static get animationCleanup() {
+        return this.state?.animationCleanup;
+    }
+    static set animationCleanup(val) {
+        if (this.state)
+            this.state.animationCleanup = val;
+    }
+    static get cachedElements() {
+        return this.state?.cachedElements ?? new Set();
+    }
+    static set cachedElements(val) {
+        if (this.state)
+            this.state.cachedElements = val;
+    }
+    static get cachedLinks() {
+        return this.state?.cachedLinks ?? new Map();
+    }
+    static get currentImageQuality() {
+        return this.state?.currentImageQuality;
+    }
+    static set currentImageQuality(val) {
+        if (this.state)
+            this.state.currentImageQuality = val;
+    }
+    static get currentSentenceIndex() {
+        return this.state?.currentSentenceIndex ?? 0;
+    }
+    static set currentSentenceIndex(val) {
+        if (this.state)
+            this.state.currentSentenceIndex = val;
+    }
+    static get currentSide() {
+        return this.state?.currentSide ?? PagePosition.Left;
+    }
+    static set currentSide(val) {
+        if (this.state)
+            this.state.currentSide = val;
+    }
+    static get currentWordIndex() {
+        return this.state?.currentWordIndex ?? 0;
+    }
+    static set currentWordIndex(val) {
+        if (this.state)
+            this.state.currentWordIndex = val;
+    }
+    static get direction() {
+        return this.state?.direction ?? Direction.Ltr;
+    }
+    static set direction(val) {
+        if (this.state)
+            this.state.direction = val;
+    }
+    static get expandingSpread() {
+        return this.state?.expandingSpread ?? false;
+    }
+    static set expandingSpread(val) {
+        if (this.state)
+            this.state.expandingSpread = val;
+    }
+    static get expansionTranslation() {
+        return this.state?.expansionTranslation ?? 0;
+    }
+    static set expansionTranslation(val) {
+        if (this.state)
+            this.state.expansionTranslation = val;
+    }
+    static get expansionTransitionPending() {
+        return this.state?.expansionTransitionPending ?? false;
+    }
+    static set expansionTransitionPending(val) {
+        if (this.state)
+            this.state.expansionTransitionPending = val;
+    }
+    static get forcingPortrait() {
+        return this.state?.forcingPortrait ?? false;
+    }
+    static set forcingPortrait(val) {
+        if (this.state)
+            this.state.forcingPortrait = val;
+    }
+    static get hasFontChanged() {
+        return this.state?.hasFontChanged ?? false;
+    }
+    static set hasFontChanged(val) {
+        if (this.state)
+            this.state.hasFontChanged = val;
+    }
+    static get highlightOnLoad() {
+        return this.state?.highlightOnLoad;
+    }
+    static set highlightOnLoad(val) {
+        if (this.state)
+            this.state.highlightOnLoad = val;
+    }
+    static get isAnimating() {
+        return this.state?.isAnimating ?? false;
+    }
+    static set isAnimating(val) {
+        if (this.state)
+            this.state.isAnimating = val;
+    }
+    static get isFontsReady() {
+        return this.state?.isFontsReady ?? false;
+    }
+    static set isFontsReady(val) {
+        if (this.state)
+            this.state.isFontsReady = val;
+    }
+    static get registeredFontFamilies() {
+        return this.state?.registeredFontFamilies ?? new Set();
+    }
+    static set registeredFontFamilies(val) {
+        if (this.state)
+            this.state.registeredFontFamilies = val;
+    }
+    static get layout() {
+        return this.state?.layout;
+    }
+    static set layout(val) {
+        if (this.state)
+            this.state.layout = val;
+    }
+    static get htmlOffset() {
+        return this.state?.htmlOffset ?? 0;
+    }
+    static set htmlOffset(val) {
+        if (this.state)
+            this.state.htmlOffset = val;
+    }
+    static get plainTextLinesObserver() {
+        return this.state?.plainTextLinesObserver ?? null;
+    }
+    static set plainTextLinesObserver(val) {
+        if (this.state)
+            this.state.plainTextLinesObserver = val;
+    }
+    static get previouslyShownPages() {
+        return this.state?.previouslyShownPages ?? 0;
+    }
+    static set previouslyShownPages(val) {
+        if (this.state)
+            this.state.previouslyShownPages = val;
+    }
+    static get styles() {
+        return this.state?.styles;
+    }
+    static set styles(val) {
+        if (this.state)
+            this.state.styles = val;
+    }
+    static get wantedElements() {
+        return this.state?.wantedElements ?? new Set();
+    }
+    static set wantedElements(val) {
+        if (this.state)
+            this.state.wantedElements = val;
+    }
+    static get elementsOnPage() {
+        return (this.state?.elementsOnPage ??
+            new Map());
+    }
+    static get handlers() {
+        return this.state?.handlers ?? new Set();
+    }
     static get currentPage() {
         return this.htmlPage === null
             ? 0
@@ -120,22 +338,22 @@ export class Builder {
             this.isFontsReady = true;
         }
     }
-    static async register() {
-        await (this.registerPromise = this.registerPromise.then(async () => {
-            this.animationCleanup?.();
-            this.animationCleanup = undefined;
-            this.isAnimating = false;
-            this.isFontsReady = false;
-            this.registeredFontFamilies = new Set();
-            this.styles = undefined;
-            this.cachedElements = new Set();
-            this.wantedElements = new Set();
-            this.handlers.clear();
-            this.elementsOnPage.clear();
-            this.cachedLinks.clear();
-            this.currentSentenceIndex = 0;
-            this.currentWordIndex = 0;
-        }));
+    static register() {
+        const originalRoot = Readiant.root;
+        Readiant.root = originalRoot;
+        this.animationCleanup?.();
+        this.animationCleanup = undefined;
+        this.isAnimating = false;
+        this.isFontsReady = false;
+        this.registeredFontFamilies = new Set();
+        this.styles = undefined;
+        this.cachedElements = new Set();
+        this.wantedElements = new Set();
+        this.handlers.clear();
+        this.elementsOnPage.clear();
+        this.cachedLinks.clear();
+        this.currentSentenceIndex = 0;
+        this.currentWordIndex = 0;
         if (Readiant.type === ContentType.HTML) {
             this.htmlPage?.classList.remove(CLASS_HIDDEN);
             this.left?.remove();
@@ -215,6 +433,7 @@ export class Builder {
             });
             if (this.viewport !== null)
                 new MutationObserver(() => {
+                    Readiant.root = originalRoot;
                     this.layer(PagePosition.Left);
                     this.layer(PagePosition.Right);
                 }).observe(this.viewport, {
@@ -231,6 +450,7 @@ export class Builder {
         this.handlers.add(handler);
     }
     static async addToCache(elements) {
+        const originalRoot = Readiant.root;
         const fragment = Readiant.documentContext.createDocumentFragment();
         const placeholder = Readiant.documentContext.createElementNS(NAMESPACE_SVG, 'svg');
         for (const [id, element] of elements) {
@@ -246,6 +466,7 @@ export class Builder {
             this.cachedElements.add(id);
         }
         await this.waitForNextFrame();
+        Readiant.root = originalRoot;
         if (this.elems)
             this.elems.appendChild(this.convert(fragment));
         if (this.hasFontChanged) {
@@ -444,7 +665,9 @@ export class Builder {
         this.animatePage(PagePosition.Right);
     }
     static async animation(side, blueprint, viewBox, isBack, epoch) {
+        const originalRoot = Readiant.root;
         await this.waitForAnimation(side === PagePosition.Left ? this.animationLeft : this.animationRight);
+        Readiant.root = originalRoot;
         if (typeof epoch !== 'undefined' && epoch !== Navigation.renderEpoch)
             return;
         const sideElement = side === PagePosition.Left
@@ -460,6 +683,7 @@ export class Builder {
         }
     }
     static async cache(pages) {
+        const originalRoot = Readiant.root;
         const elements = Storage.getBlueprints(pages);
         const add = this.cachedElements.size > 0
             ? [...elements].filter((x) => !this.cachedElements.has(x))
@@ -470,9 +694,11 @@ export class Builder {
         const stored = Storage.getElements(add);
         this.wantedElements = new Set([...this.wantedElements, ...stored.missing]);
         await this.waitForNextFrame();
+        Readiant.root = originalRoot;
         if (this.elems)
             this.elems.appendChild(this.convert(stored.elements));
         await this.waitForNextFrame();
+        Readiant.root = originalRoot;
         if (this.hasFontChanged) {
             const textElements = this.elems?.getElementsByTagNameNS(NAMESPACE_SVG, 'text');
             for (const textElement of textElements) {
@@ -648,10 +874,12 @@ export class Builder {
         Fonts.wordSpacing(newWordSpacing, true);
     }
     static async definitions(elements) {
+        const originalRoot = Readiant.root;
         const fragment = Readiant.documentContext.createDocumentFragment();
         for (const element of elements)
             fragment.appendChild(Storage.convertStringToElement(element[1]));
         await this.waitForNextFrame();
+        Readiant.root = originalRoot;
         if (this.defs)
             this.defs.appendChild(fragment);
     }
@@ -1457,7 +1685,9 @@ export class Builder {
             handler(page, side);
     }
     static observe() {
+        const originalRoot = Readiant.root;
         const callback = debounce(() => {
+            Readiant.root = originalRoot;
             this.resize();
         }, 100);
         const observer = new ResizeObserver(callback);
@@ -1533,6 +1763,13 @@ export class Builder {
             width,
         });
     }
+    static get onPlainTextRendered() {
+        return this.state?.onPlainTextRendered ?? null;
+    }
+    static set onPlainTextRendered(val) {
+        if (this.state)
+            this.state.onPlainTextRendered = val;
+    }
     static schedulePlainText() {
         if (TextMode.level !== 1 && Orientation.mode === OrientationMode.Portrait)
             this.plainText().catch((e) => {
@@ -1540,6 +1777,7 @@ export class Builder {
             });
     }
     static async plainText() {
+        const originalRoot = Readiant.root;
         if (this.plainTextPage === null || this.plainTextPageContent === null)
             return;
         const content = this.plainTextContent();
@@ -1579,8 +1817,10 @@ export class Builder {
             });
         }
         await this.plainTextLines();
+        Readiant.root = originalRoot;
         this.plainTextLinesObserver?.disconnect();
         this.plainTextLinesObserver = new ResizeObserver(() => {
+            Readiant.root = originalRoot;
             this.plainTextLines().catch((e) => {
                 throw e;
             });
@@ -1607,7 +1847,13 @@ export class Builder {
             word: String(word.getAttribute('data-w')),
         })));
         const compareLeft = (a, b) => this.direction === Direction.Rtl ? b - a : a - b;
-        const grouped = Object.values(groupBy(sentenceElements, (element) => element.sentence))
+        const sentencesByIndex = new Map();
+        for (const element of sentenceElements) {
+            const sentence = sentencesByIndex.get(element.sentence) ?? [];
+            sentence.push(element);
+            sentencesByIndex.set(element.sentence, sentence);
+        }
+        const grouped = [...sentencesByIndex.values()]
             .map((group) => group.sort((a, b) => a.top === b.top ? compareLeft(a.left, b.left) : a.top - b.top))
             .sort((a, b) => a[0].top === b[0].top
             ? compareLeft(a[0].left, b[0].left)
@@ -2066,9 +2312,13 @@ export class Builder {
         }
     }
     static async svg(pageNumber, side) {
+        const originalRoot = Readiant.root;
         const { blueprint, elements, rotation, viewBox } = Storage.getPage(pageNumber);
         const page = this.getPage(side);
-        await this.waitForElements(elements);
+        const elementsReady = await this.waitForElements(elements);
+        Readiant.root = originalRoot;
+        if (!elementsReady)
+            return;
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
             return;
         const thisSideAnimation = side === PagePosition.Left ? this.animationLeft : this.animationRight;
@@ -2079,6 +2329,7 @@ export class Builder {
         const isCollapsingSpread = Navigation.currentPages.length < this.previouslyShownPages;
         if (isCollapsingSpread || (!isCovered && !isExpandingSpread))
             await this.waitForAnimation(thisSideAnimation);
+        Readiant.root = originalRoot;
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
             return;
         this.hide(side);
@@ -2097,6 +2348,7 @@ export class Builder {
             this.startExpansionTransition();
         if (revealAfterAnimation) {
             await this.waitForAnimation(thisSideAnimation);
+            Readiant.root = originalRoot;
             if (!Navigation.currentPages.some((current) => current.page === pageNumber && current.position === side))
                 return;
             this.show(page);
@@ -3333,28 +3585,41 @@ export class Builder {
     }
     static waitForElements(elements) {
         elements = elements.map((element) => `#${element.replace('.', '\\.')}`);
+        const elementContainer = this.elems;
         return new Promise((resolve) => {
+            let settled = false;
+            const finish = (result) => {
+                if (settled)
+                    return;
+                settled = true;
+                clearTimeout(timeout);
+                observer?.disconnect();
+                resolve(result);
+            };
             for (const element of elements) {
-                const exists = this.elems?.querySelector(element);
+                const exists = elementContainer?.querySelector(element);
                 if (exists !== null)
                     elements = elements.filter((el) => el !== element);
             }
-            if (elements.length === 0)
+            if (elements.length === 0) {
                 resolve(true);
-            if (this.elems !== null)
-                new MutationObserver((_records, observer) => {
+                return;
+            }
+            const observer = elementContainer === null
+                ? undefined
+                : new MutationObserver(() => {
                     for (const element of elements) {
-                        const exists = this.elems?.querySelector(element);
+                        const exists = elementContainer.querySelector(element);
                         if (exists !== null)
                             elements = elements.filter((el) => el !== element);
                     }
-                    if (elements.length === 0) {
-                        observer.disconnect();
-                        resolve(true);
-                    }
-                }).observe(this.elems, {
-                    childList: true,
+                    if (elements.length === 0)
+                        finish(true);
                 });
+            observer?.observe(elementContainer, { childList: true });
+            const timeout = window.setTimeout(() => {
+                finish(false);
+            }, 5000);
         });
     }
     static async waitForImages(element) {
@@ -3419,41 +3684,7 @@ export class Builder {
         }
     }
 }
-_a = Builder;
 Builder.ORIGINAL_FONT = 'rdnt__font--original';
-Builder.ORIGINAL_FONTSIZE = 'rdnt__font-size--8';
-Builder.ORIGINAL_LETTERSPACING = 'rdnt__letter-spacing--3';
-Builder.ORIGINAL_LINEHEIGHT = 'rdnt__html-page--line-height--2';
-Builder.ORIGINAL_WORDSPACING = 'rdnt__word-spacing--3';
 Builder.PORTRAIT_WIDTH = 768;
 Builder.PRECISION_EPSILON = 0.1;
-Builder.activeFont = _a.ORIGINAL_FONT;
-Builder.activeFontSize = _a.ORIGINAL_FONTSIZE;
-Builder.activeLetterSpacing = _a.ORIGINAL_LETTERSPACING;
-Builder.activeLineHeight = _a.ORIGINAL_LINEHEIGHT;
-Builder.activeWordSpacing = _a.ORIGINAL_WORDSPACING;
-Builder.animationDisabled = false;
-Builder.animationEpoch = 0;
-Builder.cachedElements = new Set();
-Builder.cachedLinks = new Map();
-Builder.currentSentenceIndex = 0;
-Builder.currentSide = PagePosition.Left;
-Builder.currentWordIndex = 0;
-Builder.direction = Direction.Ltr;
-Builder.expandingSpread = false;
-Builder.expansionTranslation = 0;
-Builder.expansionTransitionPending = false;
-Builder.forcingPortrait = false;
-Builder.hasFontChanged = false;
-Builder.isAnimating = false;
-Builder.isFontsReady = false;
-Builder.registeredFontFamilies = new Set();
-Builder.htmlOffset = 0;
-Builder.plainTextLinesObserver = null;
-Builder.previouslyShownPages = 0;
-Builder.wantedElements = new Set();
 Builder.SYNTAX_MISS_STREAK_THRESHOLD = 5;
-Builder.elementsOnPage = new Map();
-Builder.handlers = new Set();
-Builder.registerPromise = Promise.resolve();
-Builder.onPlainTextRendered = null;

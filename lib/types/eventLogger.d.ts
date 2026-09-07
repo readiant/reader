@@ -4,12 +4,10 @@ import { LogType } from './log.js';
 import { Readiant } from './readiant.js';
 import { Stream } from './stream.js';
 const targetOrigin = '*';
-let dispatchComponentEvent;
-export function registerComponentDispatcher(fn) {
-    dispatchComponentEvent = fn;
-}
 export function notifyComponent(type, detail) {
-    dispatchComponentEvent?.(type, detail);
+    const instance = Readiant.getInstance(Readiant.root);
+    if (instance?.rootContext instanceof ShadowRoot)
+        instance.rootContext.host.dispatchEvent(new CustomEvent(type, { detail }));
 }
 function logToEvent(log) {
     switch (log.type) {
@@ -151,9 +149,7 @@ export function eventLogger(toLog) {
             type: ClientActionType.Log,
             logData: toLog,
         });
-    if (typeof dispatchComponentEvent !== 'undefined') {
-        const mapped = logToEvent(toLog);
-        if (mapped !== null)
-            dispatchComponentEvent(mapped[0], mapped[1]);
-    }
+    const mapped = logToEvent(toLog);
+    if (mapped !== null)
+        notifyComponent(mapped[0], mapped[1]);
 }

@@ -19,7 +19,16 @@ export class Fullscreen {
     static get toggleButton() {
         return Readiant.root.querySelector('.rdnt__fullscreen-toggle');
     }
+    static get active() {
+        return Readiant.getInstance(Readiant.root)?.fullscreenState.active ?? false;
+    }
+    static set active(val) {
+        const state = Readiant.getInstance(Readiant.root)?.fullscreenState;
+        if (state)
+            state.active = val;
+    }
     static register() {
+        const originalRoot = Readiant.root;
         this.active = false;
         if (!fullscreen)
             return;
@@ -42,7 +51,12 @@ export class Fullscreen {
         if (typeof onLabel !== 'undefined')
             this.toggleButton?.setAttribute('aria-label', onLabel);
         this.enableIcon?.classList.remove(CLASS_HIDDEN);
-        Readiant.root.addEventListener('fullscreenchange', () => this.detect());
+        Readiant.root.addEventListener('fullscreenchange', () => {
+            Readiant.root = originalRoot;
+            this.detect().catch((e) => {
+                throw e;
+            });
+        });
     }
     static async change(event) {
         let title;
@@ -157,4 +171,3 @@ export class Fullscreen {
         });
     }
 }
-Fullscreen.active = false;

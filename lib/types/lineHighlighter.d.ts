@@ -32,6 +32,30 @@ export class LineHighlighter {
     static get top() {
         return Readiant.root.querySelector('.rdnt__line-highlighter--top');
     }
+    static get state() {
+        return Readiant.getInstance(Readiant.root)?.lineHighlighterState;
+    }
+    static get active() {
+        return this.state?.active ?? false;
+    }
+    static set active(val) {
+        if (this.state)
+            this.state.active = val;
+    }
+    static get color() {
+        return this.state?.color ?? 'transparent';
+    }
+    static set color(val) {
+        if (this.state)
+            this.state.color = val;
+    }
+    static get width() {
+        return this.state?.width ?? 30;
+    }
+    static set width(val) {
+        if (this.state)
+            this.state.width = val;
+    }
     static resetState() {
         this.active = false;
         this.color = 'transparent';
@@ -123,6 +147,3 @@ export class LineHighlighter {
             Builder.layers?.classList.remove(CLASS_DISABLED);
     }
 }
-LineHighlighter.active = false;
-LineHighlighter.color = 'transparent';
-LineHighlighter.width = 30;

@@ -1,6 +1,6 @@
 {
   "name": "@readiant/reader",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Readiant Web Component",
   "main": "lib/js/base.js",
   "module": "lib/js/base.js",
@@ -50,14 +50,16 @@
     "maintained node versions"
   ],
   "peerDependencies": {
-    "@webcomponents/webcomponentsjs": "^2.8.0",
     "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {},
   "dependencies": {
-    "@juggle/resize-observer": "^3.3.1",
-    "idb": "^7.1.1",
-    "lodash": "^4.17.21"
+    "idb": "^7.1.1"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

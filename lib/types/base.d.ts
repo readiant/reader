@@ -1,7 +1,6 @@
 import { Audio } from './audio.js';
 import { Bar } from './bar.js';
 import { Colorblind } from './colorblind.js';
-import { registerComponentDispatcher } from './eventLogger.js';
 import { Fonts } from './fonts.js';
 import { Fullscreen } from './fullscreen.js';
 import { ImageQuality } from './imageQuality.js';
@@ -130,10 +129,6 @@ class ReadiantElement extends HTMLElement {
         if (initializedElements.has(this))
             return;
         initializedElements.add(this);
-        ReadiantElement.instance = this;
-        registerComponentDispatcher((type, detail) => {
-            ReadiantElement.dispatchEvent(type, detail);
-        });
         this.initialize().catch((error) => {
             console.error('[Readiant] Initialization error:', error);
         });
@@ -158,6 +153,24 @@ class ReadiantElement extends HTMLElement {
             if (this.shadowRoot)
                 return;
             const shadow = this.attachShadow({ mode: 'open' });
+            for (const eventType of [
+                'blur',
+                'change',
+                'click',
+                'focus',
+                'focusin',
+                'input',
+                'keydown',
+                'keyup',
+                'pointercancel',
+                'pointerdown',
+                'pointerleave',
+                'pointermove',
+                'pointerup',
+            ])
+                shadow.addEventListener(eventType, () => {
+                    Readiant.root = shadow;
+                }, { capture: true });
             try {
                 const sheet = new CSSStyleSheet();
                 await sheet.replace(styles);
@@ -176,7 +189,7 @@ class ReadiantElement extends HTMLElement {
                         return;
                     const { Readiant } = await import('./readiant.js');
                     const instance = new Readiant(shadow);
-                    await instance.getInitializationPromise();
+                    await Readiant.withContext(instance.getInitializationPromise());
                 }
             }
             catch (error) {
@@ -190,8 +203,6 @@ class ReadiantElement extends HTMLElement {
     }
     disconnectedCallback() {
         this.pauseAudio();
-        if (ReadiantElement.instance === this)
-            ReadiantElement.instance = null;
         if (this.shadowRoot) {
             Readiant.getInstance(this.shadowRoot)?.abort();
             Readiant.removeInstance(this.shadowRoot);
@@ -230,6 +241,10 @@ class ReadiantElement extends HTMLElement {
     setContext() {
         if (this.shadowRoot) {
             Readiant.root = this.shadowRoot;
+            const inst = Readiant.getInstance(this.shadowRoot);
+            if (inst) {
+                Readiant.root = inst.rootContext;
+            }
         }
     }
     get currentPage() {
@@ -289,15 +304,7 @@ class ReadiantElement extends HTMLElement {
         this.setContext();
         Readiant.windowContext.print();
     }
-    dispatchReadiantEvent(type, detail) {
-        this.dispatchEvent(new CustomEvent(type, { detail }));
-    }
-    static dispatchEvent(type, detail) {
-        if (ReadiantElement.instance)
-            ReadiantElement.instance.dispatchReadiantEvent(type, detail);
-    }
 }
-ReadiantElement.instance = null;
 if (!customElements.get(customElementTag)) {
     try {
         customElements.define(customElementTag, ReadiantElement);

@@ -3,6 +3,29 @@ import { ServerActionType } from './consts.js';
 import { isOffline, ENV_VALUE } from './env.js';
 import { Readiant } from './readiant.js';
 export class Stream {
+    static get state() {
+        return Readiant.getInstance(Readiant.root)?.streamState;
+    }
+    static get ws() {
+        return this.state?.ws;
+    }
+    static set ws(val) {
+        if (this.state)
+            this.state.ws = val;
+    }
+    static get backoff() {
+        return this.state?.backoff ?? [];
+    }
+    static set backoff(val) {
+        if (this.state)
+            this.state.backoff = val;
+    }
+    static get handlers() {
+        return this.state?.handlers ?? new Map();
+    }
+    static get transfers() {
+        return this.state?.transfers ?? {};
+    }
     static hasMessageHandler(messageType) {
         return this.handlers.has(messageType);
     }
@@ -13,8 +36,10 @@ export class Stream {
         if (isOffline)
             return;
         if (typeof this.ws === 'undefined') {
+            const originalRoot = Readiant.root;
             this.setup()
                 .then(() => {
+                Readiant.root = originalRoot;
                 if (typeof this.ws !== 'undefined')
                     this.ws.send(JSON.stringify(params));
             })
@@ -28,11 +53,13 @@ export class Stream {
     static async setup() {
         if (isOffline)
             return;
+        const originalRoot = Readiant.root;
         return new Promise((resolve, reject) => {
             if (this.backoff.length === 0)
                 reject(new Error());
             this.ws = new WebSocket(this.url);
             this.ws.addEventListener('message', (event) => {
+                Readiant.root = originalRoot;
                 if (typeof event.data !== 'string') {
                     const transferId = Object.keys(this.transfers)[0];
                     if (typeof transferId !== 'undefined') {
@@ -62,24 +89,29 @@ export class Stream {
                 }
             });
             this.ws.addEventListener('close', () => {
+                Readiant.root = originalRoot;
                 if (typeof this.ws !== 'undefined')
                     this.ws.close();
                 if (this.backoff.length > 0)
-                    setTimeout(() => this.setup(), this.backoff.shift());
+                    setTimeout(() => {
+                        Readiant.root = originalRoot;
+                        this.setup().catch((e) => {
+                            Readiant.errorHandler(e);
+                        });
+                    }, this.backoff.shift());
             });
             this.ws.addEventListener('error', () => {
+                Readiant.root = originalRoot;
                 reject(new Error());
             });
             this.ws.addEventListener('open', () => {
+                Readiant.root = originalRoot;
                 resolve();
             });
         });
     }
 }
 _a = Stream;
-Stream.backoff = [1000, 2500, 5000, 10000];
-Stream.handlers = new Map();
-Stream.transfers = {};
 Stream.verificationCode = String(document.body.dataset.verify);
 Stream.url = `${ENV_VALUE === 'LOCAL'
     ? 'ws://localhost:8008'

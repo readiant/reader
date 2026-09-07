@@ -11,6 +11,79 @@ export class Zoom {
     static get range() {
         return Readiant.root.querySelector('.rdnt__zoom');
     }
+    static get handlers() {
+        return this.state?.handlers ?? new Set();
+    }
+    static get state() {
+        const inst = Readiant.getInstance(Readiant.root);
+        if (!inst) {
+            return undefined;
+        }
+        return inst.zoomState;
+    }
+    static get isGrabbing() {
+        return this.state?.isGrabbing ?? false;
+    }
+    static set isGrabbing(val) {
+        if (this.state)
+            this.state.isGrabbing = val;
+    }
+    static get startX() {
+        return this.state?.startX ?? 0;
+    }
+    static set startX(val) {
+        if (this.state)
+            this.state.startX = val;
+    }
+    static get startY() {
+        return this.state?.startY ?? 0;
+    }
+    static set startY(val) {
+        if (this.state)
+            this.state.startY = val;
+    }
+    static get scrollLeft() {
+        return this.state?.scrollLeft ?? 0;
+    }
+    static set scrollLeft(val) {
+        if (this.state)
+            this.state.scrollLeft = val;
+    }
+    static get scrollTop() {
+        return this.state?.scrollTop ?? 0;
+    }
+    static set scrollTop(val) {
+        if (this.state)
+            this.state.scrollTop = val;
+    }
+    static get animationFrameId() {
+        return this.state?.animationFrameId;
+    }
+    static set animationFrameId(val) {
+        if (this.state)
+            this.state.animationFrameId = val;
+    }
+    static get lastKnownMouseX() {
+        return this.state?.lastKnownMouseX ?? 0;
+    }
+    static set lastKnownMouseX(val) {
+        if (this.state)
+            this.state.lastKnownMouseX = val;
+    }
+    static get lastKnownMouseY() {
+        return this.state?.lastKnownMouseY ?? 0;
+    }
+    static set lastKnownMouseY(val) {
+        if (this.state)
+            this.state.lastKnownMouseY = val;
+    }
+    static get level() {
+        return this.state?.level ?? 2;
+    }
+    static set level(val) {
+        if (this.state)
+            this.state.level = val;
+    }
     static add(handler) {
         this.handlers.add(handler);
     }
@@ -81,8 +154,13 @@ export class Zoom {
         event.preventDefault();
         this.lastKnownMouseX = event.clientX;
         this.lastKnownMouseY = event.clientY;
-        if (typeof this.animationFrameId === 'undefined')
-            this.animationFrameId = Readiant.windowContext.requestAnimationFrame(this.updateScrollPosition.bind(this));
+        if (typeof this.animationFrameId === 'undefined') {
+            const originalRoot = Readiant.root;
+            this.animationFrameId = Readiant.windowContext.requestAnimationFrame(() => {
+                Readiant.root = originalRoot;
+                this.updateScrollPosition();
+            });
+        }
     }
     static handlePointerUp() {
         if (this.level <= 2)
@@ -131,14 +209,6 @@ export class Zoom {
 }
 _a = Zoom;
 Zoom.modes = [60, 100, 150, 200, 250];
-Zoom.handlers = new Set();
-Zoom.isGrabbing = false;
-Zoom.startX = 0;
-Zoom.startY = 0;
-Zoom.scrollLeft = 0;
-Zoom.scrollTop = 0;
-Zoom.lastKnownMouseX = 0;
-Zoom.lastKnownMouseY = 0;
 Zoom.pointerDownHandler = (event) => {
     _a.handlePointerDown(event);
 };
@@ -151,4 +221,3 @@ Zoom.pointerLeaveHandler = () => {
 Zoom.pointerUpHandler = () => {
     _a.handlePointerUp();
 };
-Zoom.level = 2;

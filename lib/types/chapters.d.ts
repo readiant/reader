@@ -12,6 +12,14 @@ export class Chapters {
     static get list() {
         return Readiant.root.querySelector('.rdnt__chapters-list');
     }
+    static get chapters() {
+        return Readiant.getInstance(Readiant.root)?.chaptersState.chapters ?? [];
+    }
+    static set chapters(val) {
+        const state = Readiant.getInstance(Readiant.root)?.chaptersState;
+        if (state)
+            state.chapters = val;
+    }
     static register(chapters) {
         this.chapters = chapters;
         this.button?.addEventListener('click', (event) => {

@@ -61,42 +61,55 @@ export class Fonts {
     static get wordSpacingTitle() {
         return Readiant.root.querySelector('.rdnt__block-title--word-spacing');
     }
+    static get state() {
+        const inst = Readiant.getInstance(Readiant.root);
+        if (!inst) {
+            return undefined;
+        }
+        return inst.fontsState;
+    }
+    static get active() {
+        return this.state?.active ?? 'rdnt__font--original';
+    }
+    static set active(val) {
+        if (this.state)
+            this.state.active = val;
+    }
     static resetState() {
         this.active = 'rdnt__font--original';
     }
-    static async register() {
-        this.registerPromise = this.registerPromise.then(async () => {
-            for (const button of this.buttons)
-                button.addEventListener('change', (event) => {
-                    this.change(event);
-                });
-            this.fontSizeRange?.addEventListener('change', (event) => {
-                this.fontSize(event);
+    static register() {
+        const originalRoot = Readiant.root;
+        Readiant.root = originalRoot;
+        for (const button of this.buttons)
+            button.addEventListener('change', (event) => {
+                this.change(event);
             });
-            this.letterSpacingRange?.addEventListener('change', (event) => {
-                this.letterSpacing(event);
+        this.fontSizeRange?.addEventListener('change', (event) => {
+            this.fontSize(event);
+        });
+        this.letterSpacingRange?.addEventListener('change', (event) => {
+            this.letterSpacing(event);
+        });
+        for (const lineHeightButton of this.lineHeightButtons)
+            lineHeightButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.lineHeight(event);
             });
-            for (const lineHeightButton of this.lineHeightButtons)
-                lineHeightButton.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    this.lineHeight(event);
-                });
-            this.wordSpacingRange?.addEventListener('change', (event) => {
-                this.wordSpacing(event);
-            });
-            if (Readiant.type === ContentType.HTML) {
+        this.wordSpacingRange?.addEventListener('change', (event) => {
+            this.wordSpacing(event);
+        });
+        if (Readiant.type === ContentType.HTML) {
+            this.wordSpacingTitle?.parentElement?.classList.add(CLASS_HIDDEN);
+        }
+        else {
+            this.lineHeightTitle?.parentElement?.classList.add(CLASS_HIDDEN);
+            if (this.active === 'rdnt__font--original') {
+                this.fontSizeTitle?.parentElement?.classList.add(CLASS_HIDDEN);
+                this.letterSpacingTitle?.parentElement?.classList.add(CLASS_HIDDEN);
                 this.wordSpacingTitle?.parentElement?.classList.add(CLASS_HIDDEN);
             }
-            else {
-                this.lineHeightTitle?.parentElement?.classList.add(CLASS_HIDDEN);
-                if (this.active === 'rdnt__font--original') {
-                    this.fontSizeTitle?.parentElement?.classList.add(CLASS_HIDDEN);
-                    this.letterSpacingTitle?.parentElement?.classList.add(CLASS_HIDDEN);
-                    this.wordSpacingTitle?.parentElement?.classList.add(CLASS_HIDDEN);
-                }
-            }
-        });
-        await this.registerPromise;
+        }
     }
     static change(event) {
         let title;
@@ -266,5 +279,3 @@ export class Fonts {
         });
     }
 }
-Fonts.active = 'rdnt__font--original';
-Fonts.registerPromise = Promise.resolve();

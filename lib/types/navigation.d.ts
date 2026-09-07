@@ -42,6 +42,111 @@ export class Navigation {
     static get previousButton() {
         return Readiant.root.querySelector('.rdnt__navigation--prev');
     }
+    static get state() {
+        const inst = Readiant.getInstance(Readiant.root);
+        if (!inst) {
+            return undefined;
+        }
+        return inst.navigationState;
+    }
+    static get cacheSize() {
+        return this.state?.cacheSize ?? 0;
+    }
+    static set cacheSize(val) {
+        if (this.state)
+            this.state.cacheSize = val;
+    }
+    static get cachedPages() {
+        return this.state?.cachedPages ?? new Set();
+    }
+    static set cachedPages(val) {
+        if (this.state)
+            this.state.cachedPages = val;
+    }
+    static get maxPage() {
+        return this.state?.maxPage ?? 0;
+    }
+    static set maxPage(val) {
+        if (this.state)
+            this.state.maxPage = val;
+    }
+    static get lazyLoader() {
+        return this.state?.lazyLoader;
+    }
+    static set lazyLoader(val) {
+        if (this.state)
+            this.state.lazyLoader = val;
+    }
+    static get missingPages() {
+        return this.state?.missingPages ?? new Set();
+    }
+    static set missingPages(val) {
+        if (this.state)
+            this.state.missingPages = val;
+    }
+    static get pageCounts() {
+        return this.state?.pageCounts ?? [];
+    }
+    static set pageCounts(val) {
+        if (this.state)
+            this.state.pageCounts = val;
+    }
+    static get pageOffset() {
+        return this.state?.pageOffset ?? 0;
+    }
+    static set pageOffset(val) {
+        if (this.state)
+            this.state.pageOffset = val;
+    }
+    static get previousAction() {
+        return this.state?.previousAction;
+    }
+    static set previousAction(val) {
+        if (this.state)
+            this.state.previousAction = val;
+    }
+    static get previousLog() {
+        return this.state?.previousLog;
+    }
+    static set previousLog(val) {
+        if (this.state)
+            this.state.previousLog = val;
+    }
+    static get spread() {
+        return this.state?.spread;
+    }
+    static set spread(val) {
+        if (this.state)
+            this.state.spread = val;
+    }
+    static get timestamp() {
+        return this.state?.timestamp ?? new Date();
+    }
+    static set timestamp(val) {
+        if (this.state)
+            this.state.timestamp = val;
+    }
+    static get touch() {
+        return this.state?.touch;
+    }
+    static set touch(val) {
+        if (this.state)
+            this.state.touch = val;
+    }
+    static get pages() {
+        return this.state?.pages ?? [];
+    }
+    static set pages(val) {
+        if (this.state)
+            this.state.pages = val;
+    }
+    static get renderEpoch() {
+        return this.state?.renderEpoch ?? 0;
+    }
+    static set renderEpoch(val) {
+        if (this.state)
+            this.state.renderEpoch = val;
+    }
     static isOffsetPage(page) {
         return page + this.pageOffset <= 0;
     }
@@ -57,25 +162,75 @@ export class Navigation {
     static get numPages() {
         return Math.max(...this.pages);
     }
+    static get handlers() {
+        return this.state?.handlers ?? new Set();
+    }
+    static get textHandlers() {
+        return this.state?.textHandlers ?? new Map();
+    }
+    static get animationPages() {
+        return (this.state?.animationPages ?? [{ page: 2, position: PagePosition.Right }]);
+    }
+    static set animationPages(val) {
+        if (this.state)
+            this.state.animationPages = val;
+    }
+    static get chapterIndex() {
+        return this.state?.chapterIndex ?? 0;
+    }
+    static set chapterIndex(val) {
+        if (this.state)
+            this.state.chapterIndex = val;
+    }
+    static get currentPage() {
+        return this.state?.currentPage ?? 1;
+    }
+    static set currentPage(val) {
+        if (this.state)
+            this.state.currentPage = val;
+    }
+    static get currentPages() {
+        return (this.state?.currentPages ?? [{ page: 1, position: PagePosition.Right }]);
+    }
+    static set currentPages(val) {
+        if (this.state)
+            this.state.currentPages = val;
+    }
+    static get direction() {
+        return this.state?.direction ?? Direction.Ltr;
+    }
+    static set direction(val) {
+        if (this.state)
+            this.state.direction = val;
+    }
+    static get hasRegistered() {
+        return this.state?.hasRegistered ?? false;
+    }
+    static set hasRegistered(val) {
+        if (this.state)
+            this.state.hasRegistered = val;
+    }
     static async register(page, pages, pageCounts, indexes, direction, offset, spread) {
-        await (this.registerPromise = this.registerPromise.then(async () => {
-            this.handlers.clear();
-            this.textHandlers.clear();
-            this.cachedPages = new Set();
-            this.missingPages = new Set();
-            this.previousLog = undefined;
-            this.renderEpoch = 0;
-            this.hasRegistered = false;
-            this.previousAction = undefined;
-            this.currentPage = 1;
-            this.animationPages = [{ page: 2, position: PagePosition.Right }];
-            this.currentPages = [{ page: 1, position: PagePosition.Right }];
-            if (Readiant.type === ContentType.HTML)
-                this.registerHTML(page, pageCounts, indexes, direction);
-            else
-                await this.registerSVG(page, pages, pageCounts, direction, offset, spread);
-        }));
+        const originalRoot = Readiant.root;
+        Readiant.root = originalRoot;
+        this.handlers.clear();
+        this.textHandlers.clear();
+        this.cachedPages = new Set();
+        this.missingPages = new Set();
+        this.previousLog = undefined;
+        this.renderEpoch = 0;
+        this.hasRegistered = false;
+        this.previousAction = undefined;
+        this.currentPage = 1;
+        this.animationPages = [{ page: 2, position: PagePosition.Right }];
+        this.currentPages = [{ page: 1, position: PagePosition.Right }];
+        if (Readiant.type === ContentType.HTML)
+            this.registerHTML(page, pageCounts, indexes, direction);
+        else
+            await Readiant.withContext(this.registerSVG(page, pages, pageCounts, direction, offset, spread));
+        Readiant.root = originalRoot;
         this.firstButton?.addEventListener('click', (event) => {
+            Readiant.root = originalRoot;
             event.preventDefault();
             if (Readiant.type === ContentType.SVG)
                 this.gotoFirstPageSVG();
@@ -83,13 +238,16 @@ export class Navigation {
                 this.gotoPageDirectly(1);
         });
         this.nextButton?.addEventListener('click', (event) => {
+            Readiant.root = originalRoot;
             event.preventDefault();
             this.onRightPressed();
         });
         this.pageNumberInput?.addEventListener('change', (event) => {
+            Readiant.root = originalRoot;
             this.gotoPageDirectly(event);
         });
         this.previousButton?.addEventListener('click', (event) => {
+            Readiant.root = originalRoot;
             event.preventDefault();
             this.onLeftPressed();
         });
@@ -98,19 +256,24 @@ export class Navigation {
             this.previousButton?.classList.add(CLASS_HIDDEN);
         }
         Readiant.root.addEventListener('pointerdown', (event) => {
+            Readiant.root = originalRoot;
             this.touchHandler(TouchHandlerAction.Start, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointermove', (event) => {
+            Readiant.root = originalRoot;
             this.touchHandler(TouchHandlerAction.Move, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointerup', (event) => {
+            Readiant.root = originalRoot;
             this.touchHandler(TouchHandlerAction.End, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointercancel', (event) => {
+            Readiant.root = originalRoot;
             this.touchHandler(TouchHandlerAction.End, event);
         }, { passive: true });
         if (Storage.data.hover)
             Readiant.root.addEventListener('keydown', (event) => {
+                Readiant.root = originalRoot;
                 this.shortcut(event);
             });
         this.hasRegistered = true;
@@ -164,6 +327,7 @@ export class Navigation {
         });
     }
     static async registerSVG(page, pages, pageCounts, direction, offset, spread) {
+        const originalRoot = Readiant.root;
         const key = pages.indexOf(page);
         const inverse = [...pages].reverse();
         this.direction = direction;
@@ -199,6 +363,7 @@ export class Navigation {
             this.currentPage = this.currentPages[0].page;
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
         await this.initialPages(this.currentPages);
+        Readiant.root = originalRoot;
         this.logInitialPage(this.currentPage);
         const max = this.numPages;
         if (max !== this.pages.length)
@@ -705,6 +870,7 @@ export class Navigation {
         });
     }
     static async initialPages(requests) {
+        const originalRoot = Readiant.root;
         if (TextMode.level !== 3) {
             if (requests.some((val) => val.position === PagePosition.Left))
                 Builder.start(PagePosition.Left);
@@ -717,7 +883,9 @@ export class Navigation {
         }
         const pages = requests.map((request) => request.page);
         await this.requestPages(pages);
+        Readiant.root = originalRoot;
         await this.generateCache(pages);
+        Readiant.root = originalRoot;
         for (const request of requests) {
             if (Storage.hasPage(request.page)) {
                 Builder.svg(request.page, request.position).catch((e) => {
@@ -1020,8 +1188,10 @@ export class Navigation {
         this.gotoPage(page, PageChangeType.Previous);
     }
     static async requestPages(pages) {
+        const originalRoot = Readiant.root;
         if (typeof this.lazyLoader !== 'undefined') {
             await this.lazyLoader(pages);
+            Readiant.root = originalRoot;
             return;
         }
         Stream.send({
@@ -1199,20 +1369,3 @@ export class Navigation {
     }
 }
 Navigation.TOUCH_THRESHOLD = 50;
-Navigation.cachedPages = new Set();
-Navigation.maxPage = 0;
-Navigation.missingPages = new Set();
-Navigation.renderEpoch = 0;
-Navigation.handlers = new Set();
-Navigation.textHandlers = new Map();
-Navigation.animationPages = [
-    { page: 2, position: PagePosition.Right },
-];
-Navigation.chapterIndex = 0;
-Navigation.currentPage = 1;
-Navigation.currentPages = [
-    { page: 1, position: PagePosition.Right },
-];
-Navigation.direction = Direction.Ltr;
-Navigation.hasRegistered = false;
-Navigation.registerPromise = Promise.resolve();

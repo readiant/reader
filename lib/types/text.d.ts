@@ -29,6 +29,57 @@ export class Text {
     static get translateList() {
         return Readiant.root.querySelector('.rdnt__translation-list');
     }
+    static get state() {
+        return Readiant.getInstance(Readiant.root)?.textState;
+    }
+    static get cache() {
+        return this.state?.cache ?? new Map();
+    }
+    static get pendingSentences() {
+        return this.state?.pendingSentences ?? new Map();
+    }
+    static get barLoadingText() {
+        return this.state?.barLoadingText ?? null;
+    }
+    static set barLoadingText(val) {
+        if (this.state)
+            this.state.barLoadingText = val;
+    }
+    static get language() {
+        return this.state?.language ?? 'nl';
+    }
+    static set language(val) {
+        if (this.state)
+            this.state.language = val;
+    }
+    static get languages() {
+        return this.state?.languages ?? {};
+    }
+    static set languages(val) {
+        if (this.state)
+            this.state.languages = val;
+    }
+    static get simplified() {
+        return this.state?.simplified ?? false;
+    }
+    static set simplified(val) {
+        if (this.state)
+            this.state.simplified = val;
+    }
+    static get originalHTML() {
+        return this.state?.originalHTML ?? null;
+    }
+    static set originalHTML(val) {
+        if (this.state)
+            this.state.originalHTML = val;
+    }
+    static get isTranslating() {
+        return this.state?.isTranslating ?? false;
+    }
+    static set isTranslating(val) {
+        if (this.state)
+            this.state.isTranslating = val;
+    }
     static resetState() {
         this.cache.clear();
         this.pendingSentences.clear();
@@ -344,11 +395,3 @@ export class Text {
             icon.style.visibility = '';
     }
 }
-Text.cache = new Map();
-Text.pendingSentences = new Map();
-Text.barLoadingText = null;
-Text.language = 'nl';
-Text.languages = {};
-Text.simplified = false;
-Text.originalHTML = null;
-Text.isTranslating = false;

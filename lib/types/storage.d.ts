@@ -3,12 +3,22 @@ import { NAMESPACE_SVG, } from './consts.js';
 import { hoverEvents } from './detection.js';
 import { Readiant } from './readiant.js';
 export class Storage {
-    static async clear() {
-        this.clearPromise = this.clearPromise.then(async () => {
-            this.cache.clear();
-            this.stored.clear();
-        });
-        await this.clearPromise;
+    static get state() {
+        const inst = Readiant.getInstance(Readiant.root);
+        if (!inst) {
+            return undefined;
+        }
+        return inst.storageState;
+    }
+    static get cache() {
+        return this.state?.cache ?? new Map();
+    }
+    static get stored() {
+        return this.state?.stored ?? new Set();
+    }
+    static clear() {
+        this.cache.clear();
+        this.stored.clear();
     }
     static convertStringToElement(element) {
         const placeholder = Readiant.documentContext.createElementNS(NAMESPACE_SVG, 'svg');
@@ -23,6 +33,18 @@ export class Storage {
                 db.deleteObjectStore(storeName);
         if (!db.objectStoreNames.contains(this.data.code))
             db.createObjectStore(this.data.code, { keyPath: 'id' });
+    }
+    static get data() {
+        return (this.state?.data ?? {
+            code: window.location.pathname.split('/').pop(),
+            get hover() {
+                return hoverEvents;
+            },
+        });
+    }
+    static set data(val) {
+        if (this.state)
+            this.state.data = val;
     }
     static deleteAudio(src) {
         return this.cache.delete(`${this.AUDIO_KEY}${src}`);
@@ -143,7 +165,6 @@ export class Storage {
         this.cache.set(`${this.TEXT_KEY}${String(index)}`, text);
     }
 }
-Storage.cache = new Map();
 Storage.AUDIO_KEY = 'au-';
 Storage.CHAPTER_KEY = 'chptr-';
 Storage.ELEMENT_KEY = 'ele-';
@@ -152,11 +173,3 @@ Storage.READWRITE = 'readwrite';
 Storage.STORAGE_KEY = 'rdnt';
 Storage.SYNTAX_KEY = 'syn-';
 Storage.TEXT_KEY = 'txt-';
-Storage.stored = new Set();
-Storage.clearPromise = Promise.resolve();
-Storage.data = {
-    code: window.location.pathname.split('/').pop(),
-    get hover() {
-        return hoverEvents;
-    },
-};
