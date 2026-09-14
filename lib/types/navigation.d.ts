@@ -235,7 +235,9 @@ export class Navigation {
             if (Readiant.type === ContentType.SVG)
                 this.gotoFirstPageSVG();
             else
-                this.gotoPageDirectly(1);
+                this.gotoPageDirectly(1).catch((e) => {
+                    throw e;
+                });
         });
         this.nextButton?.addEventListener('click', (event) => {
             Readiant.root = owner;
@@ -244,7 +246,9 @@ export class Navigation {
         });
         this.pageNumberInput?.addEventListener('change', (event) => {
             Readiant.root = owner;
-            this.gotoPageDirectly(event);
+            this.gotoPageDirectly(event).catch((e) => {
+                throw e;
+            });
         });
         this.previousButton?.addEventListener('click', (event) => {
             Readiant.root = owner;
@@ -674,20 +678,22 @@ export class Navigation {
                 const key = pages.indexOf(page);
                 page = this.pages[key];
             }
-            this.gotoPageSVG(page, PageChangeType.Other);
+            await this.gotoPageSVG(page, PageChangeType.Other);
         }
     }
     static gotoPage(page, type = PageChangeType.Other) {
         if (Readiant.type === ContentType.HTML)
             this.gotoPageHTML(page, type);
         else
-            this.gotoPageSVG(page, type);
+            this.gotoPageSVG(page, type).catch((e) => {
+                throw e;
+            });
     }
-    static gotoPageDirectly(event) {
+    static async gotoPageDirectly(event) {
         if (Readiant.type === ContentType.HTML)
             this.gotoPageDirectlyHTML(event);
         else
-            this.gotoPageDirectlySVG(event);
+            await this.gotoPageDirectlySVG(event);
     }
     static gotoPageDirectlyHTML(event) {
         const globalPage = typeof event === 'number'
@@ -716,7 +722,7 @@ export class Navigation {
         else
             this.gotoPageHTML(builderPage, PageChangeType.Other);
     }
-    static gotoPageDirectlySVG(event) {
+    static async gotoPageDirectlySVG(event) {
         let page = typeof event === 'number'
             ? event
             : Number(event.currentTarget.value) -
@@ -726,7 +732,7 @@ export class Navigation {
             const key = pages.indexOf(page);
             page = this.pages[key];
         }
-        this.gotoPage(page, PageChangeType.Other);
+        await this.gotoPageSVG(page, PageChangeType.Other);
     }
     static gotoFirstPageSVG() {
         let firstPage = this.pages[0];
@@ -832,7 +838,7 @@ export class Navigation {
         this.htmlProgress();
         this.notify(this.globalPage, previousPage);
     }
-    static gotoPageSVG(page, type = PageChangeType.Other) {
+    static async gotoPageSVG(page, type = PageChangeType.Other) {
         if (!this.isInRangeSVG(page))
             return;
         const previousPage = this.currentPage;
@@ -851,9 +857,7 @@ export class Navigation {
                 this.renderEpoch++;
                 this.logPageChange(type);
                 this.notify(this.currentPage, previousPage);
-                this.preparePages(this.currentPages).catch((e) => {
-                    throw e;
-                });
+                await this.preparePages(this.currentPages);
             }
         }
         this.updatePageNumberDisplay();
@@ -1149,15 +1153,11 @@ export class Navigation {
         Builder.changeProgress(this.computePercentage()).catch((e) => {
             throw e;
         });
-        for (const request of requests) {
-            const cached = this.cachedPages.has(request.page);
-            const stored = Storage.hasPage(request.page);
-            if ((cached && stored) || stored)
-                Builder.svg(request.page, request.position, owner).catch((e) => {
-                    throw e;
-                });
-        }
         await this.generateCache(owner);
+        Readiant.root = owner;
+        await Promise.all(requests
+            .filter((request) => Storage.hasPage(request.page))
+            .map((request) => Builder.svg(request.page, request.position, owner)));
         Readiant.root = owner;
     }
     static previousPage() {
