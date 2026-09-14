@@ -1,3 +1,4 @@
+import { Answers } from './answers.js';
 import { Bar } from './bar.js';
 import { Builder } from './builder.js';
 import { CLASS_BLOCK_ACTIVE, CLASS_HIDDEN, CLASS_VISUALLY_HIDDEN, AudioPlayingState, OrientationMode, } from './consts.js';
@@ -1183,6 +1184,11 @@ export class Audio {
             }
             catch (_) {
                 Builder.stopHighlightingSyntax();
+            }
+            if (!Answers.visible &&
+                Builder.isAnswerSentence(side, sentences.length - 1)) {
+                Bar.empty();
+                return;
             }
             const wordStart = this.wordStart(sentence.value, wordsInSentence.map((word) => word.value), wordsInSentence.indexOf(word));
             const wordEnd = this.wordEnd(sentence.value, word.value, wordStart);

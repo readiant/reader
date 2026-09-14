@@ -16,6 +16,7 @@ import { Readiant } from './readiant.js';
 import { Storage } from './storage.js';
 import { TextMode } from './textMode.js';
 import { Zoom } from './zoom.js';
+import { Answers } from './answers.js';
 export class Builder {
     static get animationLeft() {
         return Readiant.root.querySelector('.rdnt__animation--left');
@@ -310,6 +311,9 @@ export class Builder {
         if (this.state)
             this.state.wantedElements = val;
     }
+    static get answerSentencesOnPage() {
+        return this.state?.answerSentencesOnPage ?? new Map();
+    }
     static get elementsOnPage() {
         return (this.state?.elementsOnPage ??
             new Map());
@@ -350,6 +354,7 @@ export class Builder {
         this.cachedElements = new Set();
         this.wantedElements = new Set();
         this.handlers.clear();
+        this.answerSentencesOnPage.clear();
         this.elementsOnPage.clear();
         this.cachedLinks.clear();
         this.currentSentenceIndex = 0;
@@ -682,8 +687,8 @@ export class Builder {
             sideElement.innerHTML = `<svg viewBox="${viewBox.join(' ')}">${blueprint}</svg>`;
         }
     }
-    static async cache(pages) {
-        const originalRoot = Readiant.root;
+    static async cache(pages, owner) {
+        Readiant.root = owner;
         const elements = Storage.getBlueprints(pages);
         const add = this.cachedElements.size > 0
             ? [...elements].filter((x) => !this.cachedElements.has(x))
@@ -694,11 +699,11 @@ export class Builder {
         const stored = Storage.getElements(add);
         this.wantedElements = new Set([...this.wantedElements, ...stored.missing]);
         await this.waitForNextFrame();
-        Readiant.root = originalRoot;
+        Readiant.root = owner;
         if (this.elems)
             this.elems.appendChild(this.convert(stored.elements));
         await this.waitForNextFrame();
-        Readiant.root = originalRoot;
+        Readiant.root = owner;
         if (this.hasFontChanged) {
             const textElements = this.elems?.getElementsByTagNameNS(NAMESPACE_SVG, 'text');
             for (const textElement of textElements) {
@@ -1126,6 +1131,8 @@ export class Builder {
             }
         }
         if (typeof stylesheetText !== 'undefined') {
+            if (stylesheetText.includes('--rdnt-answer'))
+                Answers.setAvailable();
             let cssText = stylesheetText;
             const fontFaceRegex = /@font-face\s*{([^}]+)}/g;
             cssText = cssText.replace(fontFaceRegex, (match, content) => {
@@ -1167,8 +1174,14 @@ export class Builder {
             }
         }
         if (allFontFaceRules.length > 0) {
+            const fontCss = allFontFaceRules.join('\n');
+            if (Readiant.root instanceof ShadowRoot) {
+                const fontStyleElementRoot = Readiant.documentContext.createElement('style');
+                fontStyleElementRoot.textContent = fontCss;
+                Readiant.root.appendChild(fontStyleElementRoot);
+            }
             const fontStyleElementDoc = Readiant.documentContext.createElement('style');
-            fontStyleElementDoc.textContent = allFontFaceRules.join('\n');
+            fontStyleElementDoc.textContent = fontCss;
             Readiant.documentContext.head.appendChild(fontStyleElementDoc);
         }
         if (typeof stylesheetText === 'undefined') {
@@ -1204,6 +1217,10 @@ export class Builder {
                 ...this.elems.querySelectorAll(`text${element}, ${element} text`),
             ].filter((value, index, self) => index === self.findIndex((t) => value.isEqualNode(t)));
             for (const exist of exists) {
+                const isAnswer = Readiant.windowContext
+                    .getComputedStyle(exist)
+                    .getPropertyValue('--rdnt-answer')
+                    .trim() === '1';
                 const transformStr = exist.getAttribute('transform');
                 let transform = [1, 0, 0, 1, 0, 0];
                 if (transformStr !== null && transformStr.trim().length > 0) {
@@ -1228,6 +1245,10 @@ export class Builder {
                     ? sourceWidth * (ctm ? Math.abs(ctm.a) : 1)
                     : 0);
                 const height = ctm ? bbox.height * Math.abs(ctm.d) : bbox.height;
+                if (isAnswer) {
+                    exist.setAttribute('data-rdnt-answer', '');
+                    Answers.setAvailable();
+                }
                 const ctmScale = ctm ? Math.abs(ctm.a) : Math.abs(transform[0]);
                 const textContent = String(exist.getAttribute('data-content'));
                 const normalizedTextContent = this.normalizeEllipsis(textContent);
@@ -1251,6 +1272,7 @@ export class Builder {
                 textElements = [
                     ...textElements,
                     {
+                        answer: isAnswer,
                         content: this.direction === Direction.Rtl
                             ? normalizedTextContent.split('').reverse().join('')
                             : normalizedTextContent,
@@ -1380,6 +1402,8 @@ export class Builder {
         this.layout = section.layout;
         section.content = section.content.replace(/<\/br>/g, '');
         this.htmlPageContent.innerHTML = section.content;
+        if (this.htmlPageContent.querySelector('[data-rdnt-answer]') !== null)
+            Answers.setAvailable();
         if (section.layout !== Layout.PrePaginated)
             this.htmlPageContent.innerHTML += `<p class="rdnt__last-element"></p>`;
         await this.waitForImages(this.htmlPageContent);
@@ -1840,6 +1864,7 @@ export class Builder {
         const sentenceElements = [
             ...this.leftTextLayer.querySelectorAll(`:not(.${CLASS_HIGHLIGHT_IGNORE})`),
         ].flatMap((element) => [...element.children].map((word) => ({
+            answer: element.hasAttribute('data-rdnt-answer'),
             content: String(word.getAttribute('data-word')),
             left: parseFloat(element.style.left),
             sentence: Number(word.getAttribute('data-s')),
@@ -1862,7 +1887,10 @@ export class Builder {
             ? grouped
                 .map((sentence) => {
                 const text = sentence.map((w) => w.content).join(' ');
-                return `<span class="rdnt__plain-text-page__sentence" data-s="${this.escapeHTML(sentence[0].sentence)}" data-first-w="${this.escapeHTML(sentence[0].word)}" data-original="${this.escapeHTML(text)}" tabindex="0">${this.escapeHTML(text)}</span>`;
+                const answerAttribute = sentence.some((word) => word.answer)
+                    ? ' data-rdnt-answer'
+                    : '';
+                return `<span class="rdnt__plain-text-page__sentence" data-s="${this.escapeHTML(sentence[0].sentence)}" data-first-w="${this.escapeHTML(sentence[0].word)}" data-original="${this.escapeHTML(text)}"${answerAttribute} tabindex="0">${this.escapeHTML(text)}</span>`;
             })
                 .join('')
                 .trim()
@@ -2311,12 +2339,12 @@ export class Builder {
             word.classList.remove(CLASS_HIGHLIGHT_SYNTAX_WORD_ACTIVE);
         }
     }
-    static async svg(pageNumber, side) {
-        const originalRoot = Readiant.root;
+    static async svg(pageNumber, side, owner) {
+        Readiant.root = owner;
         const { blueprint, elements, rotation, viewBox } = Storage.getPage(pageNumber);
         const page = this.getPage(side);
-        const elementsReady = await this.waitForElements(elements);
-        Readiant.root = originalRoot;
+        const elementsReady = await this.waitForElements(elements, owner);
+        Readiant.root = owner;
         if (!elementsReady)
             return;
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
@@ -2329,7 +2357,7 @@ export class Builder {
         const isCollapsingSpread = Navigation.currentPages.length < this.previouslyShownPages;
         if (isCollapsingSpread || (!isCovered && !isExpandingSpread))
             await this.waitForAnimation(thisSideAnimation);
-        Readiant.root = originalRoot;
+        Readiant.root = owner;
         if (!Navigation.currentPages.some((p) => p.page === pageNumber && p.position === side))
             return;
         this.hide(side);
@@ -2348,7 +2376,7 @@ export class Builder {
             this.startExpansionTransition();
         if (revealAfterAnimation) {
             await this.waitForAnimation(thisSideAnimation);
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             if (!Navigation.currentPages.some((current) => current.page === pageNumber && current.position === side))
                 return;
             this.show(page);
@@ -2359,6 +2387,8 @@ export class Builder {
     static textElement(textElement, content, index, viewBox, ignore, nextTextX, sourceWidth) {
         const div = Readiant.documentContext.createElement('div');
         div.setAttribute('class', `rdnt__highlight${ignore === true ? ' ' + CLASS_HIGHLIGHT_IGNORE : ''}`);
+        if (textElement.answer === true)
+            div.setAttribute('data-rdnt-answer', '');
         div.setAttribute('data-i', String(index));
         div.style.height = `${((textElement.style.height / viewBox[3]) * 100).toFixed(2)}%`;
         div.style.left = `${((textElement.style.x / viewBox[2]) * 100).toFixed(2)}%`;
@@ -3527,10 +3557,25 @@ export class Builder {
         else {
             this.textSentencesWithoutSyntax(sentences, words, side, currentPage);
         }
+        const answerSentences = new Set();
+        for (const word of words) {
+            if (word.closest('[data-rdnt-answer]') === null)
+                continue;
+            const sentenceIndex = Number(word.getAttribute('data-s'));
+            if (Number.isFinite(sentenceIndex))
+                answerSentences.add(sentenceIndex);
+        }
+        this.answerSentencesOnPage.set(currentPage.page, answerSentences);
         this.elementsOnPage.set(currentPage.page, {
             sentences: sentences.length,
             words: words.length,
         });
+    }
+    static isAnswerSentence(side, sentenceIndex) {
+        const currentPage = Navigation.currentPages.find((page) => page.position === side);
+        return (typeof currentPage !== 'undefined' &&
+            this.answerSentencesOnPage.get(currentPage.page)?.has(sentenceIndex) ===
+                true);
     }
     static transform(m1, m2) {
         if (!(Array.isArray(m1) &&
@@ -3583,7 +3628,8 @@ export class Builder {
             });
         });
     }
-    static waitForElements(elements) {
+    static waitForElements(elements, owner) {
+        Readiant.root = owner;
         elements = elements.map((element) => `#${element.replace('.', '\\.')}`);
         const elementContainer = this.elems;
         return new Promise((resolve) => {

@@ -211,8 +211,8 @@ export class Navigation {
             this.state.hasRegistered = val;
     }
     static async register(page, pages, pageCounts, indexes, direction, offset, spread) {
-        const originalRoot = Readiant.root;
-        Readiant.root = originalRoot;
+        const owner = Readiant.root;
+        Readiant.root = owner;
         this.handlers.clear();
         this.textHandlers.clear();
         this.cachedPages = new Set();
@@ -227,10 +227,10 @@ export class Navigation {
         if (Readiant.type === ContentType.HTML)
             this.registerHTML(page, pageCounts, indexes, direction);
         else
-            await Readiant.withContext(this.registerSVG(page, pages, pageCounts, direction, offset, spread));
-        Readiant.root = originalRoot;
+            await this.registerSVG(page, pages, pageCounts, direction, owner, offset, spread);
+        Readiant.root = owner;
         this.firstButton?.addEventListener('click', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             event.preventDefault();
             if (Readiant.type === ContentType.SVG)
                 this.gotoFirstPageSVG();
@@ -238,16 +238,16 @@ export class Navigation {
                 this.gotoPageDirectly(1);
         });
         this.nextButton?.addEventListener('click', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             event.preventDefault();
             this.onRightPressed();
         });
         this.pageNumberInput?.addEventListener('change', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             this.gotoPageDirectly(event);
         });
         this.previousButton?.addEventListener('click', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             event.preventDefault();
             this.onLeftPressed();
         });
@@ -256,24 +256,24 @@ export class Navigation {
             this.previousButton?.classList.add(CLASS_HIDDEN);
         }
         Readiant.root.addEventListener('pointerdown', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             this.touchHandler(TouchHandlerAction.Start, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointermove', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             this.touchHandler(TouchHandlerAction.Move, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointerup', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             this.touchHandler(TouchHandlerAction.End, event);
         }, { passive: true });
         Readiant.root.addEventListener('pointercancel', (event) => {
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             this.touchHandler(TouchHandlerAction.End, event);
         }, { passive: true });
         if (Storage.data.hover)
             Readiant.root.addEventListener('keydown', (event) => {
-                Readiant.root = originalRoot;
+                Readiant.root = owner;
                 this.shortcut(event);
             });
         this.hasRegistered = true;
@@ -326,8 +326,8 @@ export class Navigation {
             });
         });
     }
-    static async registerSVG(page, pages, pageCounts, direction, offset, spread) {
-        const originalRoot = Readiant.root;
+    static async registerSVG(page, pages, pageCounts, direction, owner, offset, spread) {
+        Readiant.root = owner;
         const key = pages.indexOf(page);
         const inverse = [...pages].reverse();
         this.direction = direction;
@@ -340,13 +340,19 @@ export class Navigation {
         if (!this.isInRangeSVG(this.currentPage))
             this.currentPage = this.pages[0];
         Stream.setMessageHandler(ServerActionType.Blueprint, (data) => {
-            this.onBlueprint(data);
+            Readiant.root = owner;
+            this.onBlueprint(data, owner);
         });
-        Stream.setMessageHandler(ServerActionType.Definitions, (data) => Builder.definitions(data.payload));
+        Stream.setMessageHandler(ServerActionType.Definitions, (data) => {
+            Readiant.root = owner;
+            return Builder.definitions(data.payload);
+        });
         Stream.setMessageHandler(ServerActionType.Elements, (data) => {
+            Readiant.root = owner;
             this.onElements(data);
         });
         Stream.setMessageHandler(ServerActionType.TextContent, (data) => {
+            Readiant.root = owner;
             this.onTextContent(data);
         });
         if (!isOffline)
@@ -362,8 +368,8 @@ export class Navigation {
         if (this.currentPages.length === 2)
             this.currentPage = this.currentPages[0].page;
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
-        await this.initialPages(this.currentPages);
-        Readiant.root = originalRoot;
+        await this.initialPages(this.currentPages, owner);
+        Readiant.root = owner;
         this.logInitialPage(this.currentPage);
         const max = this.numPages;
         if (max !== this.pages.length)
@@ -546,7 +552,8 @@ export class Navigation {
         this.previousLog = log;
         eventLogger(log);
     }
-    static async generateCache(exclude) {
+    static async generateCache(owner, exclude) {
+        Readiant.root = owner;
         const all = [...this.pages];
         this.cacheSize = this.currentPages.length === 2 ? 8 : 4;
         all.sort((a, b) => Math.abs(this.currentPage - a) - Math.abs(this.currentPage - b));
@@ -559,7 +566,8 @@ export class Navigation {
         if (this.missingPages.size > 0)
             await this.requestPages(typeof exclude === 'undefined'
                 ? [...this.missingPages]
-                : [...this.missingPages].filter((page) => !exclude.includes(page)));
+                : [...this.missingPages].filter((page) => !exclude.includes(page)), owner);
+        Readiant.root = owner;
         const epoch = this.renderEpoch;
         const pagesToRender = [...this.animationPages, ...this.currentPages];
         for (const page of pagesToRender) {
@@ -570,9 +578,8 @@ export class Navigation {
                 });
             }
         }
-        Builder.cache(pages).catch((e) => {
-            throw e;
-        });
+        await Builder.cache(pages, owner);
+        Readiant.root = owner;
     }
     static generatePagesToRender() {
         const animationPayload = [];
@@ -869,8 +876,8 @@ export class Navigation {
             throw e;
         });
     }
-    static async initialPages(requests) {
-        const originalRoot = Readiant.root;
+    static async initialPages(requests, owner) {
+        Readiant.root = owner;
         if (TextMode.level !== 3) {
             if (requests.some((val) => val.position === PagePosition.Left))
                 Builder.start(PagePosition.Left);
@@ -882,17 +889,14 @@ export class Navigation {
                 Builder.hide(PagePosition.Right);
         }
         const pages = requests.map((request) => request.page);
-        await this.requestPages(pages);
-        Readiant.root = originalRoot;
-        await this.generateCache(pages);
-        Readiant.root = originalRoot;
-        for (const request of requests) {
-            if (Storage.hasPage(request.page)) {
-                Builder.svg(request.page, request.position).catch((e) => {
-                    throw e;
-                });
-            }
-        }
+        await this.requestPages(pages, owner);
+        Readiant.root = owner;
+        await this.generateCache(owner, pages);
+        Readiant.root = owner;
+        await Promise.all(requests
+            .filter((request) => Storage.hasPage(request.page))
+            .map((request) => Builder.svg(request.page, request.position, owner)));
+        Readiant.root = owner;
     }
     static logInitialPage(currentPage) {
         const pages = [currentPage];
@@ -1031,7 +1035,8 @@ export class Navigation {
             }
         }
     }
-    static onBlueprint(data) {
+    static onBlueprint(data, owner) {
+        Readiant.root = owner;
         const isActivePage = this.isActivePage(data.pageId);
         const isAnimationPage = this.isAnimationPage(data.pageId);
         const epoch = this.renderEpoch;
@@ -1049,7 +1054,7 @@ export class Navigation {
         }
         if (typeof isActivePage !== 'undefined' &&
             this.isPageVisible(data.pageId)) {
-            Builder.svg(data.pageId, isActivePage).catch((e) => {
+            Builder.svg(data.pageId, isActivePage, owner).catch((e) => {
                 throw e;
             });
             Builder.animation(isActivePage, Builder.pageGroup(data.payload.blueprint), data.payload.viewBox, false, epoch).catch((e) => {
@@ -1116,6 +1121,7 @@ export class Navigation {
             this.notifyText(currentPage);
     }
     static async preparePages(requests, orientationChange) {
+        const owner = Readiant.root;
         if (typeof orientationChange !== 'undefined' &&
             orientationChange === OrientationMode.Portrait) {
             Builder.hide(PagePosition.Right);
@@ -1147,11 +1153,12 @@ export class Navigation {
             const cached = this.cachedPages.has(request.page);
             const stored = Storage.hasPage(request.page);
             if ((cached && stored) || stored)
-                Builder.svg(request.page, request.position).catch((e) => {
+                Builder.svg(request.page, request.position, owner).catch((e) => {
                     throw e;
                 });
         }
-        await this.generateCache();
+        await this.generateCache(owner);
+        Readiant.root = owner;
     }
     static previousPage() {
         const navigationTime = new Date().getTime();
@@ -1187,11 +1194,11 @@ export class Navigation {
             Builder.animateLeft();
         this.gotoPage(page, PageChangeType.Previous);
     }
-    static async requestPages(pages) {
-        const originalRoot = Readiant.root;
+    static async requestPages(pages, owner) {
+        Readiant.root = owner;
         if (typeof this.lazyLoader !== 'undefined') {
             await this.lazyLoader(pages);
-            Readiant.root = originalRoot;
+            Readiant.root = owner;
             return;
         }
         Stream.send({
