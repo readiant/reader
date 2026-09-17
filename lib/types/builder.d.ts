@@ -1105,13 +1105,29 @@ export class Builder {
     }
     static async setStylesheet(id, fontAssets, fonts, stylesheetText) {
         const allFontFaceRules = [];
+        const fontFaceLoads = [];
+        const registerFontFace = (fontFamily, sources) => {
+            if (!(Readiant.root instanceof ShadowRoot) ||
+                typeof FontFace === 'undefined' ||
+                typeof document.fonts === 'undefined')
+                return;
+            const registeredFaces = Array.from(document.fonts).filter((font) => font.family.replace(/["']/g, '').trim() === fontFamily);
+            if (registeredFaces.length > 0) {
+                fontFaceLoads.push(...registeredFaces.map((font) => font.load()));
+                return;
+            }
+            const fontFace = new FontFace(fontFamily, sources.join(', '));
+            document.fonts.add(fontFace);
+            fontFaceLoads.push(fontFace.load());
+        };
         const documentFonts = typeof document.fonts !== 'undefined'
             ? Array.from(document.fonts).map((font) => font.family.replace(/["']/g, '').trim())
             : [];
         if (Object.keys(fontAssets).length > 0) {
             for (const [fontFamily, fontUrls] of Object.entries(fontAssets)) {
                 if (this.registeredFontFamilies.has(fontFamily) ||
-                    documentFonts.some((font) => font === fontFamily))
+                    (!(Readiant.root instanceof ShadowRoot) &&
+                        documentFonts.some((font) => font === fontFamily)))
                     continue;
                 const sources = [];
                 if (typeof fontUrls.woff2 === 'string')
@@ -1120,6 +1136,7 @@ export class Builder {
                     sources.push(`url("${fontUrls.woff}") format('woff')`);
                 if (sources.length > 0) {
                     this.registeredFontFamilies.add(fontFamily);
+                    registerFontFace(fontFamily, sources);
                     allFontFaceRules.push(`@font-face {
               font-display: block;
               font-family: "${fontFamily}";
@@ -1150,6 +1167,7 @@ export class Builder {
                         sources.push(`url("${fontUrls.woff}") format('woff')`);
                     if (sources.length > 0) {
                         this.registeredFontFamilies.add(`${id}-${fontFamily}`);
+                        registerFontFace(`${id}-${fontFamily}`, sources);
                         return match
                             .replace(/font-display\s*:\s*[^;}]+;?/g, '')
                             .replace(/src\s*:\s*[^;}]+;?/, `font-display: block; src: ${sources.join(', ')};`)
@@ -1180,10 +1198,13 @@ export class Builder {
                 fontStyleElementRoot.textContent = fontCss;
                 Readiant.root.appendChild(fontStyleElementRoot);
             }
-            const fontStyleElementDoc = Readiant.documentContext.createElement('style');
-            fontStyleElementDoc.textContent = fontCss;
-            Readiant.documentContext.head.appendChild(fontStyleElementDoc);
+            else {
+                const fontStyleElementDoc = Readiant.documentContext.createElement('style');
+                fontStyleElementDoc.textContent = fontCss;
+                Readiant.documentContext.head.appendChild(fontStyleElementDoc);
+            }
         }
+        await Promise.allSettled(fontFaceLoads);
         if (typeof stylesheetText === 'undefined') {
             const link = Readiant.documentContext.createElement('link');
             link.setAttribute('href', `/files/stylesheet/${id}`);
